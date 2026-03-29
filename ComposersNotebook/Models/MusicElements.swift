@@ -39,12 +39,12 @@ enum Clef: String, Codable, CaseIterable {
 
 // MARK: - Key Signature
 
-enum KeySignatureType: String, Codable {
+enum KeySignatureType: String, Codable, Hashable {
     case major
     case minor
 }
 
-struct KeySignature: Codable, Equatable {
+struct KeySignature: Codable, Equatable, Hashable {
     let fifths: Int  // -7 to +7 (negative = flats, positive = sharps)
     let mode: KeySignatureType
 
@@ -78,7 +78,7 @@ struct KeySignature: Codable, Equatable {
 
 // MARK: - Time Signature
 
-struct TimeSignature: Codable, Equatable {
+struct TimeSignature: Codable, Equatable, Hashable {
     let beats: Int       // верхняя цифра (сколько долей в такте)
     let beatValue: Int   // нижняя цифра (какая нота = доля)
 
