@@ -3,6 +3,7 @@ import AudioToolbox
 
 // MARK: - MIDI Engine
 
+@MainActor
 class MIDIEngine: ObservableObject {
     static let shared = MIDIEngine()
 

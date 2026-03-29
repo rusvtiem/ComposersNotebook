@@ -22,6 +22,7 @@ extension ComposerPlugin {
 
 // MARK: - Plugin Manager
 
+@MainActor
 class PluginManager: ObservableObject {
     static let shared = PluginManager()
 
