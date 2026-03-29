@@ -67,14 +67,13 @@ class MIDIEngine: ObservableObject {
         isPlaying = true
 
         playbackTask = Task { @MainActor in
-            let bpm = score.tempo.bpm
-            let secondsPerBeat = 60.0 / bpm
+            let baseBPM = score.tempo.bpm
 
             for measureIndex in fromMeasure..<score.measureCount {
                 guard isPlaying else { break }
 
                 // Determine current tempo (check for tempo changes)
-                var currentBPM = bpm
+                var currentBPM = baseBPM
                 for part in score.parts {
                     if let tempo = part.measures[measureIndex].tempoMarking {
                         currentBPM = tempo.bpm
@@ -89,7 +88,6 @@ class MIDIEngine: ObservableObject {
 
                     Task {
                         setInstrument(midiProgram: part.instrument.midiProgram)
-                        var beatOffset: Double = 0
 
                         for event in measure.events {
                             guard isPlaying else { return }
@@ -121,8 +119,6 @@ class MIDIEngine: ObservableObject {
                             case .rest:
                                 try? await Task.sleep(for: .seconds(durationSec))
                             }
-
-                            beatOffset += event.duration.beats
                         }
                     }
 
