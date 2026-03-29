@@ -46,13 +46,13 @@ struct NoteToolbarView: View {
 
     private var modeButtons: some View {
         HStack(spacing: 4) {
-            ToolbarToggle(
+            NoteToolbarButton(
                 icon: "pencil",
                 label: "Нота",
                 isActive: viewModel.inputMode == .note
             ) { viewModel.inputMode = .note }
 
-            ToolbarToggle(
+            NoteToolbarButton(
                 icon: "pause.fill",
                 label: "Пауза",
                 isActive: viewModel.inputMode == .rest
@@ -69,7 +69,7 @@ struct NoteToolbarView: View {
     private var durationButtons: some View {
         HStack(spacing: 2) {
             ForEach(DurationValue.allCases, id: \.self) { dur in
-                ToolbarToggle(
+                NoteToolbarButton(
                     icon: nil,
                     label: dur.symbol,
                     isActive: viewModel.selectedDuration == dur,
@@ -83,20 +83,20 @@ struct NoteToolbarView: View {
 
     private var modifierButtons: some View {
         HStack(spacing: 4) {
-            ToolbarToggle(
+            NoteToolbarButton(
                 icon: nil,
                 label: "•",
                 isActive: viewModel.isDotted,
                 fontSize: 20
             ) { viewModel.isDotted.toggle() }
 
-            ToolbarToggle(
+            NoteToolbarButton(
                 icon: "link",
                 label: "Лига",
                 isActive: viewModel.tieNext
             ) { viewModel.tieNext.toggle() }
 
-            ToolbarToggle(
+            NoteToolbarButton(
                 icon: nil,
                 label: "⁀",
                 isActive: viewModel.slurActive,
@@ -110,7 +110,7 @@ struct NoteToolbarView: View {
     private var accidentalButtons: some View {
         HStack(spacing: 2) {
             ForEach([Accidental.flat, .natural, .sharp], id: \.self) { acc in
-                ToolbarToggle(
+                NoteToolbarButton(
                     icon: nil,
                     label: acc.displaySymbol,
                     isActive: viewModel.selectedAccidental == acc,
@@ -125,7 +125,7 @@ struct NoteToolbarView: View {
     private var articulationButtons: some View {
         HStack(spacing: 2) {
             ForEach([Articulation.staccato, .accent, .tenuto, .fermata], id: \.self) { art in
-                ToolbarToggle(
+                NoteToolbarButton(
                     icon: nil,
                     label: art.displaySymbol,
                     isActive: viewModel.selectedArticulation == art,
@@ -167,7 +167,7 @@ struct NoteToolbarView: View {
 
 // MARK: - Toolbar Toggle Button
 
-struct ToolbarToggle: View {
+struct NoteToolbarButton: View {
     let icon: String?
     let label: String
     let isActive: Bool

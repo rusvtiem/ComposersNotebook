@@ -56,8 +56,6 @@ struct PianoKeyboardView: View {
                         ForEach(0..<2, id: \.self) { octaveOffset in
                             ForEach(whiteKeys, id: \.self) { pitchName in
                                 let octave = currentOctave + octaveOffset
-                                let pitch = Pitch(name: pitchName, octave: octave,
-                                                  accidental: viewModel.selectedAccidental == .natural ? .natural : viewModel.selectedAccidental)
 
                                 WhiteKeyView(
                                     pitchName: pitchName,
