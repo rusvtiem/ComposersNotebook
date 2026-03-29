@@ -26,7 +26,7 @@ struct HomeView: View {
 
             Image(systemName: "music.note.list")
                 .font(.system(size: 72))
-                .foregroundStyle(.accent)
+                .foregroundColor(.accentColor)
 
             Text("Composer's Notebook")
                 .font(.largeTitle)
@@ -46,8 +46,8 @@ struct HomeView: View {
                     Label("Быстрая заметка", systemImage: "bolt.fill")
                         .frame(maxWidth: .infinity)
                         .padding()
-                        .background(.accent)
-                        .foregroundStyle(.white)
+                        .background(Color.accentColor)
+                        .foregroundColor(.white)
                         .clipShape(RoundedRectangle(cornerRadius: 12))
                 }
 
@@ -58,8 +58,8 @@ struct HomeView: View {
                     Label("Новая партитура", systemImage: "plus.circle.fill")
                         .frame(maxWidth: .infinity)
                         .padding()
-                        .background(.accent.opacity(0.15))
-                        .foregroundStyle(.accent)
+                        .background(Color.accentColor.opacity(0.15))
+                        .foregroundColor(.accentColor)
                         .clipShape(RoundedRectangle(cornerRadius: 12))
                 }
             }

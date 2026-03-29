@@ -193,7 +193,7 @@ struct NoteToolbarButton: View {
             .padding(.horizontal, 4)
             .background(isActive ? Color.accentColor.opacity(0.2) : Color.clear)
             .clipShape(RoundedRectangle(cornerRadius: 6))
-            .foregroundStyle(isActive ? .accent : .primary)
+            .foregroundColor(isActive ? .accentColor : .primary)
         }
         .buttonStyle(.plain)
     }
