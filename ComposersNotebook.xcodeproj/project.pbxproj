@@ -1,0 +1,425 @@
+// !$*UTF8*$!
+{
+	archiveVersion = 1;
+	classes = {
+	};
+	objectVersion = 77;
+	objects = {
+
+/* Begin PBXBuildFile section */
+		17F5D248B9DB58295D28573A /* ComposersNotebookApp.swift in Sources */ = {isa = PBXBuildFile; fileRef = 6DB29E2A4F0338EE1C46AA96 /* ComposersNotebookApp.swift */; };
+		1A8EBDA6B0D57D1D765DB808 /* MusicElements.swift in Sources */ = {isa = PBXBuildFile; fileRef = 41CC1828389F747C1307D5D9 /* MusicElements.swift */; };
+		1AEEF7BF0A66A7A3C3149A96 /* PluginManager.swift in Sources */ = {isa = PBXBuildFile; fileRef = C332283252D17AF92A4994C9 /* PluginManager.swift */; };
+		27BAA223C44B7FCD6845EDEA /* Measure.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1C0D6FAE077C7817273CB5E0 /* Measure.swift */; };
+		363073B08EC5297E80C8338F /* StaffAreaView.swift in Sources */ = {isa = PBXBuildFile; fileRef = D49B5EBD3BC6ECABB2157696 /* StaffAreaView.swift */; };
+		3734652E7AA0D578931FC4B8 /* MIDIEngine.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1B80768D47A05D75303032ED /* MIDIEngine.swift */; };
+		3CEB7F925F57B07D42FAEB39 /* Instrument.swift in Sources */ = {isa = PBXBuildFile; fileRef = FDA522273EC144D26A43A262 /* Instrument.swift */; };
+		43A3102B35157066B5B481ED /* ScoreEditorView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 2994638C367DA9CF18556A26 /* ScoreEditorView.swift */; };
+		46DCD35DD9C81C1BF12F9D4A /* PianoKeyboardView.swift in Sources */ = {isa = PBXBuildFile; fileRef = ED18EBF60DE96441348A72DA /* PianoKeyboardView.swift */; };
+		55AC7CBDB15EF5343AB32436 /* Part.swift in Sources */ = {isa = PBXBuildFile; fileRef = 7E2571DAF48F482D437CD5BF /* Part.swift */; };
+		591358A9C10D7A3284BC13DB /* Score.swift in Sources */ = {isa = PBXBuildFile; fileRef = 68512AB05D9BE0C4BF62EB1C /* Score.swift */; };
+		6C4139C1C8A3DA2A135DD3C6 /* MusicXMLExporter.swift in Sources */ = {isa = PBXBuildFile; fileRef = F180ED3F1454863D8676C257 /* MusicXMLExporter.swift */; };
+		833AA40610B6F6D5D321F577 /* MetronomeEngine.swift in Sources */ = {isa = PBXBuildFile; fileRef = D88126149726E770E48A8525 /* MetronomeEngine.swift */; };
+		86C71629511E39A92B889D68 /* ScoreViewModel.swift in Sources */ = {isa = PBXBuildFile; fileRef = BDDD972C2349864CBA4F7648 /* ScoreViewModel.swift */; };
+		A5C447F0166BC8776D4598C2 /* NoteToolbarView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 16488F411B4EA5FB4B977057 /* NoteToolbarView.swift */; };
+		BB881ADB87E40142AE3804C3 /* Pitch.swift in Sources */ = {isa = PBXBuildFile; fileRef = D82806EEF19B77753B5E8F85 /* Pitch.swift */; };
+		CF0C34584979F0ADEDBD06C9 /* Note.swift in Sources */ = {isa = PBXBuildFile; fileRef = 8589EB828201460A07C202F3 /* Note.swift */; };
+		E2580C41C84115D1BB8CC857 /* Duration.swift in Sources */ = {isa = PBXBuildFile; fileRef = 416F6A4FA620714487C9D02C /* Duration.swift */; };
+		FA705DE93A1865976F671DF6 /* ContentView.swift in Sources */ = {isa = PBXBuildFile; fileRef = A65DF18F2909BED9D221FE36 /* ContentView.swift */; };
+/* End PBXBuildFile section */
+
+/* Begin PBXFileReference section */
+		16488F411B4EA5FB4B977057 /* NoteToolbarView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = NoteToolbarView.swift; sourceTree = "<group>"; };
+		1B80768D47A05D75303032ED /* MIDIEngine.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = MIDIEngine.swift; sourceTree = "<group>"; };
+		1C0D6FAE077C7817273CB5E0 /* Measure.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Measure.swift; sourceTree = "<group>"; };
+		2994638C367DA9CF18556A26 /* ScoreEditorView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ScoreEditorView.swift; sourceTree = "<group>"; };
+		416F6A4FA620714487C9D02C /* Duration.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Duration.swift; sourceTree = "<group>"; };
+		41CC1828389F747C1307D5D9 /* MusicElements.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = MusicElements.swift; sourceTree = "<group>"; };
+		68512AB05D9BE0C4BF62EB1C /* Score.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Score.swift; sourceTree = "<group>"; };
+		6DB29E2A4F0338EE1C46AA96 /* ComposersNotebookApp.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ComposersNotebookApp.swift; sourceTree = "<group>"; };
+		7E2571DAF48F482D437CD5BF /* Part.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Part.swift; sourceTree = "<group>"; };
+		8589EB828201460A07C202F3 /* Note.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Note.swift; sourceTree = "<group>"; };
+		A65DF18F2909BED9D221FE36 /* ContentView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ContentView.swift; sourceTree = "<group>"; };
+		BDDD972C2349864CBA4F7648 /* ScoreViewModel.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ScoreViewModel.swift; sourceTree = "<group>"; };
+		C332283252D17AF92A4994C9 /* PluginManager.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = PluginManager.swift; sourceTree = "<group>"; };
+		D49B5EBD3BC6ECABB2157696 /* StaffAreaView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = StaffAreaView.swift; sourceTree = "<group>"; };
+		D82806EEF19B77753B5E8F85 /* Pitch.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Pitch.swift; sourceTree = "<group>"; };
+		D88126149726E770E48A8525 /* MetronomeEngine.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = MetronomeEngine.swift; sourceTree = "<group>"; };
+		ED18EBF60DE96441348A72DA /* PianoKeyboardView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = PianoKeyboardView.swift; sourceTree = "<group>"; };
+		F180ED3F1454863D8676C257 /* MusicXMLExporter.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = MusicXMLExporter.swift; sourceTree = "<group>"; };
+		F85D1C62DDC7A2564A387949 /* ComposersNotebook.app */ = {isa = PBXFileReference; includeInIndex = 0; lastKnownFileType = wrapper.application; path = ComposersNotebook.app; sourceTree = BUILT_PRODUCTS_DIR; };
+		FDA522273EC144D26A43A262 /* Instrument.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Instrument.swift; sourceTree = "<group>"; };
+/* End PBXFileReference section */
+
+/* Begin PBXGroup section */
+		056A78FF835E2A2E19B51980 = {
+			isa = PBXGroup;
+			children = (
+				FFCAB689CE24864CB8CC0655 /* ComposersNotebook */,
+				547C23BA537A07C8322E68AE /* Products */,
+			);
+			sourceTree = "<group>";
+		};
+		065731C636E6E4D1A66635D8 /* ViewModels */ = {
+			isa = PBXGroup;
+			children = (
+				BDDD972C2349864CBA4F7648 /* ScoreViewModel.swift */,
+			);
+			path = ViewModels;
+			sourceTree = "<group>";
+		};
+		12CBBAA7E874FA21075EE967 /* Editor */ = {
+			isa = PBXGroup;
+			children = (
+				2994638C367DA9CF18556A26 /* ScoreEditorView.swift */,
+				D49B5EBD3BC6ECABB2157696 /* StaffAreaView.swift */,
+			);
+			path = Editor;
+			sourceTree = "<group>";
+		};
+		4447B4526F303E95BC8D85FA /* Models */ = {
+			isa = PBXGroup;
+			children = (
+				416F6A4FA620714487C9D02C /* Duration.swift */,
+				FDA522273EC144D26A43A262 /* Instrument.swift */,
+				1C0D6FAE077C7817273CB5E0 /* Measure.swift */,
+				41CC1828389F747C1307D5D9 /* MusicElements.swift */,
+				8589EB828201460A07C202F3 /* Note.swift */,
+				7E2571DAF48F482D437CD5BF /* Part.swift */,
+				D82806EEF19B77753B5E8F85 /* Pitch.swift */,
+				68512AB05D9BE0C4BF62EB1C /* Score.swift */,
+			);
+			path = Models;
+			sourceTree = "<group>";
+		};
+		547C23BA537A07C8322E68AE /* Products */ = {
+			isa = PBXGroup;
+			children = (
+				F85D1C62DDC7A2564A387949 /* ComposersNotebook.app */,
+			);
+			name = Products;
+			sourceTree = "<group>";
+		};
+		7CDEDC2A70D46BC4D13D610D /* Views */ = {
+			isa = PBXGroup;
+			children = (
+				A65DF18F2909BED9D221FE36 /* ContentView.swift */,
+				FB5CDD9EA99B4FA4F8E43CB0 /* Components */,
+				12CBBAA7E874FA21075EE967 /* Editor */,
+			);
+			path = Views;
+			sourceTree = "<group>";
+		};
+		D1642127EE2829B7F5F14649 /* Services */ = {
+			isa = PBXGroup;
+			children = (
+				D88126149726E770E48A8525 /* MetronomeEngine.swift */,
+				1B80768D47A05D75303032ED /* MIDIEngine.swift */,
+				F180ED3F1454863D8676C257 /* MusicXMLExporter.swift */,
+				C332283252D17AF92A4994C9 /* PluginManager.swift */,
+			);
+			path = Services;
+			sourceTree = "<group>";
+		};
+		FB5CDD9EA99B4FA4F8E43CB0 /* Components */ = {
+			isa = PBXGroup;
+			children = (
+				16488F411B4EA5FB4B977057 /* NoteToolbarView.swift */,
+				ED18EBF60DE96441348A72DA /* PianoKeyboardView.swift */,
+			);
+			path = Components;
+			sourceTree = "<group>";
+		};
+		FFCAB689CE24864CB8CC0655 /* ComposersNotebook */ = {
+			isa = PBXGroup;
+			children = (
+				6DB29E2A4F0338EE1C46AA96 /* ComposersNotebookApp.swift */,
+				4447B4526F303E95BC8D85FA /* Models */,
+				D1642127EE2829B7F5F14649 /* Services */,
+				065731C636E6E4D1A66635D8 /* ViewModels */,
+				7CDEDC2A70D46BC4D13D610D /* Views */,
+			);
+			path = ComposersNotebook;
+			sourceTree = "<group>";
+		};
+/* End PBXGroup section */
+
+/* Begin PBXNativeTarget section */
+		57F68D947462549826AA7472 /* ComposersNotebook */ = {
+			isa = PBXNativeTarget;
+			buildConfigurationList = 23A678CE1B05F19FABCAA682 /* Build configuration list for PBXNativeTarget "ComposersNotebook" */;
+			buildPhases = (
+				EAE87665F9FD6C7FEB56B961 /* Sources */,
+			);
+			buildRules = (
+			);
+			dependencies = (
+			);
+			name = ComposersNotebook;
+			packageProductDependencies = (
+			);
+			productName = ComposersNotebook;
+			productReference = F85D1C62DDC7A2564A387949 /* ComposersNotebook.app */;
+			productType = "com.apple.product-type.application";
+		};
+/* End PBXNativeTarget section */
+
+/* Begin PBXProject section */
+		1765FF24E1FFF2682ED1847F /* Project object */ = {
+			isa = PBXProject;
+			attributes = {
+				BuildIndependentTargetsInParallel = YES;
+				LastUpgradeCheck = 1600;
+				TargetAttributes = {
+					57F68D947462549826AA7472 = {
+						ProvisioningStyle = Automatic;
+					};
+				};
+			};
+			buildConfigurationList = D91C2609A00E5A2BE574364F /* Build configuration list for PBXProject "ComposersNotebook" */;
+			developmentRegion = en;
+			hasScannedForEncodings = 0;
+			knownRegions = (
+				Base,
+				en,
+			);
+			mainGroup = 056A78FF835E2A2E19B51980;
+			minimizedProjectReferenceProxies = 1;
+			preferredProjectObjectVersion = 77;
+			productRefGroup = 547C23BA537A07C8322E68AE /* Products */;
+			projectDirPath = "";
+			projectRoot = "";
+			targets = (
+				57F68D947462549826AA7472 /* ComposersNotebook */,
+			);
+		};
+/* End PBXProject section */
+
+/* Begin PBXSourcesBuildPhase section */
+		EAE87665F9FD6C7FEB56B961 /* Sources */ = {
+			isa = PBXSourcesBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+				17F5D248B9DB58295D28573A /* ComposersNotebookApp.swift in Sources */,
+				FA705DE93A1865976F671DF6 /* ContentView.swift in Sources */,
+				E2580C41C84115D1BB8CC857 /* Duration.swift in Sources */,
+				3CEB7F925F57B07D42FAEB39 /* Instrument.swift in Sources */,
+				3734652E7AA0D578931FC4B8 /* MIDIEngine.swift in Sources */,
+				27BAA223C44B7FCD6845EDEA /* Measure.swift in Sources */,
+				833AA40610B6F6D5D321F577 /* MetronomeEngine.swift in Sources */,
+				1A8EBDA6B0D57D1D765DB808 /* MusicElements.swift in Sources */,
+				6C4139C1C8A3DA2A135DD3C6 /* MusicXMLExporter.swift in Sources */,
+				CF0C34584979F0ADEDBD06C9 /* Note.swift in Sources */,
+				A5C447F0166BC8776D4598C2 /* NoteToolbarView.swift in Sources */,
+				55AC7CBDB15EF5343AB32436 /* Part.swift in Sources */,
+				46DCD35DD9C81C1BF12F9D4A /* PianoKeyboardView.swift in Sources */,
+				BB881ADB87E40142AE3804C3 /* Pitch.swift in Sources */,
+				1AEEF7BF0A66A7A3C3149A96 /* PluginManager.swift in Sources */,
+				591358A9C10D7A3284BC13DB /* Score.swift in Sources */,
+				43A3102B35157066B5B481ED /* ScoreEditorView.swift in Sources */,
+				86C71629511E39A92B889D68 /* ScoreViewModel.swift in Sources */,
+				363073B08EC5297E80C8338F /* StaffAreaView.swift in Sources */,
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+/* End PBXSourcesBuildPhase section */
+
+/* Begin XCBuildConfiguration section */
+		3696518FBE5F7BD1B9A92432 /* Release */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				ALWAYS_SEARCH_USER_PATHS = NO;
+				CLANG_ANALYZER_NONNULL = YES;
+				CLANG_ANALYZER_NUMBER_OBJECT_CONVERSION = YES_AGGRESSIVE;
+				CLANG_CXX_LANGUAGE_STANDARD = "gnu++14";
+				CLANG_CXX_LIBRARY = "libc++";
+				CLANG_ENABLE_MODULES = YES;
+				CLANG_ENABLE_OBJC_ARC = YES;
+				CLANG_ENABLE_OBJC_WEAK = YES;
+				CLANG_WARN_BLOCK_CAPTURE_AUTORELEASING = YES;
+				CLANG_WARN_BOOL_CONVERSION = YES;
+				CLANG_WARN_COMMA = YES;
+				CLANG_WARN_CONSTANT_CONVERSION = YES;
+				CLANG_WARN_DEPRECATED_OBJC_IMPLEMENTATIONS = YES;
+				CLANG_WARN_DIRECT_OBJC_ISA_USAGE = YES_ERROR;
+				CLANG_WARN_DOCUMENTATION_COMMENTS = YES;
+				CLANG_WARN_EMPTY_BODY = YES;
+				CLANG_WARN_ENUM_CONVERSION = YES;
+				CLANG_WARN_INFINITE_RECURSION = YES;
+				CLANG_WARN_INT_CONVERSION = YES;
+				CLANG_WARN_NON_LITERAL_NULL_CONVERSION = YES;
+				CLANG_WARN_OBJC_IMPLICIT_RETAIN_SELF = YES;
+				CLANG_WARN_OBJC_LITERAL_CONVERSION = YES;
+				CLANG_WARN_OBJC_ROOT_CLASS = YES_ERROR;
+				CLANG_WARN_QUOTED_INCLUDE_IN_FRAMEWORK_HEADER = YES;
+				CLANG_WARN_RANGE_LOOP_ANALYSIS = YES;
+				CLANG_WARN_STRICT_PROTOTYPES = YES;
+				CLANG_WARN_SUSPICIOUS_MOVE = YES;
+				CLANG_WARN_UNGUARDED_AVAILABILITY = YES_AGGRESSIVE;
+				CLANG_WARN_UNREACHABLE_CODE = YES;
+				CLANG_WARN__DUPLICATE_METHOD_MATCH = YES;
+				COPY_PHASE_STRIP = NO;
+				DEBUG_INFORMATION_FORMAT = "dwarf-with-dsym";
+				ENABLE_NS_ASSERTIONS = NO;
+				ENABLE_STRICT_OBJC_MSGSEND = YES;
+				GCC_C_LANGUAGE_STANDARD = gnu11;
+				GCC_NO_COMMON_BLOCKS = YES;
+				GCC_WARN_64_TO_32_BIT_CONVERSION = YES;
+				GCC_WARN_ABOUT_RETURN_TYPE = YES_ERROR;
+				GCC_WARN_UNDECLARED_SELECTOR = YES;
+				GCC_WARN_UNINITIALIZED_AUTOS = YES_AGGRESSIVE;
+				GCC_WARN_UNUSED_FUNCTION = YES;
+				GCC_WARN_UNUSED_VARIABLE = YES;
+				IPHONEOS_DEPLOYMENT_TARGET = 17.0;
+				MTL_ENABLE_DEBUG_INFO = NO;
+				MTL_FAST_MATH = YES;
+				PRODUCT_NAME = "$(TARGET_NAME)";
+				SDKROOT = iphoneos;
+				SWIFT_COMPILATION_MODE = wholemodule;
+				SWIFT_OPTIMIZATION_LEVEL = "-O";
+				SWIFT_VERSION = 5.0;
+			};
+			name = Release;
+		};
+		5AB636ECF80C65D98DF3404A /* Debug */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				ASSETCATALOG_COMPILER_APPICON_NAME = AppIcon;
+				CODE_SIGN_IDENTITY = "iPhone Developer";
+				CODE_SIGN_STYLE = Automatic;
+				CURRENT_PROJECT_VERSION = 1;
+				GENERATE_INFOPLIST_FILE = YES;
+				INFOPLIST_KEY_NSMicrophoneUsageDescription = "Нужен доступ к микрофону для записи музыкальных идей";
+				INFOPLIST_KEY_UIApplicationSceneManifest_Generation = YES;
+				INFOPLIST_KEY_UIApplicationSupportsIndirectInputEvents = YES;
+				INFOPLIST_KEY_UILaunchScreen_Generation = YES;
+				INFOPLIST_KEY_UISupportedInterfaceOrientations = "UIInterfaceOrientationPortrait UIInterfaceOrientationLandscapeLeft UIInterfaceOrientationLandscapeRight";
+				INFOPLIST_KEY_UISupportedInterfaceOrientations_iPad = "UIInterfaceOrientationPortrait UIInterfaceOrientationPortraitUpsideDown UIInterfaceOrientationLandscapeLeft UIInterfaceOrientationLandscapeRight";
+				LD_RUNPATH_SEARCH_PATHS = (
+					"$(inherited)",
+					"@executable_path/Frameworks",
+				);
+				MARKETING_VERSION = 1.0.0;
+				PRODUCT_BUNDLE_IDENTIFIER = com.timshega.composersnotebook;
+				PRODUCT_NAME = "Composer's Notebook";
+				SDKROOT = iphoneos;
+				SWIFT_VERSION = 6.0;
+				TARGETED_DEVICE_FAMILY = "1,2";
+			};
+			name = Debug;
+		};
+		AA257A93A31DE5543D15451E /* Release */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				ASSETCATALOG_COMPILER_APPICON_NAME = AppIcon;
+				CODE_SIGN_IDENTITY = "iPhone Developer";
+				CODE_SIGN_STYLE = Automatic;
+				CURRENT_PROJECT_VERSION = 1;
+				GENERATE_INFOPLIST_FILE = YES;
+				INFOPLIST_KEY_NSMicrophoneUsageDescription = "Нужен доступ к микрофону для записи музыкальных идей";
+				INFOPLIST_KEY_UIApplicationSceneManifest_Generation = YES;
+				INFOPLIST_KEY_UIApplicationSupportsIndirectInputEvents = YES;
+				INFOPLIST_KEY_UILaunchScreen_Generation = YES;
+				INFOPLIST_KEY_UISupportedInterfaceOrientations = "UIInterfaceOrientationPortrait UIInterfaceOrientationLandscapeLeft UIInterfaceOrientationLandscapeRight";
+				INFOPLIST_KEY_UISupportedInterfaceOrientations_iPad = "UIInterfaceOrientationPortrait UIInterfaceOrientationPortraitUpsideDown UIInterfaceOrientationLandscapeLeft UIInterfaceOrientationLandscapeRight";
+				LD_RUNPATH_SEARCH_PATHS = (
+					"$(inherited)",
+					"@executable_path/Frameworks",
+				);
+				MARKETING_VERSION = 1.0.0;
+				PRODUCT_BUNDLE_IDENTIFIER = com.timshega.composersnotebook;
+				PRODUCT_NAME = "Composer's Notebook";
+				SDKROOT = iphoneos;
+				SWIFT_VERSION = 6.0;
+				TARGETED_DEVICE_FAMILY = "1,2";
+			};
+			name = Release;
+		};
+		E0C068EA1422B5C6904B19B4 /* Debug */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				ALWAYS_SEARCH_USER_PATHS = NO;
+				CLANG_ANALYZER_NONNULL = YES;
+				CLANG_ANALYZER_NUMBER_OBJECT_CONVERSION = YES_AGGRESSIVE;
+				CLANG_CXX_LANGUAGE_STANDARD = "gnu++14";
+				CLANG_CXX_LIBRARY = "libc++";
+				CLANG_ENABLE_MODULES = YES;
+				CLANG_ENABLE_OBJC_ARC = YES;
+				CLANG_ENABLE_OBJC_WEAK = YES;
+				CLANG_WARN_BLOCK_CAPTURE_AUTORELEASING = YES;
+				CLANG_WARN_BOOL_CONVERSION = YES;
+				CLANG_WARN_COMMA = YES;
+				CLANG_WARN_CONSTANT_CONVERSION = YES;
+				CLANG_WARN_DEPRECATED_OBJC_IMPLEMENTATIONS = YES;
+				CLANG_WARN_DIRECT_OBJC_ISA_USAGE = YES_ERROR;
+				CLANG_WARN_DOCUMENTATION_COMMENTS = YES;
+				CLANG_WARN_EMPTY_BODY = YES;
+				CLANG_WARN_ENUM_CONVERSION = YES;
+				CLANG_WARN_INFINITE_RECURSION = YES;
+				CLANG_WARN_INT_CONVERSION = YES;
+				CLANG_WARN_NON_LITERAL_NULL_CONVERSION = YES;
+				CLANG_WARN_OBJC_IMPLICIT_RETAIN_SELF = YES;
+				CLANG_WARN_OBJC_LITERAL_CONVERSION = YES;
+				CLANG_WARN_OBJC_ROOT_CLASS = YES_ERROR;
+				CLANG_WARN_QUOTED_INCLUDE_IN_FRAMEWORK_HEADER = YES;
+				CLANG_WARN_RANGE_LOOP_ANALYSIS = YES;
+				CLANG_WARN_STRICT_PROTOTYPES = YES;
+				CLANG_WARN_SUSPICIOUS_MOVE = YES;
+				CLANG_WARN_UNGUARDED_AVAILABILITY = YES_AGGRESSIVE;
+				CLANG_WARN_UNREACHABLE_CODE = YES;
+				CLANG_WARN__DUPLICATE_METHOD_MATCH = YES;
+				COPY_PHASE_STRIP = NO;
+				DEBUG_INFORMATION_FORMAT = dwarf;
+				ENABLE_STRICT_OBJC_MSGSEND = YES;
+				ENABLE_TESTABILITY = YES;
+				GCC_C_LANGUAGE_STANDARD = gnu11;
+				GCC_DYNAMIC_NO_PIC = NO;
+				GCC_NO_COMMON_BLOCKS = YES;
+				GCC_OPTIMIZATION_LEVEL = 0;
+				GCC_PREPROCESSOR_DEFINITIONS = (
+					"$(inherited)",
+					"DEBUG=1",
+				);
+				GCC_WARN_64_TO_32_BIT_CONVERSION = YES;
+				GCC_WARN_ABOUT_RETURN_TYPE = YES_ERROR;
+				GCC_WARN_UNDECLARED_SELECTOR = YES;
+				GCC_WARN_UNINITIALIZED_AUTOS = YES_AGGRESSIVE;
+				GCC_WARN_UNUSED_FUNCTION = YES;
+				GCC_WARN_UNUSED_VARIABLE = YES;
+				IPHONEOS_DEPLOYMENT_TARGET = 17.0;
+				MTL_ENABLE_DEBUG_INFO = INCLUDE_SOURCE;
+				MTL_FAST_MATH = YES;
+				ONLY_ACTIVE_ARCH = YES;
+				PRODUCT_NAME = "$(TARGET_NAME)";
+				SDKROOT = iphoneos;
+				SWIFT_ACTIVE_COMPILATION_CONDITIONS = DEBUG;
+				SWIFT_OPTIMIZATION_LEVEL = "-Onone";
+				SWIFT_VERSION = 5.0;
+			};
+			name = Debug;
+		};
+/* End XCBuildConfiguration section */
+
+/* Begin XCConfigurationList section */
+		23A678CE1B05F19FABCAA682 /* Build configuration list for PBXNativeTarget "ComposersNotebook" */ = {
+			isa = XCConfigurationList;
+			buildConfigurations = (
+				5AB636ECF80C65D98DF3404A /* Debug */,
+				AA257A93A31DE5543D15451E /* Release */,
+			);
+			defaultConfigurationIsVisible = 0;
+			defaultConfigurationName = Debug;
+		};
+		D91C2609A00E5A2BE574364F /* Build configuration list for PBXProject "ComposersNotebook" */ = {
+			isa = XCConfigurationList;
+			buildConfigurations = (
+				E0C068EA1422B5C6904B19B4 /* Debug */,
+				3696518FBE5F7BD1B9A92432 /* Release */,
+			);
+			defaultConfigurationIsVisible = 0;
+			defaultConfigurationName = Debug;
+		};
+/* End XCConfigurationList section */
+	};
+	rootObject = 1765FF24E1FFF2682ED1847F /* Project object */;
+}
