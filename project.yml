@@ -28,4 +28,6 @@ targets:
         ASSETCATALOG_COMPILER_APPICON_NAME: AppIcon
         GENERATE_INFOPLIST_FILE: YES
         CODE_SIGN_STYLE: Automatic
+        CODE_SIGNING_ALLOWED: "YES"
+        CODE_SIGN_IDENTITY: "Apple Development"
         GCC_TREAT_WARNINGS_AS_ERRORS: "NO"
