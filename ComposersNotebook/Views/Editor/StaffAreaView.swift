@@ -279,13 +279,14 @@ struct MeasureView: View {
     }
 
     private func restSymbol(for duration: DurationValue) -> String {
+        // Using simple text since iOS doesn't render musical Unicode rest symbols
         switch duration {
-        case .whole: return "𝄻"
-        case .half: return "𝄼"
-        case .quarter: return "𝄽"
-        case .eighth: return "𝄾"
-        case .sixteenth: return "𝄿"
-        case .thirtySecond: return "𝅀"
+        case .whole: return "■"
+        case .half: return "▬"
+        case .quarter: return "𝄾"
+        case .eighth: return "♩̸"
+        case .sixteenth: return "≋"
+        case .thirtySecond: return "≋≋"
         }
     }
 }

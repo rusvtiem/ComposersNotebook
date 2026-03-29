@@ -23,12 +23,12 @@ enum DurationValue: Int, Codable, CaseIterable {
 
     var symbol: String {
         switch self {
-        case .whole: return "𝅝"
-        case .half: return "𝅗𝅥"
-        case .quarter: return "♩"
-        case .eighth: return "♪"
-        case .sixteenth: return "𝅘𝅥𝅯"
-        case .thirtySecond: return "𝅘𝅥𝅰"
+        case .whole: return "1"
+        case .half: return "½"
+        case .quarter: return "¼"
+        case .eighth: return "⅛"
+        case .sixteenth: return "¹⁄₁₆"
+        case .thirtySecond: return "¹⁄₃₂"
         }
     }
 
