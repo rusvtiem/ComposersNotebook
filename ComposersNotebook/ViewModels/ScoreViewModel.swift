@@ -150,6 +150,9 @@ class ScoreViewModel: ObservableObject {
         guard selectedPartIndex < score.parts.count,
               selectedMeasureIndex < score.parts[selectedPartIndex].measures.count else { return }
 
+        // Clear placeholder whole rest when user starts entering notes
+        clearPlaceholderRest()
+
         let ts = effectiveTimeSignature
         let measure = score.parts[selectedPartIndex].measures[selectedMeasureIndex]
         let remaining = measure.remainingBeats(timeSignature: ts)
@@ -160,11 +163,24 @@ class ScoreViewModel: ObservableObject {
         } else {
             // Auto-advance to next measure
             advanceMeasure()
+            clearPlaceholderRest()
             score.parts[selectedPartIndex].measures[selectedMeasureIndex].events.append(event)
             cursorPosition = event.duration.beats
         }
 
         score.touch()
+    }
+
+    /// Remove the default whole rest placeholder if that's the only event in the measure
+    private func clearPlaceholderRest() {
+        let measure = score.parts[selectedPartIndex].measures[selectedMeasureIndex]
+        if measure.events.count == 1,
+           measure.events[0].isRest,
+           measure.events[0].duration.value == .whole,
+           !measure.events[0].duration.dotted {
+            score.parts[selectedPartIndex].measures[selectedMeasureIndex].events.removeAll()
+            cursorPosition = 0
+        }
     }
 
     // MARK: - Delete
