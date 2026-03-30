@@ -63,7 +63,7 @@ struct PianoKeyboardView: View {
                                     height: whiteKeyHeight
                                 )
                                 .onTapGesture {
-                                    let notePitch = Pitch(name: pitchName, octave: octave)
+                                    let notePitch = Pitch(name: pitchName, octave: octave, accidental: viewModel.selectedAccidental)
                                     viewModel.addNote(pitch: notePitch)
                                 }
                             }
