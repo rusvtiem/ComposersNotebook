@@ -134,39 +134,50 @@ struct MeasureView: View {
             let totalBeats = measure.usedBeats
             guard totalBeats > 0 else { return }
 
+            // First pass: collect note positions and draw notes
+            struct NotePosition {
+                let x: CGFloat
+                let y: CGFloat
+                let eventIndex: Int
+            }
+            var notePositions: [NotePosition] = []
             var currentX = noteStartX
-            for event in measure.events {
+
+            for (eventIndex, event) in measure.events.enumerated() {
                 let eventWidth = availableWidth * CGFloat(event.duration.beats / max(totalBeats, timeSignature.totalBeats))
 
                 switch event.type {
                 case .note(let pitch):
                     let y = noteY(pitch: pitch, staffTop: staffTop)
-                    drawNoteHead(context: context, x: currentX + eventWidth / 2, y: y, duration: event.duration.value)
-                    drawLedgerLines(context: context, pitch: pitch, x: currentX + eventWidth / 2, staffTop: staffTop)
+                    let noteX = currentX + eventWidth / 2
+                    drawNoteHead(context: context, x: noteX, y: y, duration: event.duration.value)
+                    drawLedgerLines(context: context, pitch: pitch, x: noteX, staffTop: staffTop)
+                    drawAccidental(context: context, pitch: pitch, x: noteX, y: y)
+                    notePositions.append(NotePosition(x: noteX, y: y, eventIndex: eventIndex))
                     if !event.articulations.isEmpty {
-                        let artText = Text(event.articulations.first!.displaySymbol)
-                            .font(.system(size: 10))
-                        context.draw(artText, at: CGPoint(x: currentX + eventWidth / 2, y: y - 15))
+                        let stemUp = y >= staffLineSpacing * 2 + staffTop
+                        drawArticulation(context: context, symbol: event.articulations.first!.displaySymbol, x: noteX, y: y, stemUp: stemUp, duration: event.duration.value)
                     }
 
                 case .chord(let pitches):
+                    let topPitch = pitches.min(by: { noteY(pitch: $0, staffTop: staffTop) < noteY(pitch: $1, staffTop: staffTop) })
                     for pitch in pitches {
                         let y = noteY(pitch: pitch, staffTop: staffTop)
-                        drawNoteHead(context: context, x: currentX + eventWidth / 2, y: y, duration: event.duration.value)
-                        drawLedgerLines(context: context, pitch: pitch, x: currentX + eventWidth / 2, staffTop: staffTop)
+                        let noteX = currentX + eventWidth / 2
+                        drawNoteHead(context: context, x: noteX, y: y, duration: event.duration.value)
+                        drawLedgerLines(context: context, pitch: pitch, x: noteX, staffTop: staffTop)
+                        drawAccidental(context: context, pitch: pitch, x: noteX, y: y)
+                    }
+                    if let tp = topPitch {
+                        let y = noteY(pitch: tp, staffTop: staffTop)
+                        notePositions.append(NotePosition(x: currentX + eventWidth / 2, y: y, eventIndex: eventIndex))
                     }
 
                 case .rest:
                     let restText = Text(restSymbol(for: event.duration.value))
                         .font(.system(size: 18))
                     context.draw(restText, at: CGPoint(x: currentX + eventWidth / 2, y: staffTop + 2 * staffLineSpacing))
-                }
-
-                // Tie mark
-                if event.tiedToNext {
-                    let tieText = Text("⁀").font(.system(size: 14))
-                    let y: CGFloat = event.isRest ? staffTop + 2 * staffLineSpacing : staffTop
-                    context.draw(tieText, at: CGPoint(x: currentX + eventWidth, y: y - 5))
+                    notePositions.append(NotePosition(x: currentX + eventWidth / 2, y: staffTop + 2 * staffLineSpacing, eventIndex: eventIndex))
                 }
 
                 // Dynamic marking
@@ -178,6 +189,30 @@ struct MeasureView: View {
                 }
 
                 currentX += eventWidth
+            }
+
+            // Second pass: draw ties and slurs as Bézier curves
+            for (i, event) in measure.events.enumerated() {
+                if event.tiedToNext || event.slurStart {
+                    // Find this note's position and next note's position
+                    guard let fromPos = notePositions.first(where: { $0.eventIndex == i }),
+                          let toPos = notePositions.first(where: { $0.eventIndex == i + 1 }) else { continue }
+
+                    let curveDir: CGFloat = fromPos.y >= staffTop + 2 * staffLineSpacing ? -1 : 1
+                    let curveHeight: CGFloat = staffLineSpacing * 1.5
+
+                    var curve = Path()
+                    curve.move(to: CGPoint(x: fromPos.x + 4, y: fromPos.y + curveDir * 4))
+                    curve.addQuadCurve(
+                        to: CGPoint(x: toPos.x - 4, y: toPos.y + curveDir * 4),
+                        control: CGPoint(
+                            x: (fromPos.x + toPos.x) / 2,
+                            y: min(fromPos.y, toPos.y) + curveDir * curveHeight
+                        )
+                    )
+                    let lineWidth: CGFloat = event.tiedToNext ? 1.5 : 1.0
+                    context.stroke(curve, with: .color(.primary), lineWidth: lineWidth)
+                }
             }
 
             // Tempo marking
@@ -226,25 +261,56 @@ struct MeasureView: View {
         let rect = CGRect(x: x - radius, y: y - radius * 0.75, width: radius * 2, height: radius * 1.5)
         let ellipse = Path(ellipseIn: rect)
 
+        let stemUp = y >= staffLineSpacing * 2 + 20  // above middle line = stem down, below = stem up
+
         switch duration {
         case .whole:
             context.stroke(ellipse, with: .color(.primary), lineWidth: 1.5)
         case .half:
             context.stroke(ellipse, with: .color(.primary), lineWidth: 1.5)
-            // Stem
-            drawStem(context: context, x: x + radius, y: y)
+            drawStem(context: context, x: x, y: y, radius: radius, stemUp: stemUp)
         default:
             context.fill(ellipse, with: .color(.primary))
-            // Stem
-            drawStem(context: context, x: x + radius, y: y)
+            drawStem(context: context, x: x, y: y, radius: radius, stemUp: stemUp)
+            drawFlags(context: context, x: x, y: y, radius: radius, stemUp: stemUp, duration: duration)
         }
     }
 
-    private func drawStem(context: GraphicsContext, x: CGFloat, y: CGFloat) {
+    private func drawStem(context: GraphicsContext, x: CGFloat, y: CGFloat, radius: CGFloat, stemUp: Bool) {
         var stem = Path()
-        stem.move(to: CGPoint(x: x, y: y))
-        stem.addLine(to: CGPoint(x: x, y: y - staffLineSpacing * 3))
+        let stemLength = staffLineSpacing * 3.5
+        let stemX = stemUp ? x + radius : x - radius
+        stem.move(to: CGPoint(x: stemX, y: y))
+        stem.addLine(to: CGPoint(x: stemX, y: stemUp ? y - stemLength : y + stemLength))
         context.stroke(stem, with: .color(.primary), lineWidth: 1)
+    }
+
+    private func drawFlags(context: GraphicsContext, x: CGFloat, y: CGFloat, radius: CGFloat, stemUp: Bool, duration: DurationValue) {
+        let flagCount: Int
+        switch duration {
+        case .eighth: flagCount = 1
+        case .sixteenth: flagCount = 2
+        case .thirtySecond: flagCount = 3
+        default: return
+        }
+
+        let stemLength = staffLineSpacing * 3.5
+        let stemX = stemUp ? x + radius : x - radius
+        let stemEnd = stemUp ? y - stemLength : y + stemLength
+        let flagLength: CGFloat = staffLineSpacing * 1.5
+        let flagSpacing: CGFloat = staffLineSpacing * 0.8
+
+        for i in 0..<flagCount {
+            let flagY = stemEnd + (stemUp ? CGFloat(i) * flagSpacing : -CGFloat(i) * flagSpacing)
+            var flag = Path()
+            flag.move(to: CGPoint(x: stemX, y: flagY))
+            let curveDir: CGFloat = stemUp ? 1 : -1
+            flag.addQuadCurve(
+                to: CGPoint(x: stemX + flagLength * curveDir, y: flagY + flagLength * 0.6 * (stemUp ? 1 : -1)),
+                control: CGPoint(x: stemX + flagLength * 0.6 * curveDir, y: flagY)
+            )
+            context.stroke(flag, with: .color(.primary), lineWidth: 1.2)
+        }
     }
 
     private func drawLedgerLines(context: GraphicsContext, pitch: Pitch, x: CGFloat, staffTop: CGFloat) {
@@ -276,6 +342,32 @@ struct MeasureView: View {
                 lineY += staffLineSpacing
             }
         }
+    }
+
+    private func drawAccidental(context: GraphicsContext, pitch: Pitch, x: CGFloat, y: CGFloat) {
+        guard pitch.accidental != .natural else { return }
+        let symbol = pitch.accidental.displaySymbol
+        let accText = Text(symbol).font(.system(size: 12, weight: .bold))
+        let radius: CGFloat = staffLineSpacing / 2 - 1
+        context.draw(accText, at: CGPoint(x: x - radius * 2 - 6, y: y))
+    }
+
+    private func drawArticulation(context: GraphicsContext, symbol: String, x: CGFloat, y: CGFloat, stemUp: Bool, duration: DurationValue) {
+        let stemLength = staffLineSpacing * 3.5
+        let artOffset: CGFloat = staffLineSpacing * 0.8
+        let artY: CGFloat
+        if duration == .whole {
+            // No stem — place above
+            artY = y - artOffset
+        } else if stemUp {
+            // Stem goes up — articulation below the note head
+            artY = y + artOffset
+        } else {
+            // Stem goes down — articulation above the note head
+            artY = y - artOffset
+        }
+        let artText = Text(symbol).font(.system(size: 10))
+        context.draw(artText, at: CGPoint(x: x, y: artY))
     }
 
     private func restSymbol(for duration: DurationValue) -> String {
