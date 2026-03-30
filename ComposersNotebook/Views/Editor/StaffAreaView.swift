@@ -353,7 +353,6 @@ struct MeasureView: View {
     }
 
     private func drawArticulation(context: GraphicsContext, symbol: String, x: CGFloat, y: CGFloat, stemUp: Bool, duration: DurationValue) {
-        let stemLength = staffLineSpacing * 3.5
         let artOffset: CGFloat = staffLineSpacing * 0.8
         let artY: CGFloat
         if duration == .whole {
