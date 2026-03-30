@@ -324,17 +324,24 @@ struct ScoreEditorView: View {
 
 // MARK: - Time Signature Picker Sheet
 
+struct TSPreset: Identifiable {
+    let id: String
+    let label: String
+    let ts: TimeSignature
+    init(_ label: String, _ ts: TimeSignature) { self.id = label; self.label = label; self.ts = ts }
+}
+
 struct TimeSignaturePickerSheet: View {
     @ObservedObject var viewModel: ScoreViewModel
     @Environment(\.dismiss) var dismiss
 
-    private let presets: [(String, TimeSignature)] = [
-        ("4/4", .fourFour),
-        ("3/4", .threeFour),
-        ("2/4", .twoFour),
-        ("6/8", .sixEight),
-        ("5/8", .fiveEight),
-        ("3/8", .threeeEight),
+    private let presets: [TSPreset] = [
+        TSPreset("4/4", .fourFour),
+        TSPreset("3/4", .threeFour),
+        TSPreset("2/4", .twoFour),
+        TSPreset("6/8", .sixEight),
+        TSPreset("5/8", .fiveEight),
+        TSPreset("3/8", .threeeEight),
     ]
 
     var body: some View {
@@ -345,15 +352,15 @@ struct TimeSignaturePickerSheet: View {
                     .foregroundStyle(.secondary)
 
                 LazyVGrid(columns: [GridItem(.adaptive(minimum: 70))], spacing: 8) {
-                    ForEach(presets, id: \.0) { label, ts in
+                    ForEach(presets) { preset in
                         Button {
-                            viewModel.setTimeSignatureAtCurrentMeasure(ts)
+                            viewModel.setTimeSignatureAtCurrentMeasure(preset.ts)
                             dismiss()
                         } label: {
-                            Text(label)
+                            Text(preset.label)
                                 .font(.system(size: 18, weight: .bold))
                                 .frame(width: 70, height: 50)
-                                .background(viewModel.effectiveTimeSignature == ts ? Color.accentColor.opacity(0.2) : .fill.tertiary)
+                                .background(viewModel.effectiveTimeSignature == preset.ts ? Color.accentColor.opacity(0.2) : .fill.tertiary)
                                 .clipShape(RoundedRectangle(cornerRadius: 8))
                         }
                         .buttonStyle(.plain)
@@ -374,27 +381,34 @@ struct TimeSignaturePickerSheet: View {
 
 // MARK: - Key Signature Picker Sheet
 
+struct KSPreset: Identifiable {
+    let id: String
+    let label: String
+    let ks: KeySignature
+    init(_ label: String, _ ks: KeySignature) { self.id = label; self.label = label; self.ks = ks }
+}
+
 struct KeySignaturePickerSheet: View {
     @ObservedObject var viewModel: ScoreViewModel
     @Environment(\.dismiss) var dismiss
 
-    private let keys: [(String, KeySignature)] = [
-        ("До мажор", KeySignature(fifths: 0, mode: .major)),
-        ("Соль мажор", KeySignature(fifths: 1, mode: .major)),
-        ("Ре мажор", KeySignature(fifths: 2, mode: .major)),
-        ("Ля мажор", KeySignature(fifths: 3, mode: .major)),
-        ("Ми мажор", KeySignature(fifths: 4, mode: .major)),
-        ("Си мажор", KeySignature(fifths: 5, mode: .major)),
-        ("Фа мажор", KeySignature(fifths: -1, mode: .major)),
-        ("Си-бемоль мажор", KeySignature(fifths: -2, mode: .major)),
-        ("Ми-бемоль мажор", KeySignature(fifths: -3, mode: .major)),
-        ("Ля-бемоль мажор", KeySignature(fifths: -4, mode: .major)),
-        ("ля минор", KeySignature(fifths: 0, mode: .minor)),
-        ("ми минор", KeySignature(fifths: 1, mode: .minor)),
-        ("си минор", KeySignature(fifths: 2, mode: .minor)),
-        ("ре минор", KeySignature(fifths: -1, mode: .minor)),
-        ("соль минор", KeySignature(fifths: -2, mode: .minor)),
-        ("до минор", KeySignature(fifths: -3, mode: .minor)),
+    private let keys: [KSPreset] = [
+        KSPreset("До мажор", KeySignature(fifths: 0, mode: .major)),
+        KSPreset("Соль мажор", KeySignature(fifths: 1, mode: .major)),
+        KSPreset("Ре мажор", KeySignature(fifths: 2, mode: .major)),
+        KSPreset("Ля мажор", KeySignature(fifths: 3, mode: .major)),
+        KSPreset("Ми мажор", KeySignature(fifths: 4, mode: .major)),
+        KSPreset("Си мажор", KeySignature(fifths: 5, mode: .major)),
+        KSPreset("Фа мажор", KeySignature(fifths: -1, mode: .major)),
+        KSPreset("Си-бемоль мажор", KeySignature(fifths: -2, mode: .major)),
+        KSPreset("Ми-бемоль мажор", KeySignature(fifths: -3, mode: .major)),
+        KSPreset("Ля-бемоль мажор", KeySignature(fifths: -4, mode: .major)),
+        KSPreset("ля минор", KeySignature(fifths: 0, mode: .minor)),
+        KSPreset("ми минор", KeySignature(fifths: 1, mode: .minor)),
+        KSPreset("си минор", KeySignature(fifths: 2, mode: .minor)),
+        KSPreset("ре минор", KeySignature(fifths: -1, mode: .minor)),
+        KSPreset("соль минор", KeySignature(fifths: -2, mode: .minor)),
+        KSPreset("до минор", KeySignature(fifths: -3, mode: .minor)),
     ]
 
     var body: some View {
@@ -404,15 +418,15 @@ struct KeySignaturePickerSheet: View {
                     .font(.subheadline)
                     .foregroundStyle(.secondary)
 
-                List(keys, id: \.0) { label, ks in
+                List(keys) { preset in
                     Button {
-                        viewModel.setKeySignatureAtCurrentMeasure(ks)
+                        viewModel.setKeySignatureAtCurrentMeasure(preset.ks)
                         dismiss()
                     } label: {
                         HStack {
-                            Text(label)
+                            Text(preset.label)
                             Spacer()
-                            if viewModel.effectiveKeySignature == ks {
+                            if viewModel.effectiveKeySignature == preset.ks {
                                 Image(systemName: "checkmark")
                                     .foregroundColor(.accentColor)
                             }

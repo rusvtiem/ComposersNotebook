@@ -22,19 +22,23 @@
 		833AA40610B6F6D5D321F577 /* MetronomeEngine.swift in Sources */ = {isa = PBXBuildFile; fileRef = D88126149726E770E48A8525 /* MetronomeEngine.swift */; };
 		86C71629511E39A92B889D68 /* ScoreViewModel.swift in Sources */ = {isa = PBXBuildFile; fileRef = BDDD972C2349864CBA4F7648 /* ScoreViewModel.swift */; };
 		A5C447F0166BC8776D4598C2 /* NoteToolbarView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 16488F411B4EA5FB4B977057 /* NoteToolbarView.swift */; };
+		B92B212B3BD2A945FA99C721 /* ExternalMIDIReceiver.swift in Sources */ = {isa = PBXBuildFile; fileRef = 068C6D907B670651E82A5C6E /* ExternalMIDIReceiver.swift */; };
 		BB881ADB87E40142AE3804C3 /* Pitch.swift in Sources */ = {isa = PBXBuildFile; fileRef = D82806EEF19B77753B5E8F85 /* Pitch.swift */; };
+		CEFC23B266A4FC844E1DD9F6 /* LetterInputView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 437AEBD2A108F257A1639D28 /* LetterInputView.swift */; };
 		CF0C34584979F0ADEDBD06C9 /* Note.swift in Sources */ = {isa = PBXBuildFile; fileRef = 8589EB828201460A07C202F3 /* Note.swift */; };
 		E2580C41C84115D1BB8CC857 /* Duration.swift in Sources */ = {isa = PBXBuildFile; fileRef = 416F6A4FA620714487C9D02C /* Duration.swift */; };
 		FA705DE93A1865976F671DF6 /* ContentView.swift in Sources */ = {isa = PBXBuildFile; fileRef = A65DF18F2909BED9D221FE36 /* ContentView.swift */; };
 /* End PBXBuildFile section */
 
 /* Begin PBXFileReference section */
+		068C6D907B670651E82A5C6E /* ExternalMIDIReceiver.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ExternalMIDIReceiver.swift; sourceTree = "<group>"; };
 		16488F411B4EA5FB4B977057 /* NoteToolbarView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = NoteToolbarView.swift; sourceTree = "<group>"; };
 		1B80768D47A05D75303032ED /* MIDIEngine.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = MIDIEngine.swift; sourceTree = "<group>"; };
 		1C0D6FAE077C7817273CB5E0 /* Measure.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Measure.swift; sourceTree = "<group>"; };
 		2994638C367DA9CF18556A26 /* ScoreEditorView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ScoreEditorView.swift; sourceTree = "<group>"; };
 		416F6A4FA620714487C9D02C /* Duration.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Duration.swift; sourceTree = "<group>"; };
 		41CC1828389F747C1307D5D9 /* MusicElements.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = MusicElements.swift; sourceTree = "<group>"; };
+		437AEBD2A108F257A1639D28 /* LetterInputView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = LetterInputView.swift; sourceTree = "<group>"; };
 		68512AB05D9BE0C4BF62EB1C /* Score.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Score.swift; sourceTree = "<group>"; };
 		6DB29E2A4F0338EE1C46AA96 /* ComposersNotebookApp.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ComposersNotebookApp.swift; sourceTree = "<group>"; };
 		7E2571DAF48F482D437CD5BF /* Part.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Part.swift; sourceTree = "<group>"; };
@@ -113,6 +117,7 @@
 		D1642127EE2829B7F5F14649 /* Services */ = {
 			isa = PBXGroup;
 			children = (
+				068C6D907B670651E82A5C6E /* ExternalMIDIReceiver.swift */,
 				D88126149726E770E48A8525 /* MetronomeEngine.swift */,
 				1B80768D47A05D75303032ED /* MIDIEngine.swift */,
 				F180ED3F1454863D8676C257 /* MusicXMLExporter.swift */,
@@ -124,6 +129,7 @@
 		FB5CDD9EA99B4FA4F8E43CB0 /* Components */ = {
 			isa = PBXGroup;
 			children = (
+				437AEBD2A108F257A1639D28 /* LetterInputView.swift */,
 				16488F411B4EA5FB4B977057 /* NoteToolbarView.swift */,
 				ED18EBF60DE96441348A72DA /* PianoKeyboardView.swift */,
 			);
@@ -203,7 +209,9 @@
 				17F5D248B9DB58295D28573A /* ComposersNotebookApp.swift in Sources */,
 				FA705DE93A1865976F671DF6 /* ContentView.swift in Sources */,
 				E2580C41C84115D1BB8CC857 /* Duration.swift in Sources */,
+				B92B212B3BD2A945FA99C721 /* ExternalMIDIReceiver.swift in Sources */,
 				3CEB7F925F57B07D42FAEB39 /* Instrument.swift in Sources */,
+				CEFC23B266A4FC844E1DD9F6 /* LetterInputView.swift in Sources */,
 				3734652E7AA0D578931FC4B8 /* MIDIEngine.swift in Sources */,
 				27BAA223C44B7FCD6845EDEA /* Measure.swift in Sources */,
 				833AA40610B6F6D5D321F577 /* MetronomeEngine.swift in Sources */,
