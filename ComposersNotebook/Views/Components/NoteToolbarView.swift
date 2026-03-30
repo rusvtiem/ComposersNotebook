@@ -102,6 +102,28 @@ struct NoteToolbarView: View {
                 isActive: viewModel.slurActive,
                 fontSize: 16
             ) { viewModel.slurActive.toggle() }
+
+            // Stem direction toggle
+            NoteToolbarButton(
+                icon: nil,
+                label: stemDirectionLabel,
+                isActive: viewModel.stemDirection != .auto,
+                fontSize: 14
+            ) {
+                switch viewModel.stemDirection {
+                case .auto: viewModel.stemDirection = .up
+                case .up: viewModel.stemDirection = .down
+                case .down: viewModel.stemDirection = .auto
+                }
+            }
+        }
+    }
+
+    private var stemDirectionLabel: String {
+        switch viewModel.stemDirection {
+        case .auto: return "↕"
+        case .up: return "↑"
+        case .down: return "↓"
         }
     }
 

@@ -28,6 +28,7 @@ class ScoreViewModel: ObservableObject {
     @Published var selectedDynamic: DynamicMarking?
     @Published var tieNext: Bool = false
     @Published var slurActive: Bool = false
+    @Published var stemDirection: StemDirection = .auto
 
     // Playback
     @Published var isPlaying: Bool = false
@@ -94,6 +95,7 @@ class ScoreViewModel: ObservableObject {
 
         let duration = makeDuration()
         var event = NoteEvent.note(pitch, duration: duration)
+        event.stemDirection = stemDirection
 
         if let articulation = selectedArticulation {
             event.articulations = [articulation]

@@ -1,5 +1,13 @@
 import Foundation
 
+// MARK: - Stem Direction
+
+enum StemDirection: Int, Codable, Equatable {
+    case auto = 0    // Автоматически по позиции ноты
+    case up = 1      // Штиль вверх
+    case down = 2    // Штиль вниз
+}
+
 // MARK: - Note Event (note or rest)
 
 enum NoteEventType: Codable, Equatable {
@@ -17,6 +25,7 @@ struct NoteEvent: Codable, Equatable, Identifiable {
     var tiedToNext: Bool     // залиговка (продление звучания)
     var slurStart: Bool      // начало фразировочной лиги
     var slurEnd: Bool        // конец фразировочной лиги
+    var stemDirection: StemDirection  // направление штиля
 
     init(
         type: NoteEventType,
@@ -25,7 +34,8 @@ struct NoteEvent: Codable, Equatable, Identifiable {
         dynamic: DynamicMarking? = nil,
         tiedToNext: Bool = false,
         slurStart: Bool = false,
-        slurEnd: Bool = false
+        slurEnd: Bool = false,
+        stemDirection: StemDirection = .auto
     ) {
         self.id = UUID()
         self.type = type
@@ -35,6 +45,7 @@ struct NoteEvent: Codable, Equatable, Identifiable {
         self.tiedToNext = tiedToNext
         self.slurStart = slurStart
         self.slurEnd = slurEnd
+        self.stemDirection = stemDirection
     }
 
     var isRest: Bool {

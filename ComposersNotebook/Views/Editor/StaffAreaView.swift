@@ -40,11 +40,23 @@ struct StaffAreaView: View {
                     )
                     .frame(width: measureWidth, height: staffHeight + 40)
                     .contentShape(Rectangle())
-                    .onTapGesture {
-                        viewModel.selectPart(at: partIndex)
-                        viewModel.selectedMeasureIndex = measureIndex
-                        viewModel.cursorPosition = 0
-                    }
+                    .gesture(
+                        SpatialTapGesture()
+                            .onEnded { value in
+                                viewModel.selectPart(at: partIndex)
+                                viewModel.selectedMeasureIndex = measureIndex
+
+                                // If in note input mode, calculate pitch from tap position
+                                if viewModel.inputMode == .note {
+                                    let clef = effectiveClef(partIndex: partIndex, measureIndex: measureIndex)
+                                    if let pitch = pitchFromTap(y: value.location.y, clef: clef) {
+                                        viewModel.addNote(pitch: pitch)
+                                    }
+                                } else {
+                                    viewModel.cursorPosition = 0
+                                }
+                            }
+                    )
                     .overlay(
                         RoundedRectangle(cornerRadius: 2)
                             .stroke(
@@ -59,6 +71,44 @@ struct StaffAreaView: View {
 
             Spacer().frame(height: partSpacing - staffHeight)
         }
+    }
+
+    // MARK: - Tap to place note
+
+    private func pitchFromTap(y: CGFloat, clef: Clef) -> Pitch? {
+        let staffTop: CGFloat = 20
+        let halfSpace = staffLineSpacing / 2
+
+        // Calculate staff position offset from middle line
+        let middleLineY = staffTop + 2 * staffLineSpacing
+        let offset = Int(round((middleLineY - y) / halfSpace))
+
+        // Map offset to pitch based on clef
+        let referencePitch: Pitch
+        switch clef {
+        case .treble: referencePitch = Pitch(name: .B, octave: 4)
+        case .bass: referencePitch = Pitch(name: .D, octave: 3)
+        case .alto: referencePitch = Pitch(name: .C, octave: 4)
+        case .tenor: referencePitch = Pitch(name: .A, octave: 3)
+        }
+
+        // Step through diatonic scale from reference
+        let noteNames: [PitchName] = [.C, .D, .E, .F, .G, .A, .B]
+        let refIndex = noteNames.firstIndex(of: referencePitch.name)!
+        var noteIndex = refIndex + offset
+        var octave = referencePitch.octave
+
+        while noteIndex >= 7 {
+            noteIndex -= 7
+            octave += 1
+        }
+        while noteIndex < 0 {
+            noteIndex += 7
+            octave -= 1
+        }
+
+        guard octave >= 0, octave <= 8 else { return nil }
+        return Pitch(name: noteNames[noteIndex], octave: octave, accidental: viewModel.selectedAccidental)
     }
 
     private func effectiveTimeSignature(partIndex: Int, measureIndex: Int) -> TimeSignature {
@@ -150,21 +200,23 @@ struct MeasureView: View {
                 case .note(let pitch):
                     let y = noteY(pitch: pitch, staffTop: staffTop)
                     let noteX = currentX + eventWidth / 2
-                    drawNoteHead(context: context, x: noteX, y: y, duration: event.duration.value)
+                    let stemUp = resolveStemDirection(event.stemDirection, noteY: y, staffTop: staffTop)
+                    drawNoteHead(context: context, x: noteX, y: y, duration: event.duration.value, stemUp: stemUp)
                     drawLedgerLines(context: context, pitch: pitch, x: noteX, staffTop: staffTop)
                     drawAccidental(context: context, pitch: pitch, x: noteX, y: y)
                     notePositions.append(NotePosition(x: noteX, y: y, eventIndex: eventIndex))
                     if !event.articulations.isEmpty {
-                        let stemUp = y >= staffLineSpacing * 2 + staffTop
                         drawArticulation(context: context, symbol: event.articulations.first!.displaySymbol, x: noteX, y: y, stemUp: stemUp, duration: event.duration.value)
                     }
 
                 case .chord(let pitches):
                     let topPitch = pitches.min(by: { noteY(pitch: $0, staffTop: staffTop) < noteY(pitch: $1, staffTop: staffTop) })
+                    let chordY = topPitch.map { noteY(pitch: $0, staffTop: staffTop) } ?? staffTop + 2 * staffLineSpacing
+                    let stemUp = resolveStemDirection(event.stemDirection, noteY: chordY, staffTop: staffTop)
                     for pitch in pitches {
                         let y = noteY(pitch: pitch, staffTop: staffTop)
                         let noteX = currentX + eventWidth / 2
-                        drawNoteHead(context: context, x: noteX, y: y, duration: event.duration.value)
+                        drawNoteHead(context: context, x: noteX, y: y, duration: event.duration.value, stemUp: stemUp)
                         drawLedgerLines(context: context, pitch: pitch, x: noteX, staffTop: staffTop)
                         drawAccidental(context: context, pitch: pitch, x: noteX, y: y)
                     }
@@ -256,12 +308,10 @@ struct MeasureView: View {
         return staffTop + 2 * staffLineSpacing + CGFloat(offset) * (staffLineSpacing / 2)
     }
 
-    private func drawNoteHead(context: GraphicsContext, x: CGFloat, y: CGFloat, duration: DurationValue) {
+    private func drawNoteHead(context: GraphicsContext, x: CGFloat, y: CGFloat, duration: DurationValue, stemUp: Bool = true) {
         let radius: CGFloat = staffLineSpacing / 2 - 1
         let rect = CGRect(x: x - radius, y: y - radius * 0.75, width: radius * 2, height: radius * 1.5)
         let ellipse = Path(ellipseIn: rect)
-
-        let stemUp = y >= staffLineSpacing * 2 + 20  // above middle line = stem down, below = stem up
 
         switch duration {
         case .whole:
@@ -273,6 +323,14 @@ struct MeasureView: View {
             context.fill(ellipse, with: .color(.primary))
             drawStem(context: context, x: x, y: y, radius: radius, stemUp: stemUp)
             drawFlags(context: context, x: x, y: y, radius: radius, stemUp: stemUp, duration: duration)
+        }
+    }
+
+    private func resolveStemDirection(_ direction: StemDirection, noteY: CGFloat, staffTop: CGFloat) -> Bool {
+        switch direction {
+        case .auto: return noteY >= staffTop + staffLineSpacing * 2
+        case .up: return true
+        case .down: return false
         }
     }
 
