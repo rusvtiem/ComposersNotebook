@@ -13,11 +13,17 @@ struct NoteHitInfo {
 struct StaffAreaView: View {
     @ObservedObject var viewModel: ScoreViewModel
 
-    private let staffLineSpacing: CGFloat = 10
-    private let measureWidth: CGFloat = 200
-    private let staffHeight: CGFloat = 60  // 4 spaces × 10 + some padding
-    private let partSpacing: CGFloat = 80
-    private let noteHitRadius: CGFloat = 14  // tap detection radius
+    // Base sizes at 1.0x zoom
+    private let baseStaffLineSpacing: CGFloat = 10
+    private let baseMeasureWidth: CGFloat = 200
+    private let basePartSpacing: CGFloat = 80
+
+    // Computed sizes based on zoom
+    private var staffLineSpacing: CGFloat { baseStaffLineSpacing * viewModel.zoomScale }
+    private var measureWidth: CGFloat { baseMeasureWidth * viewModel.zoomScale }
+    private var staffHeight: CGFloat { staffLineSpacing * 4 + 20 }
+    private var partSpacing: CGFloat { basePartSpacing * viewModel.zoomScale }
+    private var noteHitRadius: CGFloat { 14 * viewModel.zoomScale }
 
     var body: some View {
         VStack(alignment: .leading, spacing: 0) {
@@ -48,9 +54,10 @@ struct StaffAreaView: View {
                         selectedEventIndex: isCurrentMeasure ? viewModel.selectedEventIndex : nil,
                         timeSignature: effectiveTimeSignature(partIndex: partIndex, measureIndex: measureIndex),
                         clef: effectiveClef(partIndex: partIndex, measureIndex: measureIndex),
-                        staffLineSpacing: staffLineSpacing
+                        staffLineSpacing: staffLineSpacing,
+                        zoomScale: viewModel.zoomScale
                     )
-                    .frame(width: measureWidth, height: staffHeight + 40)
+                    .frame(width: measureWidth, height: staffHeight + 40 * viewModel.zoomScale)
                     .contentShape(Rectangle())
                     .gesture(
                         SpatialTapGesture()
@@ -120,10 +127,11 @@ struct StaffAreaView: View {
     // MARK: - Note Hit Testing
 
     private func computeNotePositions(measure: Measure, measureIndex: Int, clef: Clef, timeSignature: TimeSignature) -> [NoteHitInfo] {
-        let startX: CGFloat = 8
-        let staffTop: CGFloat = 20
-        let noteStartX: CGFloat = measureIndex == 0 ? startX + 45 : startX + 15
-        let availableWidth = measureWidth - noteStartX - 10
+        let z = viewModel.zoomScale
+        let startX: CGFloat = 8 * z
+        let staffTop: CGFloat = 20 * z
+        let noteStartX: CGFloat = measureIndex == 0 ? startX + 45 * z : startX + 15 * z
+        let availableWidth = measureWidth - noteStartX - 10 * z
         let totalBeats = measure.usedBeats
         guard totalBeats > 0 else { return [] }
 
@@ -172,7 +180,7 @@ struct StaffAreaView: View {
     // MARK: - Tap to place note
 
     private func pitchFromTap(y: CGFloat, clef: Clef) -> Pitch? {
-        let staffTop: CGFloat = 20
+        let staffTop: CGFloat = 20 * viewModel.zoomScale
         let halfSpace = staffLineSpacing / 2
 
         // Calculate staff position offset from middle line
@@ -238,6 +246,7 @@ struct MeasureView: View {
     let timeSignature: TimeSignature
     let clef: Clef
     let staffLineSpacing: CGFloat
+    var zoomScale: CGFloat = 1.0
 
     /// Static helper so StaffAreaView can compute positions without a MeasureView instance
     static func noteYStatic(pitch: Pitch, staffTop: CGFloat, staffLineSpacing: CGFloat, clef: Clef) -> CGFloat {
@@ -252,10 +261,12 @@ struct MeasureView: View {
         return staffTop + 2 * staffLineSpacing + CGFloat(offset) * (staffLineSpacing / 2)
     }
 
+    private func scaled(_ value: CGFloat) -> CGFloat { value * zoomScale }
+
     var body: some View {
         Canvas { context, size in
-            let startX: CGFloat = 8
-            let staffTop: CGFloat = 20
+            let startX: CGFloat = scaled(8)
+            let staffTop: CGFloat = scaled(20)
 
             // Draw 5 staff lines
             for line in 0..<5 {
@@ -275,21 +286,21 @@ struct MeasureView: View {
 
             // Draw clef symbol at start of first measure
             if measureIndex == 0 {
-                let clefText = Text(clef.symbol).font(.system(size: 28))
-                context.draw(clefText, at: CGPoint(x: startX + 10, y: staffTop + 2 * staffLineSpacing))
+                let clefText = Text(clef.symbol).font(.system(size: scaled(28)))
+                context.draw(clefText, at: CGPoint(x: startX + scaled(10), y: staffTop + 2 * staffLineSpacing))
             }
 
             // Draw time signature at start of first measure
             if measureIndex == 0 || measure.timeSignature != nil {
-                let tsX: CGFloat = measureIndex == 0 ? startX + 30 : startX + 5
-                let topNum = Text("\(timeSignature.beats)").font(.system(size: 14, weight: .bold))
-                let botNum = Text("\(timeSignature.beatValue)").font(.system(size: 14, weight: .bold))
+                let tsX: CGFloat = measureIndex == 0 ? startX + scaled(30) : startX + scaled(5)
+                let topNum = Text("\(timeSignature.beats)").font(.system(size: scaled(14), weight: .bold))
+                let botNum = Text("\(timeSignature.beatValue)").font(.system(size: scaled(14), weight: .bold))
                 context.draw(topNum, at: CGPoint(x: tsX, y: staffTop + staffLineSpacing))
                 context.draw(botNum, at: CGPoint(x: tsX, y: staffTop + 3 * staffLineSpacing))
             }
 
             // Draw notes
-            let noteStartX: CGFloat = measureIndex == 0 ? startX + 45 : startX + 15
+            let noteStartX: CGFloat = measureIndex == 0 ? startX + scaled(45) : startX + scaled(15)
             let availableWidth = size.width - noteStartX - 10
             let totalBeats = measure.usedBeats
             guard totalBeats > 0 else { return }
@@ -350,7 +361,7 @@ struct MeasureView: View {
                         drawSelectionHighlight(context: context, x: restX, y: restY)
                     }
                     let restText = Text(restSymbol(for: event.duration.value))
-                        .font(.system(size: 18))
+                        .font(.system(size: scaled(18)))
                     context.draw(restText, at: CGPoint(x: restX, y: restY))
                     notePositions.append(NotePosition(x: restX, y: restY, eventIndex: eventIndex))
                 }
@@ -358,9 +369,9 @@ struct MeasureView: View {
                 // Dynamic marking
                 if let dynamic = event.dynamic {
                     let dynText = Text(dynamic.displayName)
-                        .font(.system(size: 9, design: .serif))
+                        .font(.system(size: scaled(9), design: .serif))
                         .italic()
-                    context.draw(dynText, at: CGPoint(x: currentX + eventWidth / 2, y: staffTop + 5 * staffLineSpacing + 5))
+                    context.draw(dynText, at: CGPoint(x: currentX + eventWidth / 2, y: staffTop + 5 * staffLineSpacing + scaled(5)))
                 }
 
                 currentX += eventWidth
@@ -392,22 +403,23 @@ struct MeasureView: View {
 
             // Tempo marking
             if let tempo = measure.tempoMarking {
-                let tempoText = Text(tempo.displayString).font(.system(size: 9))
-                context.draw(tempoText, at: CGPoint(x: noteStartX, y: staffTop - 10))
+                let tempoText = Text(tempo.displayString).font(.system(size: scaled(9)))
+                context.draw(tempoText, at: CGPoint(x: noteStartX, y: staffTop - scaled(10)))
             }
 
             // Navigation mark
             if let nav = measure.navigationMark {
-                let navText = Text(nav.displayString).font(.system(size: 10, weight: .bold))
-                context.draw(navText, at: CGPoint(x: size.width / 2, y: staffTop - 10))
+                let navText = Text(nav.displayString).font(.system(size: scaled(10), weight: .bold))
+                context.draw(navText, at: CGPoint(x: size.width / 2, y: staffTop - scaled(10)))
             }
 
             // Repeat barlines
             if measure.barlineEnd == .repeatEnd || measure.barlineEnd == .repeatBoth {
                 let dotY1 = staffTop + 1.5 * staffLineSpacing
                 let dotY2 = staffTop + 2.5 * staffLineSpacing
-                let dot = Path(ellipseIn: CGRect(x: barlineX - 8, y: dotY1 - 2, width: 4, height: 4))
-                let dot2 = Path(ellipseIn: CGRect(x: barlineX - 8, y: dotY2 - 2, width: 4, height: 4))
+                let dotSize = scaled(4)
+                let dot = Path(ellipseIn: CGRect(x: barlineX - dotSize * 2, y: dotY1 - dotSize / 2, width: dotSize, height: dotSize))
+                let dot2 = Path(ellipseIn: CGRect(x: barlineX - dotSize * 2, y: dotY2 - dotSize / 2, width: dotSize, height: dotSize))
                 context.fill(dot, with: .color(.primary))
                 context.fill(dot2, with: .color(.primary))
             }
@@ -537,9 +549,9 @@ struct MeasureView: View {
     private func drawAccidental(context: GraphicsContext, pitch: Pitch, x: CGFloat, y: CGFloat, showNatural: Bool = false) {
         if pitch.accidental == .natural && !showNatural { return }
         let symbol = pitch.accidental.displaySymbol
-        let accText = Text(symbol).font(.system(size: 12, weight: .bold))
+        let accText = Text(symbol).font(.system(size: scaled(12), weight: .bold))
         let radius: CGFloat = staffLineSpacing / 2 - 1
-        context.draw(accText, at: CGPoint(x: x - radius * 2 - 6, y: y))
+        context.draw(accText, at: CGPoint(x: x - radius * 2 - scaled(6), y: y))
     }
 
     private func drawArticulation(context: GraphicsContext, symbol: String, x: CGFloat, y: CGFloat, stemUp: Bool, duration: DurationValue) {
@@ -555,7 +567,7 @@ struct MeasureView: View {
             // Stem goes down — articulation above the note head
             artY = y - artOffset
         }
-        let artText = Text(symbol).font(.system(size: 10))
+        let artText = Text(symbol).font(.system(size: scaled(10)))
         context.draw(artText, at: CGPoint(x: x, y: artY))
     }
 

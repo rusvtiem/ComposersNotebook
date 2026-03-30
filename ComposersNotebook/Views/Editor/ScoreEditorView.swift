@@ -18,16 +18,10 @@ struct ScoreEditorView: View {
 
             Divider()
 
-            // Staff area (scrollable, pinch-to-zoom)
+            // Staff area (scrollable, pinch-to-zoom via adaptive rendering)
             ScrollView([.horizontal, .vertical]) {
                 StaffAreaView(viewModel: viewModel)
                     .padding()
-                    .scaleEffect(viewModel.zoomScale)
-                    .frame(
-                        width: max(UIScreen.main.bounds.width, 400) * viewModel.zoomScale,
-                        height: max(300, CGFloat(viewModel.score.parts.count * 140)) * viewModel.zoomScale,
-                        alignment: .topLeading
-                    )
             }
             .gesture(
                 MagnifyGesture()
