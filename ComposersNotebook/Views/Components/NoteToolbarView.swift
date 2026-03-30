@@ -258,7 +258,13 @@ struct NoteToolbarView: View {
                     label: acc.displaySymbol,
                     isActive: viewModel.selectedAccidental == acc,
                     fontSize: 16
-                ) { viewModel.selectedAccidental = acc }
+                ) {
+                    if viewModel.selectedAccidental == acc {
+                        viewModel.selectedAccidental = nil  // deselect = no accidental
+                    } else {
+                        viewModel.selectedAccidental = acc
+                    }
+                }
             }
         }
     }

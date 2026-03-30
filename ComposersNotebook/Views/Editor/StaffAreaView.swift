@@ -204,7 +204,7 @@ struct StaffAreaView: View {
         }
 
         guard octave >= 0, octave <= 8 else { return nil }
-        return Pitch(name: noteNames[noteIndex], octave: octave, accidental: viewModel.selectedAccidental)
+        return Pitch(name: noteNames[noteIndex], octave: octave, accidental: viewModel.selectedAccidental ?? .natural)
     }
 
     private func effectiveTimeSignature(partIndex: Int, measureIndex: Int) -> TimeSignature {
@@ -317,7 +317,7 @@ struct MeasureView: View {
                     }
                     drawNoteHead(context: context, x: noteX, y: y, duration: event.duration.value, stemUp: stemUp, selected: isEventSelected)
                     drawLedgerLines(context: context, pitch: pitch, x: noteX, staffTop: staffTop)
-                    drawAccidental(context: context, pitch: pitch, x: noteX, y: y)
+                    drawAccidental(context: context, pitch: pitch, x: noteX, y: y, showNatural: event.showNatural)
                     notePositions.append(NotePosition(x: noteX, y: y, eventIndex: eventIndex))
                     if !event.articulations.isEmpty {
                         drawArticulation(context: context, symbol: event.articulations.first!.displaySymbol, x: noteX, y: y, stemUp: stemUp, duration: event.duration.value)
@@ -336,7 +336,7 @@ struct MeasureView: View {
                         }
                         drawNoteHead(context: context, x: noteX, y: y, duration: event.duration.value, stemUp: stemUp, selected: isEventSelected)
                         drawLedgerLines(context: context, pitch: pitch, x: noteX, staffTop: staffTop)
-                        drawAccidental(context: context, pitch: pitch, x: noteX, y: y)
+                        drawAccidental(context: context, pitch: pitch, x: noteX, y: y, showNatural: event.showNatural)
                     }
                     if let tp = topPitch {
                         let y = noteY(pitch: tp, staffTop: staffTop)
@@ -534,8 +534,8 @@ struct MeasureView: View {
         }
     }
 
-    private func drawAccidental(context: GraphicsContext, pitch: Pitch, x: CGFloat, y: CGFloat) {
-        guard pitch.accidental != .natural else { return }
+    private func drawAccidental(context: GraphicsContext, pitch: Pitch, x: CGFloat, y: CGFloat, showNatural: Bool = false) {
+        if pitch.accidental == .natural && !showNatural { return }
         let symbol = pitch.accidental.displaySymbol
         let accText = Text(symbol).font(.system(size: 12, weight: .bold))
         let radius: CGFloat = staffLineSpacing / 2 - 1

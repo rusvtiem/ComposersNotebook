@@ -26,6 +26,7 @@ struct NoteEvent: Codable, Equatable, Identifiable {
     var slurStart: Bool      // начало фразировочной лиги
     var slurEnd: Bool        // конец фразировочной лиги
     var stemDirection: StemDirection  // направление штиля
+    var showNatural: Bool             // явный бекар (♮)
 
     init(
         type: NoteEventType,
@@ -35,7 +36,8 @@ struct NoteEvent: Codable, Equatable, Identifiable {
         tiedToNext: Bool = false,
         slurStart: Bool = false,
         slurEnd: Bool = false,
-        stemDirection: StemDirection = .auto
+        stemDirection: StemDirection = .auto,
+        showNatural: Bool = false
     ) {
         self.id = UUID()
         self.type = type
@@ -46,6 +48,7 @@ struct NoteEvent: Codable, Equatable, Identifiable {
         self.slurStart = slurStart
         self.slurEnd = slurEnd
         self.stemDirection = stemDirection
+        self.showNatural = showNatural
     }
 
     var isRest: Bool {

@@ -25,7 +25,7 @@ class ScoreViewModel: ObservableObject {
     // Input state
     @Published var inputMode: InputMode = .note
     @Published var selectedDuration: DurationValue = .quarter
-    @Published var selectedAccidental: Accidental = .natural
+    @Published var selectedAccidental: Accidental? = nil  // nil = без альтерации, .natural = явный бекар
     @Published var isDotted: Bool = false
     @Published var selectedArticulation: Articulation?
     @Published var selectedDynamic: DynamicMarking?
@@ -99,6 +99,9 @@ class ScoreViewModel: ObservableObject {
         let duration = makeDuration()
         var event = NoteEvent.note(pitch, duration: duration)
         event.stemDirection = stemDirection
+        if pitch.accidental == .natural && selectedAccidental == .natural {
+            event.showNatural = true
+        }
 
         if let articulation = selectedArticulation {
             event.articulations = [articulation]
@@ -233,6 +236,7 @@ class ScoreViewModel: ObservableObject {
               idx < score.parts[selectedPartIndex].measures[selectedMeasureIndex].events.count else { return }
         saveUndoState()
         var event = score.parts[selectedPartIndex].measures[selectedMeasureIndex].events[idx]
+        event.showNatural = (accidental == .natural)
         switch event.type {
         case .note(var pitch):
             pitch.accidental = accidental
