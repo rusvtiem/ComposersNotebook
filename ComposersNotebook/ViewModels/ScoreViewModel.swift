@@ -32,6 +32,7 @@ class ScoreViewModel: ObservableObject {
     @Published var tieNext: Bool = false
     @Published var slurActive: Bool = false
     @Published var stemDirection: StemDirection = .auto
+    @Published var zoomScale: CGFloat = 1.0  // pinch-to-zoom
 
     // Playback
     @Published var isPlaying: Bool = false

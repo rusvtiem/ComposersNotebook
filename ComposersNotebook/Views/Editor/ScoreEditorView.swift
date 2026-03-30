@@ -5,6 +5,7 @@ struct ScoreEditorView: View {
     @StateObject private var viewModel: ScoreViewModel
     @State private var showSettings = false
     @State private var showPartPicker = false
+    @State private var baseZoomScale: CGFloat = 1.0
 
     init(score: Score) {
         _viewModel = StateObject(wrappedValue: ScoreViewModel(score: score))
@@ -17,11 +18,27 @@ struct ScoreEditorView: View {
 
             Divider()
 
-            // Staff area (scrollable)
+            // Staff area (scrollable, pinch-to-zoom)
             ScrollView([.horizontal, .vertical]) {
                 StaffAreaView(viewModel: viewModel)
                     .padding()
+                    .scaleEffect(viewModel.zoomScale)
+                    .frame(
+                        width: max(UIScreen.main.bounds.width, 400) * viewModel.zoomScale,
+                        height: max(300, CGFloat(viewModel.score.parts.count * 140)) * viewModel.zoomScale,
+                        alignment: .topLeading
+                    )
             }
+            .gesture(
+                MagnifyGesture()
+                    .onChanged { value in
+                        let newScale = baseZoomScale * value.magnification
+                        viewModel.zoomScale = min(max(newScale, 0.5), 3.0)
+                    }
+                    .onEnded { _ in
+                        baseZoomScale = viewModel.zoomScale
+                    }
+            )
             .frame(maxHeight: .infinity)
 
             // Metronome + Playback bar
