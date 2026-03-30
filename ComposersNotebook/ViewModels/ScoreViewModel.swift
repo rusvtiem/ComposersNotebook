@@ -378,6 +378,22 @@ class ScoreViewModel: ObservableObject {
         }
     }
 
+    // MARK: - Time Signature / Key Signature Changes
+
+    func setTimeSignatureAtCurrentMeasure(_ ts: TimeSignature) {
+        saveUndoState()
+        for partIndex in score.parts.indices {
+            score.parts[partIndex].measures[selectedMeasureIndex].timeSignature = ts
+        }
+    }
+
+    func setKeySignatureAtCurrentMeasure(_ ks: KeySignature) {
+        saveUndoState()
+        for partIndex in score.parts.indices {
+            score.parts[partIndex].measures[selectedMeasureIndex].keySignature = ks
+        }
+    }
+
     // MARK: - Undo / Redo
 
     func saveUndoState() {

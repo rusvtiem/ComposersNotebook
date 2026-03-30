@@ -187,13 +187,33 @@ class MIDIEngine: ObservableObject {
         }
     }
 
+    // MARK: - Pause
+
+    @Published var isPaused = false
+    private var pausedMeasureIndex: Int?
+
+    func pause() {
+        isPaused = true
+        isPlaying = false
+        playbackTask?.cancel()
+        playbackTask = nil
+        for note: UInt8 in 0...127 {
+            sampler.stopNote(note, onChannel: 0)
+        }
+    }
+
+    func resume(score: Score, fromMeasure: Int) {
+        isPaused = false
+        playScore(score, fromMeasure: fromMeasure)
+    }
+
     // MARK: - Stop
 
     func stop() {
         isPlaying = false
+        isPaused = false
         playbackTask?.cancel()
         playbackTask = nil
-        // Stop all notes
         for note: UInt8 in 0...127 {
             sampler.stopNote(note, onChannel: 0)
         }

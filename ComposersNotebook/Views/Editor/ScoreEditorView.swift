@@ -1,11 +1,21 @@
 import SwiftUI
 
+enum InputKeyboardMode: String, CaseIterable {
+    case piano = "Пианино"
+    case letters = "Буквы"
+}
+
 struct ScoreEditorView: View {
     @EnvironmentObject var appState: AppState
     @StateObject private var viewModel: ScoreViewModel
+    @StateObject private var midiReceiver = ExternalMIDIReceiver.shared
     @State private var showSettings = false
     @State private var showPartPicker = false
     @State private var baseZoomScale: CGFloat = 1.0
+    @State private var keyboardMode: InputKeyboardMode = .piano
+    @State private var showMeasureMenu = false
+    @State private var showTimeSignaturePicker = false
+    @State private var showKeySignaturePicker = false
 
     init(score: Score) {
         _viewModel = StateObject(wrappedValue: ScoreViewModel(score: score))
@@ -36,28 +46,7 @@ struct ScoreEditorView: View {
             .frame(maxHeight: .infinity)
 
             // Metronome + Playback bar
-            HStack(spacing: 16) {
-                MetronomeView(
-                    timeSignature: viewModel.effectiveTimeSignature,
-                    bpm: viewModel.score.tempo.bpm
-                )
-
-                Spacer()
-
-                // Play/Stop
-                Button {
-                    if viewModel.midiEngine.isPlaying {
-                        viewModel.midiEngine.stop()
-                    } else {
-                        viewModel.midiEngine.playScore(viewModel.score, fromMeasure: viewModel.selectedMeasureIndex)
-                    }
-                } label: {
-                    Image(systemName: viewModel.midiEngine.isPlaying ? "stop.fill" : "play.fill")
-                        .font(.system(size: 20))
-                }
-            }
-            .padding(.horizontal, 12)
-            .padding(.vertical, 6)
+            playbackBar
 
             Divider()
 
@@ -66,9 +55,8 @@ struct ScoreEditorView: View {
 
             Divider()
 
-            // Piano keyboard
-            PianoKeyboardView(viewModel: viewModel)
-                .frame(height: 120)
+            // Keyboard mode selector + input
+            inputArea
         }
         .navigationTitle(viewModel.score.title)
         .navigationBarTitleDisplayMode(.inline)
@@ -104,6 +92,151 @@ struct ScoreEditorView: View {
                     Image(systemName: "ellipsis.circle")
                 }
             }
+        }
+        .onAppear {
+            setupMIDIReceiver()
+        }
+    }
+
+    // MARK: - MIDI Receiver Setup
+
+    private func setupMIDIReceiver() {
+        midiReceiver.onNoteOn = { midiNote, _ in
+            let pitch = Pitch.fromMIDI(midiNote)
+            viewModel.addNote(pitch: pitch)
+        }
+    }
+
+    // MARK: - Playback Bar (with pause/resume)
+
+    private var playbackBar: some View {
+        HStack(spacing: 16) {
+            MetronomeView(
+                timeSignature: viewModel.effectiveTimeSignature,
+                bpm: viewModel.score.tempo.bpm
+            )
+
+            Spacer()
+
+            // MIDI indicator
+            if midiReceiver.isConnected {
+                HStack(spacing: 4) {
+                    Circle().fill(.green).frame(width: 6, height: 6)
+                    Text("MIDI")
+                        .font(.system(size: 9))
+                        .foregroundStyle(.secondary)
+                }
+            }
+
+            // Playback controls: |<< | Play/Pause | Stop | >>|
+            HStack(spacing: 12) {
+                Button {
+                    viewModel.selectedMeasureIndex = 0
+                } label: {
+                    Image(systemName: "backward.end.fill")
+                        .font(.system(size: 14))
+                }
+
+                Button {
+                    if viewModel.midiEngine.isPlaying {
+                        viewModel.midiEngine.pause()
+                    } else {
+                        viewModel.midiEngine.playScore(viewModel.score, fromMeasure: viewModel.selectedMeasureIndex)
+                    }
+                } label: {
+                    Image(systemName: viewModel.midiEngine.isPlaying ? "pause.fill" : "play.fill")
+                        .font(.system(size: 20))
+                }
+
+                Button {
+                    viewModel.midiEngine.stop()
+                } label: {
+                    Image(systemName: "stop.fill")
+                        .font(.system(size: 14))
+                }
+                .disabled(!viewModel.midiEngine.isPlaying)
+
+                Button {
+                    viewModel.selectedMeasureIndex = max(0, viewModel.score.measureCount - 1)
+                } label: {
+                    Image(systemName: "forward.end.fill")
+                        .font(.system(size: 14))
+                }
+            }
+        }
+        .padding(.horizontal, 12)
+        .padding(.vertical, 6)
+    }
+
+    // MARK: - Input Area (Piano / Letters)
+
+    private var inputArea: some View {
+        VStack(spacing: 0) {
+            // Mode selector
+            HStack(spacing: 8) {
+                ForEach(InputKeyboardMode.allCases, id: \.self) { mode in
+                    Button {
+                        keyboardMode = mode
+                    } label: {
+                        Text(mode.rawValue)
+                            .font(.system(size: 11, weight: .medium))
+                            .padding(.horizontal, 10)
+                            .padding(.vertical, 4)
+                            .background(keyboardMode == mode ? Color.accentColor.opacity(0.2) : Color.clear)
+                            .clipShape(Capsule())
+                            .foregroundColor(keyboardMode == mode ? .accentColor : .secondary)
+                    }
+                    .buttonStyle(.plain)
+                }
+
+                Spacer()
+
+                // Measure operations
+                Menu {
+                    Button { viewModel.insertMeasureBefore() } label: {
+                        Label("Вставить такт до", systemImage: "arrow.left.to.line")
+                    }
+                    Button { viewModel.insertMeasureAfter() } label: {
+                        Label("Вставить такт после", systemImage: "arrow.right.to.line")
+                    }
+                    Divider()
+                    Button(role: .destructive) { viewModel.deleteMeasure() } label: {
+                        Label("Удалить такт", systemImage: "trash")
+                    }
+                    .disabled(viewModel.score.measureCount <= 1)
+                    Divider()
+                    Button { showTimeSignaturePicker = true } label: {
+                        Label("Сменить размер", systemImage: "number")
+                    }
+                    Button { showKeySignaturePicker = true } label: {
+                        Label("Сменить тональность", systemImage: "music.note")
+                    }
+                } label: {
+                    Image(systemName: "ruler")
+                        .font(.system(size: 14))
+                        .padding(6)
+                }
+            }
+            .padding(.horizontal, 8)
+            .padding(.vertical, 4)
+
+            // Keyboard
+            switch keyboardMode {
+            case .piano:
+                PianoKeyboardView(viewModel: viewModel)
+                    .frame(height: 100)
+            case .letters:
+                LetterInputView(viewModel: viewModel)
+                    .frame(height: 100)
+            }
+        }
+        .sheet(isPresented: $showTimeSignaturePicker) {
+            TimeSignaturePickerSheet(viewModel: viewModel)
+                .presentationDetents([.height(200)])
+        }
+        .sheet(isPresented: $showKeySignaturePicker) {
+            KeySignaturePickerSheet(viewModel: viewModel)
+                .presentationDetents([.height(250)])
         }
     }
 
@@ -185,6 +318,116 @@ struct ScoreEditorView: View {
             }
         } catch {
             print("Ошибка экспорта: \(error)")
+        }
+    }
+}
+
+// MARK: - Time Signature Picker Sheet
+
+struct TimeSignaturePickerSheet: View {
+    @ObservedObject var viewModel: ScoreViewModel
+    @Environment(\.dismiss) var dismiss
+
+    private let presets: [(String, TimeSignature)] = [
+        ("4/4", .fourFour),
+        ("3/4", .threeFour),
+        ("2/4", .twoFour),
+        ("6/8", .sixEight),
+        ("5/8", .fiveEight),
+        ("3/8", .threeeEight),
+    ]
+
+    var body: some View {
+        NavigationStack {
+            VStack(spacing: 12) {
+                Text("Сменить размер с такта \(viewModel.selectedMeasureIndex + 1)")
+                    .font(.subheadline)
+                    .foregroundStyle(.secondary)
+
+                LazyVGrid(columns: [GridItem(.adaptive(minimum: 70))], spacing: 8) {
+                    ForEach(presets, id: \.0) { label, ts in
+                        Button {
+                            viewModel.setTimeSignatureAtCurrentMeasure(ts)
+                            dismiss()
+                        } label: {
+                            Text(label)
+                                .font(.system(size: 18, weight: .bold))
+                                .frame(width: 70, height: 50)
+                                .background(viewModel.effectiveTimeSignature == ts ? Color.accentColor.opacity(0.2) : .fill.tertiary)
+                                .clipShape(RoundedRectangle(cornerRadius: 8))
+                        }
+                        .buttonStyle(.plain)
+                    }
+                }
+                .padding(.horizontal)
+            }
+            .navigationTitle("Размер")
+            .navigationBarTitleDisplayMode(.inline)
+            .toolbar {
+                ToolbarItem(placement: .cancellationAction) {
+                    Button("Отмена") { dismiss() }
+                }
+            }
+        }
+    }
+}
+
+// MARK: - Key Signature Picker Sheet
+
+struct KeySignaturePickerSheet: View {
+    @ObservedObject var viewModel: ScoreViewModel
+    @Environment(\.dismiss) var dismiss
+
+    private let keys: [(String, KeySignature)] = [
+        ("До мажор", KeySignature(fifths: 0, mode: .major)),
+        ("Соль мажор", KeySignature(fifths: 1, mode: .major)),
+        ("Ре мажор", KeySignature(fifths: 2, mode: .major)),
+        ("Ля мажор", KeySignature(fifths: 3, mode: .major)),
+        ("Ми мажор", KeySignature(fifths: 4, mode: .major)),
+        ("Си мажор", KeySignature(fifths: 5, mode: .major)),
+        ("Фа мажор", KeySignature(fifths: -1, mode: .major)),
+        ("Си-бемоль мажор", KeySignature(fifths: -2, mode: .major)),
+        ("Ми-бемоль мажор", KeySignature(fifths: -3, mode: .major)),
+        ("Ля-бемоль мажор", KeySignature(fifths: -4, mode: .major)),
+        ("ля минор", KeySignature(fifths: 0, mode: .minor)),
+        ("ми минор", KeySignature(fifths: 1, mode: .minor)),
+        ("си минор", KeySignature(fifths: 2, mode: .minor)),
+        ("ре минор", KeySignature(fifths: -1, mode: .minor)),
+        ("соль минор", KeySignature(fifths: -2, mode: .minor)),
+        ("до минор", KeySignature(fifths: -3, mode: .minor)),
+    ]
+
+    var body: some View {
+        NavigationStack {
+            VStack(spacing: 8) {
+                Text("Сменить тональность с такта \(viewModel.selectedMeasureIndex + 1)")
+                    .font(.subheadline)
+                    .foregroundStyle(.secondary)
+
+                List(keys, id: \.0) { label, ks in
+                    Button {
+                        viewModel.setKeySignatureAtCurrentMeasure(ks)
+                        dismiss()
+                    } label: {
+                        HStack {
+                            Text(label)
+                            Spacer()
+                            if viewModel.effectiveKeySignature == ks {
+                                Image(systemName: "checkmark")
+                                    .foregroundColor(.accentColor)
+                            }
+                        }
+                    }
+                }
+                .listStyle(.plain)
+            }
+            .navigationTitle("Тональность")
+            .navigationBarTitleDisplayMode(.inline)
+            .toolbar {
+                ToolbarItem(placement: .cancellationAction) {
+                    Button("Отмена") { dismiss() }
+                }
+            }
         }
     }
 }
