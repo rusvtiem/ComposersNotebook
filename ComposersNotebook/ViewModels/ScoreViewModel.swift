@@ -19,6 +19,9 @@ class ScoreViewModel: ObservableObject {
     @Published var selectedMeasureIndex: Int = 0
     @Published var cursorPosition: Double = 0  // beat position within measure
 
+    // Selection state
+    @Published var selectedEventIndex: Int? = nil  // index of selected note in current measure
+
     // Input state
     @Published var inputMode: InputMode = .note
     @Published var selectedDuration: DurationValue = .quarter
@@ -183,6 +186,128 @@ class ScoreViewModel: ObservableObject {
             score.parts[selectedPartIndex].measures[selectedMeasureIndex].events.removeAll()
             cursorPosition = 0
         }
+    }
+
+    // MARK: - Note Selection & Editing
+
+    var selectedEvent: NoteEvent? {
+        guard let idx = selectedEventIndex,
+              let measure = currentMeasure,
+              idx < measure.events.count else { return nil }
+        return measure.events[idx]
+    }
+
+    func selectEvent(at index: Int) {
+        guard let measure = currentMeasure, index < measure.events.count else { return }
+        selectedEventIndex = index
+    }
+
+    func deselectEvent() {
+        selectedEventIndex = nil
+    }
+
+    func updateSelectedEventPitch(_ pitch: Pitch) {
+        guard let idx = selectedEventIndex,
+              selectedPartIndex < score.parts.count,
+              selectedMeasureIndex < score.parts[selectedPartIndex].measures.count,
+              idx < score.parts[selectedPartIndex].measures[selectedMeasureIndex].events.count else { return }
+        saveUndoState()
+        score.parts[selectedPartIndex].measures[selectedMeasureIndex].events[idx].type = .note(pitch: pitch)
+        score.touch()
+    }
+
+    func updateSelectedEventDuration(_ duration: DurationValue) {
+        guard let idx = selectedEventIndex,
+              selectedPartIndex < score.parts.count,
+              selectedMeasureIndex < score.parts[selectedPartIndex].measures.count,
+              idx < score.parts[selectedPartIndex].measures[selectedMeasureIndex].events.count else { return }
+        saveUndoState()
+        score.parts[selectedPartIndex].measures[selectedMeasureIndex].events[idx].duration.value = duration
+        score.touch()
+    }
+
+    func updateSelectedEventAccidental(_ accidental: Accidental) {
+        guard let idx = selectedEventIndex,
+              selectedPartIndex < score.parts.count,
+              selectedMeasureIndex < score.parts[selectedPartIndex].measures.count,
+              idx < score.parts[selectedPartIndex].measures[selectedMeasureIndex].events.count else { return }
+        saveUndoState()
+        var event = score.parts[selectedPartIndex].measures[selectedMeasureIndex].events[idx]
+        switch event.type {
+        case .note(var pitch):
+            pitch.accidental = accidental
+            event.type = .note(pitch: pitch)
+        case .chord(var pitches):
+            for i in pitches.indices { pitches[i].accidental = accidental }
+            event.type = .chord(pitches: pitches)
+        case .rest: break
+        }
+        score.parts[selectedPartIndex].measures[selectedMeasureIndex].events[idx] = event
+        score.touch()
+    }
+
+    func updateSelectedEventArticulation(_ articulation: Articulation?) {
+        guard let idx = selectedEventIndex,
+              selectedPartIndex < score.parts.count,
+              selectedMeasureIndex < score.parts[selectedPartIndex].measures.count,
+              idx < score.parts[selectedPartIndex].measures[selectedMeasureIndex].events.count else { return }
+        saveUndoState()
+        if let art = articulation {
+            if score.parts[selectedPartIndex].measures[selectedMeasureIndex].events[idx].articulations.contains(art) {
+                score.parts[selectedPartIndex].measures[selectedMeasureIndex].events[idx].articulations.removeAll { $0 == art }
+            } else {
+                score.parts[selectedPartIndex].measures[selectedMeasureIndex].events[idx].articulations.append(art)
+            }
+        } else {
+            score.parts[selectedPartIndex].measures[selectedMeasureIndex].events[idx].articulations.removeAll()
+        }
+        score.touch()
+    }
+
+    func toggleSelectedEventTie() {
+        guard let idx = selectedEventIndex,
+              selectedPartIndex < score.parts.count,
+              selectedMeasureIndex < score.parts[selectedPartIndex].measures.count,
+              idx < score.parts[selectedPartIndex].measures[selectedMeasureIndex].events.count else { return }
+        saveUndoState()
+        score.parts[selectedPartIndex].measures[selectedMeasureIndex].events[idx].tiedToNext.toggle()
+        score.touch()
+    }
+
+    func toggleSelectedEventSlur() {
+        guard let idx = selectedEventIndex,
+              selectedPartIndex < score.parts.count,
+              selectedMeasureIndex < score.parts[selectedPartIndex].measures.count,
+              idx < score.parts[selectedPartIndex].measures[selectedMeasureIndex].events.count else { return }
+        saveUndoState()
+        score.parts[selectedPartIndex].measures[selectedMeasureIndex].events[idx].slurStart.toggle()
+        score.touch()
+    }
+
+    func updateSelectedEventStemDirection(_ direction: StemDirection) {
+        guard let idx = selectedEventIndex,
+              selectedPartIndex < score.parts.count,
+              selectedMeasureIndex < score.parts[selectedPartIndex].measures.count,
+              idx < score.parts[selectedPartIndex].measures[selectedMeasureIndex].events.count else { return }
+        saveUndoState()
+        score.parts[selectedPartIndex].measures[selectedMeasureIndex].events[idx].stemDirection = direction
+        score.touch()
+    }
+
+    func deleteSelectedEvent() {
+        guard let idx = selectedEventIndex,
+              selectedPartIndex < score.parts.count,
+              selectedMeasureIndex < score.parts[selectedPartIndex].measures.count,
+              idx < score.parts[selectedPartIndex].measures[selectedMeasureIndex].events.count else { return }
+        saveUndoState()
+        let removed = score.parts[selectedPartIndex].measures[selectedMeasureIndex].events.remove(at: idx)
+        cursorPosition = max(0, cursorPosition - removed.duration.beats)
+        selectedEventIndex = nil
+        score.touch()
+    }
+
+    func moveSelectedEvent(toPitch pitch: Pitch) {
+        updateSelectedEventPitch(pitch)
     }
 
     // MARK: - Delete

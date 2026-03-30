@@ -5,41 +5,162 @@ import SwiftUI
 struct NoteToolbarView: View {
     @ObservedObject var viewModel: ScoreViewModel
 
+    private var isEditing: Bool {
+        viewModel.selectedEventIndex != nil
+    }
+
     var body: some View {
         ScrollView(.horizontal, showsIndicators: false) {
             HStack(spacing: 6) {
-                // Input mode
-                modeButtons
+                if isEditing {
+                    editModeControls
+                } else {
+                    // Input mode
+                    modeButtons
 
-                Divider().frame(height: 30)
+                    Divider().frame(height: 30)
 
-                // Duration
-                durationButtons
+                    // Duration
+                    durationButtons
 
-                Divider().frame(height: 30)
+                    Divider().frame(height: 30)
 
-                // Modifiers
-                modifierButtons
+                    // Modifiers
+                    modifierButtons
 
-                Divider().frame(height: 30)
+                    Divider().frame(height: 30)
 
-                // Accidentals
-                accidentalButtons
+                    // Accidentals
+                    accidentalButtons
 
-                Divider().frame(height: 30)
+                    Divider().frame(height: 30)
 
-                // Articulations
-                articulationButtons
+                    // Articulations
+                    articulationButtons
 
-                Divider().frame(height: 30)
+                    Divider().frame(height: 30)
 
-                // Actions
-                actionButtons
+                    // Actions
+                    actionButtons
+                }
             }
             .padding(.horizontal, 8)
             .padding(.vertical, 6)
         }
+        .background(isEditing ? Color.blue.opacity(0.05) : Color.clear)
         .background(.bar)
+    }
+
+    // MARK: - Edit Mode
+
+    private var editModeControls: some View {
+        HStack(spacing: 4) {
+            // Label
+            Text("Ред.")
+                .font(.system(size: 10, weight: .bold))
+                .foregroundColor(.blue)
+                .frame(width: 32)
+
+            Divider().frame(height: 30)
+
+            // Duration change
+            ForEach(DurationValue.allCases, id: \.self) { dur in
+                let isActive = viewModel.selectedEvent?.duration.value == dur
+                NoteToolbarButton(
+                    icon: nil,
+                    label: dur.symbol,
+                    isActive: isActive,
+                    fontSize: 18
+                ) { viewModel.updateSelectedEventDuration(dur) }
+            }
+
+            Divider().frame(height: 30)
+
+            // Accidentals
+            ForEach([Accidental.flat, .natural, .sharp], id: \.self) { acc in
+                let isActive = viewModel.selectedEvent?.pitches.first?.accidental == acc
+                NoteToolbarButton(
+                    icon: nil,
+                    label: acc.displaySymbol,
+                    isActive: isActive,
+                    fontSize: 16
+                ) { viewModel.updateSelectedEventAccidental(acc) }
+            }
+
+            Divider().frame(height: 30)
+
+            // Articulations
+            ForEach([Articulation.staccato, .accent, .tenuto, .fermata], id: \.self) { art in
+                let isActive = viewModel.selectedEvent?.articulations.contains(art) == true
+                NoteToolbarButton(
+                    icon: nil,
+                    label: art.displaySymbol,
+                    isActive: isActive,
+                    fontSize: 14
+                ) { viewModel.updateSelectedEventArticulation(art) }
+            }
+
+            Divider().frame(height: 30)
+
+            // Tie / Slur
+            NoteToolbarButton(
+                icon: "link",
+                label: "Лига",
+                isActive: viewModel.selectedEvent?.tiedToNext == true
+            ) { viewModel.toggleSelectedEventTie() }
+
+            NoteToolbarButton(
+                icon: nil,
+                label: "⁀",
+                isActive: viewModel.selectedEvent?.slurStart == true,
+                fontSize: 16
+            ) { viewModel.toggleSelectedEventSlur() }
+
+            // Stem direction
+            NoteToolbarButton(
+                icon: nil,
+                label: editStemLabel,
+                isActive: viewModel.selectedEvent?.stemDirection != .auto,
+                fontSize: 14
+            ) {
+                guard let event = viewModel.selectedEvent else { return }
+                let next: StemDirection
+                switch event.stemDirection {
+                case .auto: next = .up
+                case .up: next = .down
+                case .down: next = .auto
+                }
+                viewModel.updateSelectedEventStemDirection(next)
+            }
+
+            Divider().frame(height: 30)
+
+            // Delete selected note
+            Button {
+                viewModel.deleteSelectedEvent()
+            } label: {
+                Image(systemName: "trash")
+                    .foregroundColor(.red)
+                    .frame(width: 32, height: 32)
+            }
+
+            // Deselect
+            Button {
+                viewModel.deselectEvent()
+            } label: {
+                Image(systemName: "xmark.circle")
+                    .frame(width: 32, height: 32)
+            }
+        }
+    }
+
+    private var editStemLabel: String {
+        guard let event = viewModel.selectedEvent else { return "↕" }
+        switch event.stemDirection {
+        case .auto: return "↕"
+        case .up: return "↑"
+        case .down: return "↓"
+        }
     }
 
     // MARK: - Mode

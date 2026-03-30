@@ -1,5 +1,13 @@
 import SwiftUI
 
+// MARK: - Note Hit Info
+
+struct NoteHitInfo {
+    let x: CGFloat
+    let y: CGFloat
+    let eventIndex: Int
+}
+
 // MARK: - Staff Area (all visible measures)
 
 struct StaffAreaView: View {
@@ -9,6 +17,7 @@ struct StaffAreaView: View {
     private let measureWidth: CGFloat = 200
     private let staffHeight: CGFloat = 60  // 4 spaces × 10 + some padding
     private let partSpacing: CGFloat = 80
+    private let noteHitRadius: CGFloat = 14  // tap detection radius
 
     var body: some View {
         VStack(alignment: .leading, spacing: 0) {
@@ -29,11 +38,14 @@ struct StaffAreaView: View {
 
             HStack(spacing: 0) {
                 ForEach(Array(part.measures.enumerated()), id: \.offset) { measureIndex, measure in
+                    let isCurrentMeasure = partIndex == viewModel.selectedPartIndex
+                        && measureIndex == viewModel.selectedMeasureIndex
+
                     MeasureView(
                         measure: measure,
                         measureIndex: measureIndex,
-                        isSelected: partIndex == viewModel.selectedPartIndex
-                            && measureIndex == viewModel.selectedMeasureIndex,
+                        isSelected: isCurrentMeasure,
+                        selectedEventIndex: isCurrentMeasure ? viewModel.selectedEventIndex : nil,
                         timeSignature: effectiveTimeSignature(partIndex: partIndex, measureIndex: measureIndex),
                         clef: effectiveClef(partIndex: partIndex, measureIndex: measureIndex),
                         staffLineSpacing: staffLineSpacing
@@ -46,9 +58,26 @@ struct StaffAreaView: View {
                                 viewModel.selectPart(at: partIndex)
                                 viewModel.selectedMeasureIndex = measureIndex
 
-                                // If in note input mode, calculate pitch from tap position
+                                let clef = effectiveClef(partIndex: partIndex, measureIndex: measureIndex)
+                                let ts = effectiveTimeSignature(partIndex: partIndex, measureIndex: measureIndex)
+                                let positions = computeNotePositions(
+                                    measure: measure, measureIndex: measureIndex,
+                                    clef: clef, timeSignature: ts
+                                )
+
+                                // Check if tap is on an existing note
+                                if let hitIndex = hitTestNote(at: value.location, positions: positions) {
+                                    if viewModel.selectedEventIndex == hitIndex {
+                                        viewModel.deselectEvent()
+                                    } else {
+                                        viewModel.selectEvent(at: hitIndex)
+                                    }
+                                    return
+                                }
+
+                                // No note hit — deselect and optionally add note
+                                viewModel.deselectEvent()
                                 if viewModel.inputMode == .note {
-                                    let clef = effectiveClef(partIndex: partIndex, measureIndex: measureIndex)
                                     if let pitch = pitchFromTap(y: value.location.y, clef: clef) {
                                         viewModel.addNote(pitch: pitch)
                                     }
@@ -57,12 +86,27 @@ struct StaffAreaView: View {
                                 }
                             }
                     )
+                    .simultaneousGesture(
+                        LongPressGesture(minimumDuration: 0.3)
+                            .sequenced(before: DragGesture())
+                            .onChanged { value in
+                                switch value {
+                                case .second(true, let drag):
+                                    guard let drag = drag,
+                                          isCurrentMeasure,
+                                          viewModel.selectedEventIndex != nil else { return }
+                                    let clef = effectiveClef(partIndex: partIndex, measureIndex: measureIndex)
+                                    if let pitch = pitchFromTap(y: drag.location.y, clef: clef) {
+                                        viewModel.updateSelectedEventPitch(pitch)
+                                    }
+                                default: break
+                                }
+                            }
+                    )
                     .overlay(
                         RoundedRectangle(cornerRadius: 2)
                             .stroke(
-                                partIndex == viewModel.selectedPartIndex
-                                    && measureIndex == viewModel.selectedMeasureIndex
-                                    ? Color.accentColor : Color.clear,
+                                isCurrentMeasure ? Color.accentColor : Color.clear,
                                 lineWidth: 2
                             )
                     )
@@ -71,6 +115,58 @@ struct StaffAreaView: View {
 
             Spacer().frame(height: partSpacing - staffHeight)
         }
+    }
+
+    // MARK: - Note Hit Testing
+
+    private func computeNotePositions(measure: Measure, measureIndex: Int, clef: Clef, timeSignature: TimeSignature) -> [NoteHitInfo] {
+        let startX: CGFloat = 8
+        let staffTop: CGFloat = 20
+        let noteStartX: CGFloat = measureIndex == 0 ? startX + 45 : startX + 15
+        let availableWidth = measureWidth - noteStartX - 10
+        let totalBeats = measure.usedBeats
+        guard totalBeats > 0 else { return [] }
+
+        var positions: [NoteHitInfo] = []
+        var currentX = noteStartX
+
+        for (eventIndex, event) in measure.events.enumerated() {
+            let eventWidth = availableWidth * CGFloat(event.duration.beats / max(totalBeats, timeSignature.totalBeats))
+            let noteX = currentX + eventWidth / 2
+
+            switch event.type {
+            case .note(let pitch):
+                let y = MeasureView.noteYStatic(pitch: pitch, staffTop: staffTop, staffLineSpacing: staffLineSpacing, clef: clef)
+                positions.append(NoteHitInfo(x: noteX, y: y, eventIndex: eventIndex))
+            case .chord(let pitches):
+                if let firstPitch = pitches.first {
+                    let y = MeasureView.noteYStatic(pitch: firstPitch, staffTop: staffTop, staffLineSpacing: staffLineSpacing, clef: clef)
+                    positions.append(NoteHitInfo(x: noteX, y: y, eventIndex: eventIndex))
+                }
+            case .rest:
+                let y = staffTop + 2 * staffLineSpacing
+                positions.append(NoteHitInfo(x: noteX, y: y, eventIndex: eventIndex))
+            }
+
+            currentX += eventWidth
+        }
+
+        return positions
+    }
+
+    private func hitTestNote(at point: CGPoint, positions: [NoteHitInfo]) -> Int? {
+        var closest: (index: Int, distance: CGFloat)?
+        for pos in positions {
+            let dx = point.x - pos.x
+            let dy = point.y - pos.y
+            let dist = sqrt(dx * dx + dy * dy)
+            if dist < noteHitRadius {
+                if closest == nil || dist < closest!.distance {
+                    closest = (pos.eventIndex, dist)
+                }
+            }
+        }
+        return closest?.index
     }
 
     // MARK: - Tap to place note
@@ -138,9 +234,23 @@ struct MeasureView: View {
     let measure: Measure
     let measureIndex: Int
     let isSelected: Bool
+    let selectedEventIndex: Int?
     let timeSignature: TimeSignature
     let clef: Clef
     let staffLineSpacing: CGFloat
+
+    /// Static helper so StaffAreaView can compute positions without a MeasureView instance
+    static func noteYStatic(pitch: Pitch, staffTop: CGFloat, staffLineSpacing: CGFloat, clef: Clef) -> CGFloat {
+        let middleLinePosition: Int
+        switch clef {
+        case .treble: middleLinePosition = Pitch(name: .B, octave: 4).staffPosition
+        case .bass: middleLinePosition = Pitch(name: .D, octave: 3).staffPosition
+        case .alto: middleLinePosition = Pitch(name: .C, octave: 4).staffPosition
+        case .tenor: middleLinePosition = Pitch(name: .A, octave: 3).staffPosition
+        }
+        let offset = middleLinePosition - pitch.staffPosition
+        return staffTop + 2 * staffLineSpacing + CGFloat(offset) * (staffLineSpacing / 2)
+    }
 
     var body: some View {
         Canvas { context, size in
@@ -201,7 +311,11 @@ struct MeasureView: View {
                     let y = noteY(pitch: pitch, staffTop: staffTop)
                     let noteX = currentX + eventWidth / 2
                     let stemUp = resolveStemDirection(event.stemDirection, noteY: y, staffTop: staffTop)
-                    drawNoteHead(context: context, x: noteX, y: y, duration: event.duration.value, stemUp: stemUp)
+                    let isEventSelected = selectedEventIndex == eventIndex
+                    if isEventSelected {
+                        drawSelectionHighlight(context: context, x: noteX, y: y)
+                    }
+                    drawNoteHead(context: context, x: noteX, y: y, duration: event.duration.value, stemUp: stemUp, selected: isEventSelected)
                     drawLedgerLines(context: context, pitch: pitch, x: noteX, staffTop: staffTop)
                     drawAccidental(context: context, pitch: pitch, x: noteX, y: y)
                     notePositions.append(NotePosition(x: noteX, y: y, eventIndex: eventIndex))
@@ -213,10 +327,14 @@ struct MeasureView: View {
                     let topPitch = pitches.min(by: { noteY(pitch: $0, staffTop: staffTop) < noteY(pitch: $1, staffTop: staffTop) })
                     let chordY = topPitch.map { noteY(pitch: $0, staffTop: staffTop) } ?? staffTop + 2 * staffLineSpacing
                     let stemUp = resolveStemDirection(event.stemDirection, noteY: chordY, staffTop: staffTop)
+                    let isEventSelected = selectedEventIndex == eventIndex
                     for pitch in pitches {
                         let y = noteY(pitch: pitch, staffTop: staffTop)
                         let noteX = currentX + eventWidth / 2
-                        drawNoteHead(context: context, x: noteX, y: y, duration: event.duration.value, stemUp: stemUp)
+                        if isEventSelected {
+                            drawSelectionHighlight(context: context, x: noteX, y: y)
+                        }
+                        drawNoteHead(context: context, x: noteX, y: y, duration: event.duration.value, stemUp: stemUp, selected: isEventSelected)
                         drawLedgerLines(context: context, pitch: pitch, x: noteX, staffTop: staffTop)
                         drawAccidental(context: context, pitch: pitch, x: noteX, y: y)
                     }
@@ -226,10 +344,15 @@ struct MeasureView: View {
                     }
 
                 case .rest:
+                    let restX = currentX + eventWidth / 2
+                    let restY = staffTop + 2 * staffLineSpacing
+                    if selectedEventIndex == eventIndex {
+                        drawSelectionHighlight(context: context, x: restX, y: restY)
+                    }
                     let restText = Text(restSymbol(for: event.duration.value))
                         .font(.system(size: 18))
-                    context.draw(restText, at: CGPoint(x: currentX + eventWidth / 2, y: staffTop + 2 * staffLineSpacing))
-                    notePositions.append(NotePosition(x: currentX + eventWidth / 2, y: staffTop + 2 * staffLineSpacing, eventIndex: eventIndex))
+                    context.draw(restText, at: CGPoint(x: restX, y: restY))
+                    notePositions.append(NotePosition(x: restX, y: restY, eventIndex: eventIndex))
                 }
 
                 // Dynamic marking
@@ -308,20 +431,29 @@ struct MeasureView: View {
         return staffTop + 2 * staffLineSpacing + CGFloat(offset) * (staffLineSpacing / 2)
     }
 
-    private func drawNoteHead(context: GraphicsContext, x: CGFloat, y: CGFloat, duration: DurationValue, stemUp: Bool = true) {
+    private func drawSelectionHighlight(context: GraphicsContext, x: CGFloat, y: CGFloat) {
+        let highlightRadius: CGFloat = staffLineSpacing * 0.9
+        let rect = CGRect(x: x - highlightRadius, y: y - highlightRadius, width: highlightRadius * 2, height: highlightRadius * 2)
+        let circle = Path(ellipseIn: rect)
+        context.fill(circle, with: .color(.blue.opacity(0.2)))
+        context.stroke(circle, with: .color(.blue.opacity(0.6)), lineWidth: 1.5)
+    }
+
+    private func drawNoteHead(context: GraphicsContext, x: CGFloat, y: CGFloat, duration: DurationValue, stemUp: Bool = true, selected: Bool = false) {
         let radius: CGFloat = staffLineSpacing / 2 - 1
         let rect = CGRect(x: x - radius, y: y - radius * 0.75, width: radius * 2, height: radius * 1.5)
         let ellipse = Path(ellipseIn: rect)
+        let noteColor: Color = selected ? .blue : .primary
 
         switch duration {
         case .whole:
-            context.stroke(ellipse, with: .color(.primary), lineWidth: 1.5)
+            context.stroke(ellipse, with: .color(noteColor), lineWidth: 1.5)
         case .half:
-            context.stroke(ellipse, with: .color(.primary), lineWidth: 1.5)
-            drawStem(context: context, x: x, y: y, radius: radius, stemUp: stemUp)
+            context.stroke(ellipse, with: .color(noteColor), lineWidth: 1.5)
+            drawStem(context: context, x: x, y: y, radius: radius, stemUp: stemUp, color: noteColor)
         default:
-            context.fill(ellipse, with: .color(.primary))
-            drawStem(context: context, x: x, y: y, radius: radius, stemUp: stemUp)
+            context.fill(ellipse, with: .color(noteColor))
+            drawStem(context: context, x: x, y: y, radius: radius, stemUp: stemUp, color: noteColor)
             drawFlags(context: context, x: x, y: y, radius: radius, stemUp: stemUp, duration: duration)
         }
     }
@@ -334,13 +466,13 @@ struct MeasureView: View {
         }
     }
 
-    private func drawStem(context: GraphicsContext, x: CGFloat, y: CGFloat, radius: CGFloat, stemUp: Bool) {
+    private func drawStem(context: GraphicsContext, x: CGFloat, y: CGFloat, radius: CGFloat, stemUp: Bool, color: Color = .primary) {
         var stem = Path()
         let stemLength = staffLineSpacing * 3.5
         let stemX = stemUp ? x + radius : x - radius
         stem.move(to: CGPoint(x: stemX, y: y))
         stem.addLine(to: CGPoint(x: stemX, y: stemUp ? y - stemLength : y + stemLength))
-        context.stroke(stem, with: .color(.primary), lineWidth: 1)
+        context.stroke(stem, with: .color(color), lineWidth: 1)
     }
 
     private func drawFlags(context: GraphicsContext, x: CGFloat, y: CGFloat, radius: CGFloat, stemUp: Bool, duration: DurationValue) {
