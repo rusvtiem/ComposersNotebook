@@ -9,6 +9,7 @@ struct ScoreEditorView: View {
     @EnvironmentObject var appState: AppState
     @StateObject private var viewModel: ScoreViewModel
     @StateObject private var midiReceiver = ExternalMIDIReceiver.shared
+    @StateObject private var soundFontManager = SoundFontManager.shared
     @State private var showSettings = false
     @State private var showPartPicker = false
     @State private var baseZoomScale: CGFloat = 1.0
@@ -16,6 +17,13 @@ struct ScoreEditorView: View {
     @State private var showMeasureMenu = false
     @State private var showTimeSignaturePicker = false
     @State private var showKeySignaturePicker = false
+    @State private var showSoundSettings = false
+    @State private var showImportPicker = false
+    @State private var showExportSheet = false
+    @State private var showShareSheet = false
+    @State private var shareURL: URL?
+    @State private var alertMessage: String?
+    @State private var showAlert = false
 
     init(score: Score) {
         _viewModel = StateObject(wrappedValue: ScoreViewModel(score: score))
@@ -80,14 +88,45 @@ struct ScoreEditorView: View {
                 .disabled(!viewModel.canRedo)
 
                 Menu {
-                    Button("Экспорт MusicXML") { exportMusicXML() }
+                    // Save
+                    Button {
+                        saveCNB()
+                        HapticManager.success()
+                    } label: {
+                        Label(String(localized: "Save"), systemImage: "square.and.arrow.down")
+                    }
+
+                    Divider()
+
+                    // Export submenu
+                    Menu {
+                        Button(String(localized: "Export as CNB")) { exportCNB() }
+                        Button(String(localized: "Export as MusicXML")) { exportMusicXML() }
+                        Button(String(localized: "Export as MIDI")) { exportMIDI() }
+                        Button(String(localized: "Export as PDF")) { exportPDF() }
+                    } label: {
+                        Label(String(localized: "Export"), systemImage: "square.and.arrow.up")
+                    }
+
+                    // Import
+                    Button { showImportPicker = true } label: {
+                        Label(String(localized: "Import File"), systemImage: "square.and.arrow.down.on.square")
+                    }
+
+                    Divider()
+
+                    // Sound settings
+                    Button { showSoundSettings = true } label: {
+                        Label(String(localized: "Sound Settings"), systemImage: "speaker.wave.2")
+                    }
+
+                    // Theme toggle
                     Button { appState.isDarkMode.toggle() } label: {
                         Label(
-                            appState.isDarkMode ? "Светлая тема" : "Тёмная тема",
+                            appState.isDarkMode ? String(localized: "Light Theme") : String(localized: "Dark Theme"),
                             systemImage: appState.isDarkMode ? "sun.max.fill" : "moon.fill"
                         )
                     }
-                    Button("Сохранить") { viewModel.save() }
                 } label: {
                     Image(systemName: "ellipsis.circle")
                 }
@@ -95,6 +134,32 @@ struct ScoreEditorView: View {
         }
         .onAppear {
             setupMIDIReceiver()
+        }
+        .sheet(isPresented: $showSoundSettings) {
+            if let part = viewModel.currentPart {
+                SoundSettingsView(
+                    soundFontManager: soundFontManager,
+                    instrument: part.instrument,
+                    onPreview: {
+                        MIDIEngine.shared.previewSound(midiProgram: part.instrument.midiProgram)
+                    }
+                )
+                .presentationDetents([.large])
+            }
+        }
+        .sheet(isPresented: $showImportPicker) {
+            DocumentPickerView(
+                contentTypes: [.cnb, .musicXML, .midiFile, .xml, .midi],
+                onPick: { url in importFile(at: url) }
+            )
+        }
+        .sheet(isPresented: $showShareSheet) {
+            if let url = shareURL {
+                ShareSheet(items: [url])
+            }
+        }
+        .alert(alertMessage ?? "", isPresented: $showAlert) {
+            Button("OK") {}
         }
     }
 
@@ -298,27 +363,111 @@ struct ScoreEditorView: View {
         .background(.bar)
     }
 
+    // MARK: - Save CNB
+
+    private func saveCNB() {
+        let fileManager = CNBFileManager.shared
+        let url = fileManager.fileURL(for: viewModel.score)
+        do {
+            try fileManager.save(score: viewModel.score, to: url)
+        } catch {
+            showError("Save failed: \(error.localizedDescription)")
+        }
+    }
+
     // MARK: - Export
+
+    private func exportCNB() {
+        let fileManager = CNBFileManager.shared
+        let url = fileManager.fileURL(for: viewModel.score)
+        do {
+            try fileManager.save(score: viewModel.score, to: url)
+            shareFile(url)
+        } catch {
+            showError("Export failed: \(error.localizedDescription)")
+        }
+    }
 
     private func exportMusicXML() {
         let exporter = MusicXMLExporter()
         let xml = exporter.export(score: viewModel.score)
-
         let docs = FileManager.default.urls(for: .documentDirectory, in: .userDomainMask).first!
         let filename = viewModel.score.title.replacingOccurrences(of: " ", with: "_") + ".musicxml"
         let url = docs.appendingPathComponent(filename)
 
         do {
             try xml.write(to: url, atomically: true, encoding: .utf8)
-            // Share sheet
-            let activityVC = UIActivityViewController(activityItems: [url], applicationActivities: nil)
-            if let windowScene = UIApplication.shared.connectedScenes.first as? UIWindowScene,
-               let rootVC = windowScene.windows.first?.rootViewController {
-                rootVC.present(activityVC, animated: true)
-            }
+            shareFile(url)
         } catch {
-            print("Ошибка экспорта: \(error)")
+            showError("MusicXML export failed: \(error.localizedDescription)")
         }
+    }
+
+    private func exportMIDI() {
+        let docs = FileManager.default.urls(for: .documentDirectory, in: .userDomainMask).first!
+        let filename = viewModel.score.title.replacingOccurrences(of: " ", with: "_") + ".mid"
+        let url = docs.appendingPathComponent(filename)
+
+        do {
+            try MIDIExporter.exportToFile(score: viewModel.score, url: url)
+            shareFile(url)
+        } catch {
+            showError("MIDI export failed: \(error.localizedDescription)")
+        }
+    }
+
+    private func exportPDF() {
+        let docs = FileManager.default.urls(for: .documentDirectory, in: .userDomainMask).first!
+        let filename = viewModel.score.title.replacingOccurrences(of: " ", with: "_") + ".pdf"
+        let url = docs.appendingPathComponent(filename)
+
+        do {
+            try PDFExporter.exportToFile(score: viewModel.score, url: url)
+            shareFile(url)
+        } catch {
+            showError("PDF export failed: \(error.localizedDescription)")
+        }
+    }
+
+    // MARK: - Import
+
+    private func importFile(at url: URL) {
+        do {
+            let ext = url.pathExtension.lowercased()
+            let score: Score
+
+            switch ext {
+            case "cnb":
+                let container = try CNBFileManager.shared.load(from: url)
+                score = container.score
+            case "musicxml", "mxl", "xml":
+                score = try MusicXMLImporter.importFile(at: url)
+            case "mid", "midi":
+                score = try MIDIImporter.importFile(at: url)
+            default:
+                showError("Unsupported file format: .\(ext)")
+                return
+            }
+
+            appState.currentScore = score
+            HapticManager.success()
+        } catch {
+            showError("Import failed: \(error.localizedDescription)")
+        }
+    }
+
+    // MARK: - Helpers
+
+    private func shareFile(_ url: URL) {
+        shareURL = url
+        showShareSheet = true
+        HapticManager.success()
+    }
+
+    private func showError(_ message: String) {
+        alertMessage = message
+        showAlert = true
+        HapticManager.error()
     }
 }
 

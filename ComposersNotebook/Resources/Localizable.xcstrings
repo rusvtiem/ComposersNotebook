@@ -1,0 +1,271 @@
+{
+  "sourceLanguage": "en",
+  "strings": {
+    "Quick Note": {
+      "localizations": {
+        "ru": { "stringUnit": { "state": "translated", "value": "Быстрая заметка" } }
+      }
+    },
+    "New Score": {
+      "localizations": {
+        "ru": { "stringUnit": { "state": "translated", "value": "Новая партитура" } }
+      }
+    },
+    "Open File": {
+      "localizations": {
+        "ru": { "stringUnit": { "state": "translated", "value": "Открыть файл" } }
+      }
+    },
+    "Recent": {
+      "localizations": {
+        "ru": { "stringUnit": { "state": "translated", "value": "Недавние" } }
+      }
+    },
+    "Composer's Sketchbook": {
+      "localizations": {
+        "ru": { "stringUnit": { "state": "translated", "value": "Блокнот композитора" } }
+      }
+    },
+    "Save": {
+      "localizations": {
+        "ru": { "stringUnit": { "state": "translated", "value": "Сохранить" } }
+      }
+    },
+    "Export": {
+      "localizations": {
+        "ru": { "stringUnit": { "state": "translated", "value": "Экспорт" } }
+      }
+    },
+    "Export as CNB": {
+      "localizations": {
+        "ru": { "stringUnit": { "state": "translated", "value": "Экспорт CNB" } }
+      }
+    },
+    "Export as MusicXML": {
+      "localizations": {
+        "ru": { "stringUnit": { "state": "translated", "value": "Экспорт MusicXML" } }
+      }
+    },
+    "Export as MIDI": {
+      "localizations": {
+        "ru": { "stringUnit": { "state": "translated", "value": "Экспорт MIDI" } }
+      }
+    },
+    "Export as PDF": {
+      "localizations": {
+        "ru": { "stringUnit": { "state": "translated", "value": "Экспорт PDF" } }
+      }
+    },
+    "Import File": {
+      "localizations": {
+        "ru": { "stringUnit": { "state": "translated", "value": "Импорт файла" } }
+      }
+    },
+    "Sound Settings": {
+      "localizations": {
+        "ru": { "stringUnit": { "state": "translated", "value": "Настройки звука" } }
+      }
+    },
+    "Light Theme": {
+      "localizations": {
+        "ru": { "stringUnit": { "state": "translated", "value": "Светлая тема" } }
+      }
+    },
+    "Dark Theme": {
+      "localizations": {
+        "ru": { "stringUnit": { "state": "translated", "value": "Тёмная тема" } }
+      }
+    },
+    "Advanced Settings": {
+      "localizations": {
+        "ru": { "stringUnit": { "state": "translated", "value": "Детальные настройки" } }
+      }
+    },
+    "Sound Character": {
+      "localizations": {
+        "ru": { "stringUnit": { "state": "translated", "value": "Характер звука" } }
+      }
+    },
+    "Sound Source": {
+      "localizations": {
+        "ru": { "stringUnit": { "state": "translated", "value": "Источник звука" } }
+      }
+    },
+    "Sound Preset": {
+      "localizations": {
+        "ru": { "stringUnit": { "state": "translated", "value": "Пресет звучания" } }
+      }
+    },
+    "Preview Sound": {
+      "localizations": {
+        "ru": { "stringUnit": { "state": "translated", "value": "Прослушать" } }
+      }
+    },
+    "Save as Preset": {
+      "localizations": {
+        "ru": { "stringUnit": { "state": "translated", "value": "Сохранить как пресет" } }
+      }
+    },
+    "Reset to Default": {
+      "localizations": {
+        "ru": { "stringUnit": { "state": "translated", "value": "Вернуть к стандартным" } }
+      }
+    },
+    "Save Preset": {
+      "localizations": {
+        "ru": { "stringUnit": { "state": "translated", "value": "Сохранить пресет" } }
+      }
+    },
+    "Preset name": {
+      "localizations": {
+        "ru": { "stringUnit": { "state": "translated", "value": "Название пресета" } }
+      }
+    },
+    "Cancel": {
+      "localizations": {
+        "ru": { "stringUnit": { "state": "translated", "value": "Отмена" } }
+      }
+    },
+    "My Presets": {
+      "localizations": {
+        "ru": { "stringUnit": { "state": "translated", "value": "Мои пресеты" } }
+      }
+    },
+    "Volume": {
+      "localizations": {
+        "ru": { "stringUnit": { "state": "translated", "value": "Громкость" } }
+      }
+    },
+    "Pan": {
+      "localizations": {
+        "ru": { "stringUnit": { "state": "translated", "value": "Панорама" } }
+      }
+    },
+    "Reverb": {
+      "localizations": {
+        "ru": { "stringUnit": { "state": "translated", "value": "Реверберация" } }
+      }
+    },
+    "Brightness": {
+      "localizations": {
+        "ru": { "stringUnit": { "state": "translated", "value": "Яркость" } }
+      }
+    },
+    "Attack": {
+      "localizations": {
+        "ru": { "stringUnit": { "state": "translated", "value": "Атака" } }
+      }
+    },
+    "Decay": {
+      "localizations": {
+        "ru": { "stringUnit": { "state": "translated", "value": "Затухание" } }
+      }
+    },
+    "Sustain": {
+      "localizations": {
+        "ru": { "stringUnit": { "state": "translated", "value": "Сустейн" } }
+      }
+    },
+    "Release": {
+      "localizations": {
+        "ru": { "stringUnit": { "state": "translated", "value": "Релиз" } }
+      }
+    },
+    "Dry": {
+      "localizations": {
+        "ru": { "stringUnit": { "state": "translated", "value": "Сухо" } }
+      }
+    },
+    "Hall": {
+      "localizations": {
+        "ru": { "stringUnit": { "state": "translated", "value": "Зал" } }
+      }
+    },
+    "Warm": {
+      "localizations": {
+        "ru": { "stringUnit": { "state": "translated", "value": "Тёплый" } }
+      }
+    },
+    "Bright": {
+      "localizations": {
+        "ru": { "stringUnit": { "state": "translated", "value": "Яркий" } }
+      }
+    },
+    "Classical": {
+      "localizations": {
+        "ru": { "stringUnit": { "state": "translated", "value": "Классический" } }
+      }
+    },
+    "Soft": {
+      "localizations": {
+        "ru": { "stringUnit": { "state": "translated", "value": "Мягкий" } }
+      }
+    },
+    "Fast": {
+      "localizations": {
+        "ru": { "stringUnit": { "state": "translated", "value": "Быстро" } }
+      }
+    },
+    "Slow": {
+      "localizations": {
+        "ru": { "stringUnit": { "state": "translated", "value": "Медленно" } }
+      }
+    },
+    "Short": {
+      "localizations": {
+        "ru": { "stringUnit": { "state": "translated", "value": "Коротко" } }
+      }
+    },
+    "Long": {
+      "localizations": {
+        "ru": { "stringUnit": { "state": "translated", "value": "Длинно" } }
+      }
+    },
+    "Built-in": {
+      "localizations": {
+        "ru": { "stringUnit": { "state": "translated", "value": "Встроенный" } }
+      }
+    },
+    "Plugin": {
+      "localizations": {
+        "ru": { "stringUnit": { "state": "translated", "value": "Плагин" } }
+      }
+    },
+    "Custom": {
+      "localizations": {
+        "ru": { "stringUnit": { "state": "translated", "value": "Свой" } }
+      }
+    },
+    "Piano-specific settings": {
+      "localizations": {
+        "ru": { "stringUnit": { "state": "translated", "value": "Настройки пианино" } }
+      }
+    },
+    "String-specific settings": {
+      "localizations": {
+        "ru": { "stringUnit": { "state": "translated", "value": "Настройки струнных" } }
+      }
+    },
+    "Woodwind-specific settings": {
+      "localizations": {
+        "ru": { "stringUnit": { "state": "translated", "value": "Настройки деревянных духовых" } }
+      }
+    },
+    "Brass-specific settings": {
+      "localizations": {
+        "ru": { "stringUnit": { "state": "translated", "value": "Настройки медных духовых" } }
+      }
+    },
+    "Voice-specific settings": {
+      "localizations": {
+        "ru": { "stringUnit": { "state": "translated", "value": "Настройки вокала" } }
+      }
+    },
+    "Percussion-specific settings": {
+      "localizations": {
+        "ru": { "stringUnit": { "state": "translated", "value": "Настройки ударных" } }
+      }
+    }
+  },
+  "version": "1.0"
+}

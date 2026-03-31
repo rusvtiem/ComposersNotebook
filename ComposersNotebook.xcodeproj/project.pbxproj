@@ -10,7 +10,11 @@
 		17F5D248B9DB58295D28573A /* ComposersNotebookApp.swift in Sources */ = {isa = PBXBuildFile; fileRef = 6DB29E2A4F0338EE1C46AA96 /* ComposersNotebookApp.swift */; };
 		1A8EBDA6B0D57D1D765DB808 /* MusicElements.swift in Sources */ = {isa = PBXBuildFile; fileRef = 41CC1828389F747C1307D5D9 /* MusicElements.swift */; };
 		1AEEF7BF0A66A7A3C3149A96 /* PluginManager.swift in Sources */ = {isa = PBXBuildFile; fileRef = C332283252D17AF92A4994C9 /* PluginManager.swift */; };
+		1F478093720BE42701AA1F6A /* SoundSettingsView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1BCFB51C3587D8D0E6748278 /* SoundSettingsView.swift */; };
+		24C5D4A7B94626B08147CFF1 /* PDFExporter.swift in Sources */ = {isa = PBXBuildFile; fileRef = 093CEAAE8CBA72093B7CC246 /* PDFExporter.swift */; };
+		27953B80AB317A69E8610ED7 /* CNBFileManager.swift in Sources */ = {isa = PBXBuildFile; fileRef = 96555FF85927B90F1BE79A91 /* CNBFileManager.swift */; };
 		27BAA223C44B7FCD6845EDEA /* Measure.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1C0D6FAE077C7817273CB5E0 /* Measure.swift */; };
+		2D036A5632087043F8F70BC7 /* DocumentPickerView.swift in Sources */ = {isa = PBXBuildFile; fileRef = E787F5BE541F1950B58DEB22 /* DocumentPickerView.swift */; };
 		363073B08EC5297E80C8338F /* StaffAreaView.swift in Sources */ = {isa = PBXBuildFile; fileRef = D49B5EBD3BC6ECABB2157696 /* StaffAreaView.swift */; };
 		3734652E7AA0D578931FC4B8 /* MIDIEngine.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1B80768D47A05D75303032ED /* MIDIEngine.swift */; };
 		3CEB7F925F57B07D42FAEB39 /* Instrument.swift in Sources */ = {isa = PBXBuildFile; fileRef = FDA522273EC144D26A43A262 /* Instrument.swift */; };
@@ -19,36 +23,51 @@
 		55AC7CBDB15EF5343AB32436 /* Part.swift in Sources */ = {isa = PBXBuildFile; fileRef = 7E2571DAF48F482D437CD5BF /* Part.swift */; };
 		591358A9C10D7A3284BC13DB /* Score.swift in Sources */ = {isa = PBXBuildFile; fileRef = 68512AB05D9BE0C4BF62EB1C /* Score.swift */; };
 		6C4139C1C8A3DA2A135DD3C6 /* MusicXMLExporter.swift in Sources */ = {isa = PBXBuildFile; fileRef = F180ED3F1454863D8676C257 /* MusicXMLExporter.swift */; };
+		7401A39AB70F6E84025CF54D /* MusicXMLImporter.swift in Sources */ = {isa = PBXBuildFile; fileRef = 287E43EA5C25B87FEF4570C3 /* MusicXMLImporter.swift */; };
 		833AA40610B6F6D5D321F577 /* MetronomeEngine.swift in Sources */ = {isa = PBXBuildFile; fileRef = D88126149726E770E48A8525 /* MetronomeEngine.swift */; };
 		86C71629511E39A92B889D68 /* ScoreViewModel.swift in Sources */ = {isa = PBXBuildFile; fileRef = BDDD972C2349864CBA4F7648 /* ScoreViewModel.swift */; };
 		A5C447F0166BC8776D4598C2 /* NoteToolbarView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 16488F411B4EA5FB4B977057 /* NoteToolbarView.swift */; };
+		B00A65CB074EC8EFA0E665AA /* HapticManager.swift in Sources */ = {isa = PBXBuildFile; fileRef = 258B049FF3BDAE14219D42FA /* HapticManager.swift */; };
 		B92B212B3BD2A945FA99C721 /* ExternalMIDIReceiver.swift in Sources */ = {isa = PBXBuildFile; fileRef = 068C6D907B670651E82A5C6E /* ExternalMIDIReceiver.swift */; };
 		BB881ADB87E40142AE3804C3 /* Pitch.swift in Sources */ = {isa = PBXBuildFile; fileRef = D82806EEF19B77753B5E8F85 /* Pitch.swift */; };
+		CBD7CC61B245383EF27697B6 /* SoundFontManager.swift in Sources */ = {isa = PBXBuildFile; fileRef = 5E0926F59E024C74C9195BF7 /* SoundFontManager.swift */; };
 		CEFC23B266A4FC844E1DD9F6 /* LetterInputView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 437AEBD2A108F257A1639D28 /* LetterInputView.swift */; };
 		CF0C34584979F0ADEDBD06C9 /* Note.swift in Sources */ = {isa = PBXBuildFile; fileRef = 8589EB828201460A07C202F3 /* Note.swift */; };
 		E2580C41C84115D1BB8CC857 /* Duration.swift in Sources */ = {isa = PBXBuildFile; fileRef = 416F6A4FA620714487C9D02C /* Duration.swift */; };
+		EB47F76217867C2E337264A6 /* Localizable.xcstrings in Resources */ = {isa = PBXBuildFile; fileRef = A6B17635FA7B1DC13D45F669 /* Localizable.xcstrings */; };
 		FA705DE93A1865976F671DF6 /* ContentView.swift in Sources */ = {isa = PBXBuildFile; fileRef = A65DF18F2909BED9D221FE36 /* ContentView.swift */; };
+		FA88E65596789A4B3D28E3BC /* MIDIFileHandler.swift in Sources */ = {isa = PBXBuildFile; fileRef = B96876E6DC6637C53E496FFA /* MIDIFileHandler.swift */; };
 /* End PBXBuildFile section */
 
 /* Begin PBXFileReference section */
 		068C6D907B670651E82A5C6E /* ExternalMIDIReceiver.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ExternalMIDIReceiver.swift; sourceTree = "<group>"; };
+		093CEAAE8CBA72093B7CC246 /* PDFExporter.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = PDFExporter.swift; sourceTree = "<group>"; };
 		16488F411B4EA5FB4B977057 /* NoteToolbarView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = NoteToolbarView.swift; sourceTree = "<group>"; };
 		1B80768D47A05D75303032ED /* MIDIEngine.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = MIDIEngine.swift; sourceTree = "<group>"; };
+		1BCFB51C3587D8D0E6748278 /* SoundSettingsView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SoundSettingsView.swift; sourceTree = "<group>"; };
 		1C0D6FAE077C7817273CB5E0 /* Measure.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Measure.swift; sourceTree = "<group>"; };
+		258B049FF3BDAE14219D42FA /* HapticManager.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = HapticManager.swift; sourceTree = "<group>"; };
+		287E43EA5C25B87FEF4570C3 /* MusicXMLImporter.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = MusicXMLImporter.swift; sourceTree = "<group>"; };
 		2994638C367DA9CF18556A26 /* ScoreEditorView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ScoreEditorView.swift; sourceTree = "<group>"; };
 		416F6A4FA620714487C9D02C /* Duration.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Duration.swift; sourceTree = "<group>"; };
 		41CC1828389F747C1307D5D9 /* MusicElements.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = MusicElements.swift; sourceTree = "<group>"; };
 		437AEBD2A108F257A1639D28 /* LetterInputView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = LetterInputView.swift; sourceTree = "<group>"; };
+		5E0926F59E024C74C9195BF7 /* SoundFontManager.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SoundFontManager.swift; sourceTree = "<group>"; };
 		68512AB05D9BE0C4BF62EB1C /* Score.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Score.swift; sourceTree = "<group>"; };
 		6DB29E2A4F0338EE1C46AA96 /* ComposersNotebookApp.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ComposersNotebookApp.swift; sourceTree = "<group>"; };
 		7E2571DAF48F482D437CD5BF /* Part.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Part.swift; sourceTree = "<group>"; };
 		8589EB828201460A07C202F3 /* Note.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Note.swift; sourceTree = "<group>"; };
+		96555FF85927B90F1BE79A91 /* CNBFileManager.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = CNBFileManager.swift; sourceTree = "<group>"; };
 		A65DF18F2909BED9D221FE36 /* ContentView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ContentView.swift; sourceTree = "<group>"; };
+		A6B17635FA7B1DC13D45F669 /* Localizable.xcstrings */ = {isa = PBXFileReference; lastKnownFileType = text.json.xcstrings; path = Localizable.xcstrings; sourceTree = "<group>"; };
+		B96876E6DC6637C53E496FFA /* MIDIFileHandler.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = MIDIFileHandler.swift; sourceTree = "<group>"; };
 		BDDD972C2349864CBA4F7648 /* ScoreViewModel.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ScoreViewModel.swift; sourceTree = "<group>"; };
 		C332283252D17AF92A4994C9 /* PluginManager.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = PluginManager.swift; sourceTree = "<group>"; };
 		D49B5EBD3BC6ECABB2157696 /* StaffAreaView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = StaffAreaView.swift; sourceTree = "<group>"; };
 		D82806EEF19B77753B5E8F85 /* Pitch.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Pitch.swift; sourceTree = "<group>"; };
 		D88126149726E770E48A8525 /* MetronomeEngine.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = MetronomeEngine.swift; sourceTree = "<group>"; };
+		E1613A1E57F0056578AA8924 /* Info.plist */ = {isa = PBXFileReference; lastKnownFileType = text.plist; path = Info.plist; sourceTree = "<group>"; };
+		E787F5BE541F1950B58DEB22 /* DocumentPickerView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = DocumentPickerView.swift; sourceTree = "<group>"; };
 		ED18EBF60DE96441348A72DA /* PianoKeyboardView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = PianoKeyboardView.swift; sourceTree = "<group>"; };
 		F180ED3F1454863D8676C257 /* MusicXMLExporter.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = MusicXMLExporter.swift; sourceTree = "<group>"; };
 		F85D1C62DDC7A2564A387949 /* ComposersNotebook.app */ = {isa = PBXFileReference; includeInIndex = 0; lastKnownFileType = wrapper.application; path = ComposersNotebook.app; sourceTree = BUILT_PRODUCTS_DIR; };
@@ -114,14 +133,28 @@
 			path = Views;
 			sourceTree = "<group>";
 		};
+		B5F7DD2C26B73BD3E4FAC201 /* Resources */ = {
+			isa = PBXGroup;
+			children = (
+				A6B17635FA7B1DC13D45F669 /* Localizable.xcstrings */,
+			);
+			path = Resources;
+			sourceTree = "<group>";
+		};
 		D1642127EE2829B7F5F14649 /* Services */ = {
 			isa = PBXGroup;
 			children = (
+				96555FF85927B90F1BE79A91 /* CNBFileManager.swift */,
 				068C6D907B670651E82A5C6E /* ExternalMIDIReceiver.swift */,
+				258B049FF3BDAE14219D42FA /* HapticManager.swift */,
 				D88126149726E770E48A8525 /* MetronomeEngine.swift */,
 				1B80768D47A05D75303032ED /* MIDIEngine.swift */,
+				B96876E6DC6637C53E496FFA /* MIDIFileHandler.swift */,
 				F180ED3F1454863D8676C257 /* MusicXMLExporter.swift */,
+				287E43EA5C25B87FEF4570C3 /* MusicXMLImporter.swift */,
+				093CEAAE8CBA72093B7CC246 /* PDFExporter.swift */,
 				C332283252D17AF92A4994C9 /* PluginManager.swift */,
+				5E0926F59E024C74C9195BF7 /* SoundFontManager.swift */,
 			);
 			path = Services;
 			sourceTree = "<group>";
@@ -129,9 +162,11 @@
 		FB5CDD9EA99B4FA4F8E43CB0 /* Components */ = {
 			isa = PBXGroup;
 			children = (
+				E787F5BE541F1950B58DEB22 /* DocumentPickerView.swift */,
 				437AEBD2A108F257A1639D28 /* LetterInputView.swift */,
 				16488F411B4EA5FB4B977057 /* NoteToolbarView.swift */,
 				ED18EBF60DE96441348A72DA /* PianoKeyboardView.swift */,
+				1BCFB51C3587D8D0E6748278 /* SoundSettingsView.swift */,
 			);
 			path = Components;
 			sourceTree = "<group>";
@@ -140,7 +175,9 @@
 			isa = PBXGroup;
 			children = (
 				6DB29E2A4F0338EE1C46AA96 /* ComposersNotebookApp.swift */,
+				E1613A1E57F0056578AA8924 /* Info.plist */,
 				4447B4526F303E95BC8D85FA /* Models */,
+				B5F7DD2C26B73BD3E4FAC201 /* Resources */,
 				D1642127EE2829B7F5F14649 /* Services */,
 				065731C636E6E4D1A66635D8 /* ViewModels */,
 				7CDEDC2A70D46BC4D13D610D /* Views */,
@@ -156,6 +193,7 @@
 			buildConfigurationList = 23A678CE1B05F19FABCAA682 /* Build configuration list for PBXNativeTarget "ComposersNotebook" */;
 			buildPhases = (
 				EAE87665F9FD6C7FEB56B961 /* Sources */,
+				C3042D56121CB081767B2959 /* Resources */,
 			);
 			buildRules = (
 			);
@@ -188,6 +226,7 @@
 			knownRegions = (
 				Base,
 				en,
+				ru,
 			);
 			mainGroup = 056A78FF835E2A2E19B51980;
 			minimizedProjectReferenceProxies = 1;
@@ -201,24 +240,41 @@
 		};
 /* End PBXProject section */
 
+/* Begin PBXResourcesBuildPhase section */
+		C3042D56121CB081767B2959 /* Resources */ = {
+			isa = PBXResourcesBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+				EB47F76217867C2E337264A6 /* Localizable.xcstrings in Resources */,
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+/* End PBXResourcesBuildPhase section */
+
 /* Begin PBXSourcesBuildPhase section */
 		EAE87665F9FD6C7FEB56B961 /* Sources */ = {
 			isa = PBXSourcesBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
+				27953B80AB317A69E8610ED7 /* CNBFileManager.swift in Sources */,
 				17F5D248B9DB58295D28573A /* ComposersNotebookApp.swift in Sources */,
 				FA705DE93A1865976F671DF6 /* ContentView.swift in Sources */,
+				2D036A5632087043F8F70BC7 /* DocumentPickerView.swift in Sources */,
 				E2580C41C84115D1BB8CC857 /* Duration.swift in Sources */,
 				B92B212B3BD2A945FA99C721 /* ExternalMIDIReceiver.swift in Sources */,
+				B00A65CB074EC8EFA0E665AA /* HapticManager.swift in Sources */,
 				3CEB7F925F57B07D42FAEB39 /* Instrument.swift in Sources */,
 				CEFC23B266A4FC844E1DD9F6 /* LetterInputView.swift in Sources */,
 				3734652E7AA0D578931FC4B8 /* MIDIEngine.swift in Sources */,
+				FA88E65596789A4B3D28E3BC /* MIDIFileHandler.swift in Sources */,
 				27BAA223C44B7FCD6845EDEA /* Measure.swift in Sources */,
 				833AA40610B6F6D5D321F577 /* MetronomeEngine.swift in Sources */,
 				1A8EBDA6B0D57D1D765DB808 /* MusicElements.swift in Sources */,
 				6C4139C1C8A3DA2A135DD3C6 /* MusicXMLExporter.swift in Sources */,
+				7401A39AB70F6E84025CF54D /* MusicXMLImporter.swift in Sources */,
 				CF0C34584979F0ADEDBD06C9 /* Note.swift in Sources */,
 				A5C447F0166BC8776D4598C2 /* NoteToolbarView.swift in Sources */,
+				24C5D4A7B94626B08147CFF1 /* PDFExporter.swift in Sources */,
 				55AC7CBDB15EF5343AB32436 /* Part.swift in Sources */,
 				46DCD35DD9C81C1BF12F9D4A /* PianoKeyboardView.swift in Sources */,
 				BB881ADB87E40142AE3804C3 /* Pitch.swift in Sources */,
@@ -226,6 +282,8 @@
 				591358A9C10D7A3284BC13DB /* Score.swift in Sources */,
 				43A3102B35157066B5B481ED /* ScoreEditorView.swift in Sources */,
 				86C71629511E39A92B889D68 /* ScoreViewModel.swift in Sources */,
+				CBD7CC61B245383EF27697B6 /* SoundFontManager.swift in Sources */,
+				1F478093720BE42701AA1F6A /* SoundSettingsView.swift in Sources */,
 				363073B08EC5297E80C8338F /* StaffAreaView.swift in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
@@ -299,17 +357,21 @@
 				CURRENT_PROJECT_VERSION = 1;
 				GCC_TREAT_WARNINGS_AS_ERRORS = NO;
 				GENERATE_INFOPLIST_FILE = YES;
+				INFOPLIST_FILE = ComposersNotebook/Info.plist;
+				INFOPLIST_KEY_CFBundleDocumentTypes = "[{\"CFBundleTypeName\":\"Composer's Notebook\",\"CFBundleTypeRole\":\"Editor\",\"LSHandlerRank\":\"Owner\",\"LSItemContentTypes\":[\"com.timshega.composersnotebook.cnb\"]},{\"CFBundleTypeName\":\"MusicXML\",\"CFBundleTypeRole\":\"Viewer\",\"LSHandlerRank\":\"Alternate\",\"LSItemContentTypes\":[\"org.musicxml.musicxml\",\"public.xml\"]},{\"CFBundleTypeName\":\"MIDI\",\"CFBundleTypeRole\":\"Viewer\",\"LSHandlerRank\":\"Alternate\",\"LSItemContentTypes\":[\"public.midi-audio\"]},{\"CFBundleTypeName\":\"SoundFont\",\"CFBundleTypeRole\":\"Viewer\",\"LSHandlerRank\":\"Alternate\",\"LSItemContentTypes\":[\"com.soundblaster.soundfont\"]}]\n";
 				INFOPLIST_KEY_NSMicrophoneUsageDescription = "Нужен доступ к микрофону для записи музыкальных идей";
 				INFOPLIST_KEY_UIApplicationSceneManifest_Generation = YES;
 				INFOPLIST_KEY_UIApplicationSupportsIndirectInputEvents = YES;
 				INFOPLIST_KEY_UILaunchScreen_Generation = YES;
 				INFOPLIST_KEY_UISupportedInterfaceOrientations = "UIInterfaceOrientationPortrait UIInterfaceOrientationLandscapeLeft UIInterfaceOrientationLandscapeRight";
 				INFOPLIST_KEY_UISupportedInterfaceOrientations_iPad = "UIInterfaceOrientationPortrait UIInterfaceOrientationPortraitUpsideDown UIInterfaceOrientationLandscapeLeft UIInterfaceOrientationLandscapeRight";
+				INFOPLIST_KEY_UTExportedTypeDeclarations = "[{\"UTTypeConformsTo\":[\"public.data\",\"public.content\"],\"UTTypeDescription\":\"Composer's Notebook Document\",\"UTTypeIconFiles\":[],\"UTTypeIdentifier\":\"com.timshega.composersnotebook.cnb\",\"UTTypeTagSpecification\":{\"public.filename-extension\":[\"cnb\"],\"public.mime-type\":[\"application/x-composersnotebook\"]}}]\n";
+				INFOPLIST_KEY_UTImportedTypeDeclarations = "[{\"UTTypeConformsTo\":[\"public.data\"],\"UTTypeDescription\":\"MusicXML Document\",\"UTTypeIdentifier\":\"org.musicxml.musicxml\",\"UTTypeTagSpecification\":{\"public.filename-extension\":[\"musicxml\",\"mxl\"]}},{\"UTTypeConformsTo\":[\"public.data\"],\"UTTypeDescription\":\"SoundFont File\",\"UTTypeIdentifier\":\"com.soundblaster.soundfont\",\"UTTypeTagSpecification\":{\"public.filename-extension\":[\"sf2\"]}}]\n";
 				LD_RUNPATH_SEARCH_PATHS = (
 					"$(inherited)",
 					"@executable_path/Frameworks",
 				);
-				MARKETING_VERSION = 1.0.0;
+				MARKETING_VERSION = 2.0.0;
 				PRODUCT_BUNDLE_IDENTIFIER = com.timshega.composersnotebook;
 				PRODUCT_NAME = "Composer's Notebook";
 				SDKROOT = iphoneos;
@@ -329,17 +391,21 @@
 				CURRENT_PROJECT_VERSION = 1;
 				GCC_TREAT_WARNINGS_AS_ERRORS = NO;
 				GENERATE_INFOPLIST_FILE = YES;
+				INFOPLIST_FILE = ComposersNotebook/Info.plist;
+				INFOPLIST_KEY_CFBundleDocumentTypes = "[{\"CFBundleTypeName\":\"Composer's Notebook\",\"CFBundleTypeRole\":\"Editor\",\"LSHandlerRank\":\"Owner\",\"LSItemContentTypes\":[\"com.timshega.composersnotebook.cnb\"]},{\"CFBundleTypeName\":\"MusicXML\",\"CFBundleTypeRole\":\"Viewer\",\"LSHandlerRank\":\"Alternate\",\"LSItemContentTypes\":[\"org.musicxml.musicxml\",\"public.xml\"]},{\"CFBundleTypeName\":\"MIDI\",\"CFBundleTypeRole\":\"Viewer\",\"LSHandlerRank\":\"Alternate\",\"LSItemContentTypes\":[\"public.midi-audio\"]},{\"CFBundleTypeName\":\"SoundFont\",\"CFBundleTypeRole\":\"Viewer\",\"LSHandlerRank\":\"Alternate\",\"LSItemContentTypes\":[\"com.soundblaster.soundfont\"]}]\n";
 				INFOPLIST_KEY_NSMicrophoneUsageDescription = "Нужен доступ к микрофону для записи музыкальных идей";
 				INFOPLIST_KEY_UIApplicationSceneManifest_Generation = YES;
 				INFOPLIST_KEY_UIApplicationSupportsIndirectInputEvents = YES;
 				INFOPLIST_KEY_UILaunchScreen_Generation = YES;
 				INFOPLIST_KEY_UISupportedInterfaceOrientations = "UIInterfaceOrientationPortrait UIInterfaceOrientationLandscapeLeft UIInterfaceOrientationLandscapeRight";
 				INFOPLIST_KEY_UISupportedInterfaceOrientations_iPad = "UIInterfaceOrientationPortrait UIInterfaceOrientationPortraitUpsideDown UIInterfaceOrientationLandscapeLeft UIInterfaceOrientationLandscapeRight";
+				INFOPLIST_KEY_UTExportedTypeDeclarations = "[{\"UTTypeConformsTo\":[\"public.data\",\"public.content\"],\"UTTypeDescription\":\"Composer's Notebook Document\",\"UTTypeIconFiles\":[],\"UTTypeIdentifier\":\"com.timshega.composersnotebook.cnb\",\"UTTypeTagSpecification\":{\"public.filename-extension\":[\"cnb\"],\"public.mime-type\":[\"application/x-composersnotebook\"]}}]\n";
+				INFOPLIST_KEY_UTImportedTypeDeclarations = "[{\"UTTypeConformsTo\":[\"public.data\"],\"UTTypeDescription\":\"MusicXML Document\",\"UTTypeIdentifier\":\"org.musicxml.musicxml\",\"UTTypeTagSpecification\":{\"public.filename-extension\":[\"musicxml\",\"mxl\"]}},{\"UTTypeConformsTo\":[\"public.data\"],\"UTTypeDescription\":\"SoundFont File\",\"UTTypeIdentifier\":\"com.soundblaster.soundfont\",\"UTTypeTagSpecification\":{\"public.filename-extension\":[\"sf2\"]}}]\n";
 				LD_RUNPATH_SEARCH_PATHS = (
 					"$(inherited)",
 					"@executable_path/Frameworks",
 				);
-				MARKETING_VERSION = 1.0.0;
+				MARKETING_VERSION = 2.0.0;
 				PRODUCT_BUNDLE_IDENTIFIER = com.timshega.composersnotebook;
 				PRODUCT_NAME = "Composer's Notebook";
 				SDKROOT = iphoneos;

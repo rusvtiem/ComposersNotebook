@@ -21,7 +21,7 @@ targets:
         INFOPLIST_KEY_NSMicrophoneUsageDescription: "Нужен доступ к микрофону для записи музыкальных идей"
         SWIFT_VERSION: "5"
         SWIFT_STRICT_CONCURRENCY: minimal
-        MARKETING_VERSION: "1.0.0"
+        MARKETING_VERSION: "2.0.0"
         CURRENT_PROJECT_VERSION: 1
         PRODUCT_BUNDLE_IDENTIFIER: com.timshega.composersnotebook
         PRODUCT_NAME: "Composer's Notebook"
@@ -31,3 +31,63 @@ targets:
         CODE_SIGNING_ALLOWED: "YES"
         CODE_SIGN_IDENTITY: "Apple Development"
         GCC_TREAT_WARNINGS_AS_ERRORS: "NO"
+        INFOPLIST_KEY_CFBundleDocumentTypes: |
+          [{"CFBundleTypeName":"Composer's Notebook","CFBundleTypeRole":"Editor","LSHandlerRank":"Owner","LSItemContentTypes":["com.timshega.composersnotebook.cnb"]},{"CFBundleTypeName":"MusicXML","CFBundleTypeRole":"Viewer","LSHandlerRank":"Alternate","LSItemContentTypes":["org.musicxml.musicxml","public.xml"]},{"CFBundleTypeName":"MIDI","CFBundleTypeRole":"Viewer","LSHandlerRank":"Alternate","LSItemContentTypes":["public.midi-audio"]},{"CFBundleTypeName":"SoundFont","CFBundleTypeRole":"Viewer","LSHandlerRank":"Alternate","LSItemContentTypes":["com.soundblaster.soundfont"]}]
+        INFOPLIST_KEY_UTExportedTypeDeclarations: |
+          [{"UTTypeConformsTo":["public.data","public.content"],"UTTypeDescription":"Composer's Notebook Document","UTTypeIconFiles":[],"UTTypeIdentifier":"com.timshega.composersnotebook.cnb","UTTypeTagSpecification":{"public.filename-extension":["cnb"],"public.mime-type":["application/x-composersnotebook"]}}]
+        INFOPLIST_KEY_UTImportedTypeDeclarations: |
+          [{"UTTypeConformsTo":["public.data"],"UTTypeDescription":"MusicXML Document","UTTypeIdentifier":"org.musicxml.musicxml","UTTypeTagSpecification":{"public.filename-extension":["musicxml","mxl"]}},{"UTTypeConformsTo":["public.data"],"UTTypeDescription":"SoundFont File","UTTypeIdentifier":"com.soundblaster.soundfont","UTTypeTagSpecification":{"public.filename-extension":["sf2"]}}]
+    info:
+      path: ComposersNotebook/Info.plist
+      properties:
+        CFBundleDocumentTypes:
+          - CFBundleTypeName: "Composer's Notebook"
+            CFBundleTypeRole: Editor
+            LSHandlerRank: Owner
+            LSItemContentTypes:
+              - com.timshega.composersnotebook.cnb
+          - CFBundleTypeName: MusicXML
+            CFBundleTypeRole: Viewer
+            LSHandlerRank: Alternate
+            LSItemContentTypes:
+              - org.musicxml.musicxml
+              - public.xml
+          - CFBundleTypeName: MIDI
+            CFBundleTypeRole: Viewer
+            LSHandlerRank: Alternate
+            LSItemContentTypes:
+              - public.midi-audio
+          - CFBundleTypeName: SoundFont
+            CFBundleTypeRole: Viewer
+            LSHandlerRank: Alternate
+            LSItemContentTypes:
+              - com.soundblaster.soundfont
+        UTExportedTypeDeclarations:
+          - UTTypeConformsTo:
+              - public.data
+              - public.content
+            UTTypeDescription: "Composer's Notebook Document"
+            UTTypeIdentifier: com.timshega.composersnotebook.cnb
+            UTTypeTagSpecification:
+              public.filename-extension:
+                - cnb
+              public.mime-type:
+                - application/x-composersnotebook
+        UTImportedTypeDeclarations:
+          - UTTypeConformsTo:
+              - public.data
+            UTTypeDescription: MusicXML Document
+            UTTypeIdentifier: org.musicxml.musicxml
+            UTTypeTagSpecification:
+              public.filename-extension:
+                - musicxml
+                - mxl
+          - UTTypeConformsTo:
+              - public.data
+            UTTypeDescription: SoundFont File
+            UTTypeIdentifier: com.soundblaster.soundfont
+            UTTypeTagSpecification:
+              public.filename-extension:
+                - sf2
+        LSSupportsOpeningDocumentsInPlace: true
+        UIFileSharingEnabled: true

@@ -19,9 +19,11 @@ struct ContentView: View {
 struct HomeView: View {
     @EnvironmentObject var appState: AppState
     @State private var showNewScoreSheet = false
+    @State private var showImportPicker = false
+    @State private var recentFiles: [URL] = []
 
     var body: some View {
-        VStack(spacing: 24) {
+        VStack(spacing: 16) {
             Spacer()
 
             Image(systemName: "music.note.list")
@@ -32,18 +34,18 @@ struct HomeView: View {
                 .font(.largeTitle)
                 .fontWeight(.bold)
 
-            Text("Блокнот композитора")
+            Text(String(localized: "Composer's Sketchbook"))
                 .font(.title3)
                 .foregroundStyle(.secondary)
 
             Spacer()
 
-            VStack(spacing: 16) {
-                // Быстрая заметка
+            VStack(spacing: 12) {
                 Button {
                     startQuickNote()
+                    HapticManager.buttonTap()
                 } label: {
-                    Label("Быстрая заметка", systemImage: "bolt.fill")
+                    Label(String(localized: "Quick Note"), systemImage: "bolt.fill")
                         .frame(maxWidth: .infinity)
                         .padding()
                         .background(Color.accentColor)
@@ -51,19 +53,64 @@ struct HomeView: View {
                         .clipShape(RoundedRectangle(cornerRadius: 12))
                 }
 
-                // Новая партитура
                 Button {
                     showNewScoreSheet = true
+                    HapticManager.buttonTap()
                 } label: {
-                    Label("Новая партитура", systemImage: "plus.circle.fill")
+                    Label(String(localized: "New Score"), systemImage: "plus.circle.fill")
                         .frame(maxWidth: .infinity)
                         .padding()
                         .background(Color.accentColor.opacity(0.15))
                         .foregroundColor(.accentColor)
                         .clipShape(RoundedRectangle(cornerRadius: 12))
                 }
+
+                Button {
+                    showImportPicker = true
+                    HapticManager.buttonTap()
+                } label: {
+                    Label(String(localized: "Open File"), systemImage: "folder")
+                        .frame(maxWidth: .infinity)
+                        .padding()
+                        .background(Color(.systemGray5))
+                        .foregroundColor(.primary)
+                        .clipShape(RoundedRectangle(cornerRadius: 12))
+                }
             }
             .padding(.horizontal, 32)
+
+            // Recent files
+            if !recentFiles.isEmpty {
+                VStack(alignment: .leading, spacing: 8) {
+                    Text(String(localized: "Recent"))
+                        .font(.headline)
+                        .padding(.horizontal, 32)
+
+                    ForEach(recentFiles.prefix(5), id: \.absoluteString) { url in
+                        Button {
+                            openCNBFile(url)
+                        } label: {
+                            HStack {
+                                Image(systemName: "doc.text")
+                                    .foregroundStyle(.accentColor)
+                                VStack(alignment: .leading) {
+                                    Text(url.deletingPathExtension().lastPathComponent)
+                                        .font(.body)
+                                    Text(fileDate(url))
+                                        .font(.caption)
+                                        .foregroundStyle(.secondary)
+                                }
+                                Spacer()
+                                Image(systemName: "chevron.right")
+                                    .foregroundStyle(.tertiary)
+                            }
+                            .padding(.horizontal, 32)
+                            .padding(.vertical, 4)
+                        }
+                        .buttonStyle(.plain)
+                    }
+                }
+            }
 
             Spacer()
         }
@@ -77,16 +124,64 @@ struct HomeView: View {
                 }
             }
         }
+        .onAppear {
+            recentFiles = CNBFileManager.shared.listFiles()
+        }
         .sheet(isPresented: $showNewScoreSheet) {
             NewScoreSheet { score in
                 appState.currentScore = score
             }
         }
+        .sheet(isPresented: $showImportPicker) {
+            DocumentPickerView(
+                contentTypes: [.cnb, .musicXML, .midiFile, .xml, .midi],
+                onPick: { url in importFile(url) }
+            )
+        }
     }
 
     private func startQuickNote() {
         appState.isQuickNoteMode = true
-        appState.currentScore = Score.pianoSolo(title: "Быстрая заметка")
+        appState.currentScore = Score.pianoSolo(title: String(localized: "Quick Note"))
+    }
+
+    private func openCNBFile(_ url: URL) {
+        do {
+            let container = try CNBFileManager.shared.load(from: url)
+            appState.currentScore = container.score
+            HapticManager.success()
+        } catch {
+            print("Error opening file: \(error)")
+        }
+    }
+
+    private func importFile(_ url: URL) {
+        do {
+            let ext = url.pathExtension.lowercased()
+            switch ext {
+            case "cnb":
+                let container = try CNBFileManager.shared.load(from: url)
+                appState.currentScore = container.score
+            case "musicxml", "mxl", "xml":
+                appState.currentScore = try MusicXMLImporter.importFile(at: url)
+            case "mid", "midi":
+                appState.currentScore = try MIDIImporter.importFile(at: url)
+            default:
+                print("Unsupported format: \(ext)")
+            }
+            HapticManager.success()
+        } catch {
+            print("Import error: \(error)")
+        }
+    }
+
+    private func fileDate(_ url: URL) -> String {
+        guard let date = (try? url.resourceValues(forKeys: [.contentModificationDateKey]))?.contentModificationDate else {
+            return ""
+        }
+        let formatter = RelativeDateTimeFormatter()
+        formatter.unitsStyle = .short
+        return formatter.localizedString(for: date, relativeTo: Date())
     }
 }
 
