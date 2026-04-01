@@ -189,10 +189,10 @@ class CNBFileManager {
             throw CNBError.invalidFile
         }
 
-        let compressedSlice = data.dropFirst(4)
+        let compressedData = Data(data.dropFirst(4))
         let decompressed: Data
         do {
-            decompressed = try (compressedSlice as NSData).decompressed(using: .zlib) as Data
+            decompressed = try (compressedData as NSData).decompressed(using: .zlib) as Data
         } catch {
             throw CNBError.decompressionFailed
         }
