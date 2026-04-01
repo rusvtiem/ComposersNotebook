@@ -165,7 +165,10 @@ class CNBFileManager {
     // MARK: - Compression (zlib via NSData)
 
     private func compress(_ data: Data) throws -> Data {
-        guard let compressed = (data as NSData).compressed(using: .zlib) as Data? else {
+        let compressed: Data
+        do {
+            compressed = try (data as NSData).compressed(using: .zlib) as Data
+        } catch {
             throw CNBError.compressionFailed
         }
         // Prepend magic bytes "CNB1" for format identification
@@ -186,8 +189,11 @@ class CNBFileManager {
             throw CNBError.invalidFile
         }
 
-        let compressed = data.dropFirst(4)
-        guard let decompressed = (compressed as NSData).decompressed(using: .zlib) as Data? else {
+        let compressedSlice = data.dropFirst(4)
+        let decompressed: Data
+        do {
+            decompressed = try (compressedSlice as NSData).decompressed(using: .zlib) as Data
+        } catch {
             throw CNBError.decompressionFailed
         }
         return decompressed
