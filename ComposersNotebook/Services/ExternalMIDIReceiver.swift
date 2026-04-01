@@ -68,27 +68,24 @@ class ExternalMIDIReceiver: ObservableObject {
 
     private nonisolated func handleMIDIEvents(_ eventList: UnsafePointer<MIDIEventList>) {
         let list = eventList.pointee
-        withUnsafePointer(to: list.packet) { ptr in
-            var packet = ptr.pointee
-            for _ in 0..<list.numPackets {
-                let words = packet.words
-                let word = words.0
-                let status = (word >> 16) & 0xF0
-                let note = Int((word >> 8) & 0x7F)
-                let velocity = Int(word & 0x7F)
+        var packet = list.packet
+        for _ in 0..<list.numPackets {
+            let words = packet.words
+            let word = words.0
+            let status = (word >> 16) & 0xF0
+            let note = Int((word >> 8) & 0x7F)
+            let velocity = Int(word & 0x7F)
 
-                if status == 0x90 && velocity > 0 {
-                    // Note On
-                    Task { @MainActor [weak self] in
-                        self?.onNoteOn?(note, velocity)
-                    }
-                }
-
-                withUnsafePointer(to: &packet) { ptr in
-                    let next = MIDIEventPacketNext(ptr)
-                    packet = next.pointee
+            if status == 0x90 && velocity > 0 {
+                Task { @MainActor [weak self] in
+                    self?.onNoteOn?(note, velocity)
                 }
             }
+
+            let next = withUnsafePointer(to: packet) { ptr in
+                MIDIEventPacketNext(ptr).pointee
+            }
+            packet = next
         }
     }
 }
