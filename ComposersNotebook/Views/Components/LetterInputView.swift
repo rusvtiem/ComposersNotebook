@@ -81,7 +81,7 @@ struct LetterInputView: View {
                             if letterMode == .chord {
                                 Text(chordLabel(for: pitchName))
                                     .font(.system(size: 8, weight: .medium))
-                                    .foregroundStyle(.accentColor)
+                                    .foregroundStyle(.accent)
                             } else {
                                 Text(ruName)
                                     .font(.system(size: 9))

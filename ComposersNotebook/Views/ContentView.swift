@@ -92,7 +92,7 @@ struct HomeView: View {
                         } label: {
                             HStack {
                                 Image(systemName: "doc.text")
-                                    .foregroundStyle(.accentColor)
+                                    .foregroundStyle(.accent)
                                 VStack(alignment: .leading) {
                                     Text(url.deletingPathExtension().lastPathComponent)
                                         .font(.body)
