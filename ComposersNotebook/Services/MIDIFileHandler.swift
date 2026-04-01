@@ -266,7 +266,7 @@ class MIDIImporter {
         var trackNames: [String] = []
         var trackPrograms: [Int] = []
 
-        for trackIdx in 0..<numTracks {
+        for _ in 0..<numTracks {
             guard offset + 8 <= data.count else { break }
             guard Array(data[offset..<offset+4]) == midiTrackChunk else {
                 throw MIDIImportError.invalidTrackHeader
@@ -607,11 +607,15 @@ class MIDIImporter {
 
 private extension Data {
     mutating func append(uint16 value: UInt16) {
-        withUnsafeBytes(of: value.bigEndian) { append(contentsOf: $0) }
+        append(UInt8((value >> 8) & 0xFF))
+        append(UInt8(value & 0xFF))
     }
 
     mutating func append(uint32 value: UInt32) {
-        withUnsafeBytes(of: value.bigEndian) { append(contentsOf: $0) }
+        append(UInt8((value >> 24) & 0xFF))
+        append(UInt8((value >> 16) & 0xFF))
+        append(UInt8((value >> 8) & 0xFF))
+        append(UInt8(value & 0xFF))
     }
 
     func uint16(at offset: Int) -> UInt16 {
