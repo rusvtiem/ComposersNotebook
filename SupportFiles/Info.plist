@@ -27,7 +27,6 @@
 			<string>Alternate</string>
 			<key>LSItemContentTypes</key>
 			<array>
-				<string>org.musicxml.musicxml</string>
 				<string>public.xml</string>
 			</array>
 		</dict>
@@ -41,18 +40,6 @@
 			<key>LSItemContentTypes</key>
 			<array>
 				<string>public.midi-audio</string>
-			</array>
-		</dict>
-		<dict>
-			<key>CFBundleTypeName</key>
-			<string>SoundFont</string>
-			<key>CFBundleTypeRole</key>
-			<string>Viewer</string>
-			<key>LSHandlerRank</key>
-			<string>Alternate</string>
-			<key>LSItemContentTypes</key>
-			<array>
-				<string>com.soundblaster.soundfont</string>
 			</array>
 		</dict>
 	</array>
@@ -72,8 +59,23 @@
 	<string>1</string>
 	<key>LSSupportsOpeningDocumentsInPlace</key>
 	<true/>
+	<key>NSMicrophoneUsageDescription</key>
+	<string>Нужен доступ к микрофону для записи музыкальных идей</string>
+	<key>UIApplicationSceneManifest</key>
+	<dict>
+		<key>UIApplicationSupportsMultipleScenes</key>
+		<false/>
+	</dict>
 	<key>UIFileSharingEnabled</key>
 	<true/>
+	<key>UILaunchScreen</key>
+	<dict/>
+	<key>UISupportedInterfaceOrientations</key>
+	<array>
+		<string>UIInterfaceOrientationPortrait</string>
+		<string>UIInterfaceOrientationLandscapeLeft</string>
+		<string>UIInterfaceOrientationLandscapeRight</string>
+	</array>
 	<key>UTExportedTypeDeclarations</key>
 	<array>
 		<dict>
@@ -91,48 +93,6 @@
 				<key>public.filename-extension</key>
 				<array>
 					<string>cnb</string>
-				</array>
-				<key>public.mime-type</key>
-				<array>
-					<string>application/x-composersnotebook</string>
-				</array>
-			</dict>
-		</dict>
-	</array>
-	<key>UTImportedTypeDeclarations</key>
-	<array>
-		<dict>
-			<key>UTTypeConformsTo</key>
-			<array>
-				<string>public.data</string>
-			</array>
-			<key>UTTypeDescription</key>
-			<string>MusicXML Document</string>
-			<key>UTTypeIdentifier</key>
-			<string>org.musicxml.musicxml</string>
-			<key>UTTypeTagSpecification</key>
-			<dict>
-				<key>public.filename-extension</key>
-				<array>
-					<string>musicxml</string>
-					<string>mxl</string>
-				</array>
-			</dict>
-		</dict>
-		<dict>
-			<key>UTTypeConformsTo</key>
-			<array>
-				<string>public.data</string>
-			</array>
-			<key>UTTypeDescription</key>
-			<string>SoundFont File</string>
-			<key>UTTypeIdentifier</key>
-			<string>com.soundblaster.soundfont</string>
-			<key>UTTypeTagSpecification</key>
-			<dict>
-				<key>public.filename-extension</key>
-				<array>
-					<string>sf2</string>
 				</array>
 			</dict>
 		</dict>

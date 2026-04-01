@@ -66,7 +66,6 @@
 		D49B5EBD3BC6ECABB2157696 /* StaffAreaView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = StaffAreaView.swift; sourceTree = "<group>"; };
 		D82806EEF19B77753B5E8F85 /* Pitch.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Pitch.swift; sourceTree = "<group>"; };
 		D88126149726E770E48A8525 /* MetronomeEngine.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = MetronomeEngine.swift; sourceTree = "<group>"; };
-		E1613A1E57F0056578AA8924 /* Info.plist */ = {isa = PBXFileReference; lastKnownFileType = text.plist; path = Info.plist; sourceTree = "<group>"; };
 		E787F5BE541F1950B58DEB22 /* DocumentPickerView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = DocumentPickerView.swift; sourceTree = "<group>"; };
 		ED18EBF60DE96441348A72DA /* PianoKeyboardView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = PianoKeyboardView.swift; sourceTree = "<group>"; };
 		F180ED3F1454863D8676C257 /* MusicXMLExporter.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = MusicXMLExporter.swift; sourceTree = "<group>"; };
@@ -175,7 +174,6 @@
 			isa = PBXGroup;
 			children = (
 				6DB29E2A4F0338EE1C46AA96 /* ComposersNotebookApp.swift */,
-				E1613A1E57F0056578AA8924 /* Info.plist */,
 				4447B4526F303E95BC8D85FA /* Models */,
 				B5F7DD2C26B73BD3E4FAC201 /* Resources */,
 				D1642127EE2829B7F5F14649 /* Services */,
@@ -356,17 +354,7 @@
 				CODE_SIGN_STYLE = Automatic;
 				CURRENT_PROJECT_VERSION = 1;
 				GCC_TREAT_WARNINGS_AS_ERRORS = NO;
-				GENERATE_INFOPLIST_FILE = YES;
-				INFOPLIST_FILE = ComposersNotebook/Info.plist;
-				INFOPLIST_KEY_CFBundleDocumentTypes = "[{\"CFBundleTypeName\":\"Composer's Notebook\",\"CFBundleTypeRole\":\"Editor\",\"LSHandlerRank\":\"Owner\",\"LSItemContentTypes\":[\"com.timshega.composersnotebook.cnb\"]},{\"CFBundleTypeName\":\"MusicXML\",\"CFBundleTypeRole\":\"Viewer\",\"LSHandlerRank\":\"Alternate\",\"LSItemContentTypes\":[\"org.musicxml.musicxml\",\"public.xml\"]},{\"CFBundleTypeName\":\"MIDI\",\"CFBundleTypeRole\":\"Viewer\",\"LSHandlerRank\":\"Alternate\",\"LSItemContentTypes\":[\"public.midi-audio\"]},{\"CFBundleTypeName\":\"SoundFont\",\"CFBundleTypeRole\":\"Viewer\",\"LSHandlerRank\":\"Alternate\",\"LSItemContentTypes\":[\"com.soundblaster.soundfont\"]}]\n";
-				INFOPLIST_KEY_NSMicrophoneUsageDescription = "Нужен доступ к микрофону для записи музыкальных идей";
-				INFOPLIST_KEY_UIApplicationSceneManifest_Generation = YES;
-				INFOPLIST_KEY_UIApplicationSupportsIndirectInputEvents = YES;
-				INFOPLIST_KEY_UILaunchScreen_Generation = YES;
-				INFOPLIST_KEY_UISupportedInterfaceOrientations = "UIInterfaceOrientationPortrait UIInterfaceOrientationLandscapeLeft UIInterfaceOrientationLandscapeRight";
-				INFOPLIST_KEY_UISupportedInterfaceOrientations_iPad = "UIInterfaceOrientationPortrait UIInterfaceOrientationPortraitUpsideDown UIInterfaceOrientationLandscapeLeft UIInterfaceOrientationLandscapeRight";
-				INFOPLIST_KEY_UTExportedTypeDeclarations = "[{\"UTTypeConformsTo\":[\"public.data\",\"public.content\"],\"UTTypeDescription\":\"Composer's Notebook Document\",\"UTTypeIconFiles\":[],\"UTTypeIdentifier\":\"com.timshega.composersnotebook.cnb\",\"UTTypeTagSpecification\":{\"public.filename-extension\":[\"cnb\"],\"public.mime-type\":[\"application/x-composersnotebook\"]}}]\n";
-				INFOPLIST_KEY_UTImportedTypeDeclarations = "[{\"UTTypeConformsTo\":[\"public.data\"],\"UTTypeDescription\":\"MusicXML Document\",\"UTTypeIdentifier\":\"org.musicxml.musicxml\",\"UTTypeTagSpecification\":{\"public.filename-extension\":[\"musicxml\",\"mxl\"]}},{\"UTTypeConformsTo\":[\"public.data\"],\"UTTypeDescription\":\"SoundFont File\",\"UTTypeIdentifier\":\"com.soundblaster.soundfont\",\"UTTypeTagSpecification\":{\"public.filename-extension\":[\"sf2\"]}}]\n";
+				INFOPLIST_FILE = SupportFiles/Info.plist;
 				LD_RUNPATH_SEARCH_PATHS = (
 					"$(inherited)",
 					"@executable_path/Frameworks",
@@ -390,17 +378,7 @@
 				CODE_SIGN_STYLE = Automatic;
 				CURRENT_PROJECT_VERSION = 1;
 				GCC_TREAT_WARNINGS_AS_ERRORS = NO;
-				GENERATE_INFOPLIST_FILE = YES;
-				INFOPLIST_FILE = ComposersNotebook/Info.plist;
-				INFOPLIST_KEY_CFBundleDocumentTypes = "[{\"CFBundleTypeName\":\"Composer's Notebook\",\"CFBundleTypeRole\":\"Editor\",\"LSHandlerRank\":\"Owner\",\"LSItemContentTypes\":[\"com.timshega.composersnotebook.cnb\"]},{\"CFBundleTypeName\":\"MusicXML\",\"CFBundleTypeRole\":\"Viewer\",\"LSHandlerRank\":\"Alternate\",\"LSItemContentTypes\":[\"org.musicxml.musicxml\",\"public.xml\"]},{\"CFBundleTypeName\":\"MIDI\",\"CFBundleTypeRole\":\"Viewer\",\"LSHandlerRank\":\"Alternate\",\"LSItemContentTypes\":[\"public.midi-audio\"]},{\"CFBundleTypeName\":\"SoundFont\",\"CFBundleTypeRole\":\"Viewer\",\"LSHandlerRank\":\"Alternate\",\"LSItemContentTypes\":[\"com.soundblaster.soundfont\"]}]\n";
-				INFOPLIST_KEY_NSMicrophoneUsageDescription = "Нужен доступ к микрофону для записи музыкальных идей";
-				INFOPLIST_KEY_UIApplicationSceneManifest_Generation = YES;
-				INFOPLIST_KEY_UIApplicationSupportsIndirectInputEvents = YES;
-				INFOPLIST_KEY_UILaunchScreen_Generation = YES;
-				INFOPLIST_KEY_UISupportedInterfaceOrientations = "UIInterfaceOrientationPortrait UIInterfaceOrientationLandscapeLeft UIInterfaceOrientationLandscapeRight";
-				INFOPLIST_KEY_UISupportedInterfaceOrientations_iPad = "UIInterfaceOrientationPortrait UIInterfaceOrientationPortraitUpsideDown UIInterfaceOrientationLandscapeLeft UIInterfaceOrientationLandscapeRight";
-				INFOPLIST_KEY_UTExportedTypeDeclarations = "[{\"UTTypeConformsTo\":[\"public.data\",\"public.content\"],\"UTTypeDescription\":\"Composer's Notebook Document\",\"UTTypeIconFiles\":[],\"UTTypeIdentifier\":\"com.timshega.composersnotebook.cnb\",\"UTTypeTagSpecification\":{\"public.filename-extension\":[\"cnb\"],\"public.mime-type\":[\"application/x-composersnotebook\"]}}]\n";
-				INFOPLIST_KEY_UTImportedTypeDeclarations = "[{\"UTTypeConformsTo\":[\"public.data\"],\"UTTypeDescription\":\"MusicXML Document\",\"UTTypeIdentifier\":\"org.musicxml.musicxml\",\"UTTypeTagSpecification\":{\"public.filename-extension\":[\"musicxml\",\"mxl\"]}},{\"UTTypeConformsTo\":[\"public.data\"],\"UTTypeDescription\":\"SoundFont File\",\"UTTypeIdentifier\":\"com.soundblaster.soundfont\",\"UTTypeTagSpecification\":{\"public.filename-extension\":[\"sf2\"]}}]\n";
+				INFOPLIST_FILE = SupportFiles/Info.plist;
 				LD_RUNPATH_SEARCH_PATHS = (
 					"$(inherited)",
 					"@executable_path/Frameworks",

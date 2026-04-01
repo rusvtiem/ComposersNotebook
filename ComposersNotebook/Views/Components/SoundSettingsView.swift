@@ -413,29 +413,4 @@ struct SoundSettingsView: View {
     }
 }
 
-// MARK: - InstrumentGroup rawValue for persistence
-
-extension InstrumentGroup: RawRepresentable {
-    public init?(rawValue: String) {
-        switch rawValue {
-        case "woodwinds": self = .woodwinds
-        case "brass": self = .brass
-        case "percussion": self = .percussion
-        case "strings": self = .strings
-        case "keyboards": self = .keyboards
-        case "voices": self = .voices
-        default: return nil
-        }
-    }
-
-    public var rawValue: String {
-        switch self {
-        case .woodwinds: return "woodwinds"
-        case .brass: return "brass"
-        case .percussion: return "percussion"
-        case .strings: return "strings"
-        case .keyboards: return "keyboards"
-        case .voices: return "voices"
-        }
-    }
-}
+// InstrumentGroup already conforms to RawRepresentable via String raw type in Instrument.swift
