@@ -607,13 +607,11 @@ class MIDIImporter {
 
 private extension Data {
     mutating func append(uint16 value: UInt16) {
-        var v = value.bigEndian
-        append(Data(bytes: &v, count: 2))
+        withUnsafeBytes(of: value.bigEndian) { append(contentsOf: $0) }
     }
 
     mutating func append(uint32 value: UInt32) {
-        var v = value.bigEndian
-        append(Data(bytes: &v, count: 4))
+        withUnsafeBytes(of: value.bigEndian) { append(contentsOf: $0) }
     }
 
     func uint16(at offset: Int) -> UInt16 {
