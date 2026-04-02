@@ -105,7 +105,7 @@ struct SoundSettingsView: View {
                                     Spacer()
                                     if settings.presetName == preset.name {
                                         Image(systemName: "checkmark")
-                                            .foregroundStyle(.accent)
+                                            .foregroundColor(.accentColor)
                                     }
                                 }
                             }
@@ -336,7 +336,7 @@ struct SoundSettingsView: View {
                             Spacer()
                             sourceLabel(sf.source)
                             if sf == soundFontManager.activeSoundFont {
-                                Image(systemName: "checkmark").foregroundStyle(.accent)
+                                Image(systemName: "checkmark").foregroundColor(.accentColor)
                             }
                         }
                     }
