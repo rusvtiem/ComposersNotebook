@@ -332,7 +332,7 @@ struct ScoreEditorView: View {
                 .font(.caption)
                 .padding(.horizontal, 8)
                 .padding(.vertical, 4)
-                .background(.fill.tertiary)
+                .background(Color(.tertiarySystemFill))
                 .clipShape(Capsule())
             }
 
@@ -509,7 +509,7 @@ struct TimeSignaturePickerSheet: View {
                             Text(preset.label)
                                 .font(.system(size: 18, weight: .bold))
                                 .frame(width: 70, height: 50)
-                                .background(viewModel.effectiveTimeSignature == preset.ts ? Color.accentColor.opacity(0.2) : .fill.tertiary)
+                                .background(viewModel.effectiveTimeSignature == preset.ts ? Color.accentColor.opacity(0.2) : Color(.tertiarySystemFill))
                                 .clipShape(RoundedRectangle(cornerRadius: 8))
                         }
                         .buttonStyle(.plain)

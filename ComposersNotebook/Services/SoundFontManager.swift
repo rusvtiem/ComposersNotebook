@@ -100,13 +100,13 @@ class SoundFontManager: ObservableObject {
         let userDir = userSoundFontDirectory
         if let userFiles = try? FileManager.default.contentsOfDirectory(at: userDir, includingPropertiesForKeys: [.fileSizeKey]) {
             for url in userFiles where url.pathExtension.lowercased() == "sf2" {
-                let size = (try? url.resourceValues(forKeys: [.fileSizeKey]).fileSize.map { Int64($0) }) ?? 0
+                let size = (try? url.resourceValues(forKeys: [.fileSizeKey]).fileSize).map { Int64($0) } ?? 0
                 fonts.append(SoundFontInfo(
                     id: "user_\(url.lastPathComponent)",
                     name: url.deletingPathExtension().lastPathComponent,
                     url: url,
                     source: .userImported,
-                    fileSize: size ?? 0
+                    fileSize: size
                 ))
             }
         }

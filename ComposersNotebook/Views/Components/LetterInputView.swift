@@ -90,7 +90,7 @@ struct LetterInputView: View {
                         }
                         .frame(maxWidth: .infinity)
                         .frame(height: 56)
-                        .background(letterMode == .chord ? Color.accentColor.opacity(0.05) : .fill.tertiary)
+                        .background(letterMode == .chord ? Color.accentColor.opacity(0.05) : Color(.tertiarySystemFill))
                         .clipShape(RoundedRectangle(cornerRadius: 8))
                     }
                     .buttonStyle(.plain)
