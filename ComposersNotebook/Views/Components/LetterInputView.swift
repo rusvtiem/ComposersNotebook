@@ -5,6 +5,7 @@ import SwiftUI
 enum LetterInputMode: String, CaseIterable {
     case note = "Нота"
     case chord = "Аккорд"
+    case chord7 = "Септ."
 }
 
 // MARK: - Letter Note Input (До, Ре, Ми / C, D, E + Chords)
@@ -78,8 +79,8 @@ struct LetterInputView: View {
                         VStack(spacing: 1) {
                             Text(enName)
                                 .font(.system(size: 18, weight: .bold, design: .rounded))
-                            if letterMode == .chord {
-                                Text(chordLabel(for: pitchName))
+                            if letterMode == .chord || letterMode == .chord7 {
+                                Text(chordLabel(for: pitchName) + (letterMode == .chord7 ? "7" : ""))
                                     .font(.system(size: 8, weight: .medium))
                                     .foregroundColor(.accentColor)
                             } else {
@@ -90,7 +91,7 @@ struct LetterInputView: View {
                         }
                         .frame(maxWidth: .infinity)
                         .frame(height: 56)
-                        .background(letterMode == .chord ? Color.accentColor.opacity(0.05) : Color(.tertiarySystemFill))
+                        .background(letterMode != .note ? Color.accentColor.opacity(0.05) : Color(.tertiarySystemFill))
                         .clipShape(RoundedRectangle(cornerRadius: 8))
                     }
                     .buttonStyle(.plain)
@@ -105,11 +106,15 @@ struct LetterInputView: View {
     private func inputNote(_ pitchName: PitchName) {
         let accidental = viewModel.selectedAccidental ?? .natural
 
-        if letterMode == .note {
+        switch letterMode {
+        case .note:
             let pitch = Pitch(name: pitchName, octave: currentOctave, accidental: accidental)
             viewModel.addNote(pitch: pitch)
-        } else {
+        case .chord:
             let chord = buildDiatonicTriad(root: pitchName, octave: currentOctave)
+            viewModel.addChord(pitches: chord)
+        case .chord7:
+            let chord = buildDiatonicSeventh(root: pitchName, octave: currentOctave)
             viewModel.addChord(pitches: chord)
         }
     }
@@ -135,6 +140,28 @@ struct LetterInputView: View {
         let fifthPitch = Pitch(name: scaleNotes[fifthIndex], octave: fifthOctave, accidental: scale[scaleNotes[fifthIndex]] ?? .natural)
 
         return [rootPitch, thirdPitch, fifthPitch]
+    }
+
+    /// Build a seventh chord on the given root using the current key signature's scale
+    private func buildDiatonicSeventh(root: PitchName, octave: Int) -> [Pitch] {
+        let ks = viewModel.effectiveKeySignature
+        let scale = diatonicScale(fifths: ks.fifths, mode: ks.mode)
+        let scaleNotes: [PitchName] = [.C, .D, .E, .F, .G, .A, .B]
+        let rootIndex = scaleNotes.firstIndex(of: root)!
+
+        let thirdIndex = (rootIndex + 2) % 7
+        let fifthIndex = (rootIndex + 4) % 7
+        let seventhIndex = (rootIndex + 6) % 7
+
+        let rootPitch = Pitch(name: root, octave: octave, accidental: scale[root] ?? .natural)
+        let thirdOctave = thirdIndex < rootIndex ? octave + 1 : octave
+        let thirdPitch = Pitch(name: scaleNotes[thirdIndex], octave: thirdOctave, accidental: scale[scaleNotes[thirdIndex]] ?? .natural)
+        let fifthOctave = fifthIndex <= rootIndex ? octave + 1 : octave
+        let fifthPitch = Pitch(name: scaleNotes[fifthIndex], octave: fifthOctave, accidental: scale[scaleNotes[fifthIndex]] ?? .natural)
+        let seventhOctave = seventhIndex <= rootIndex ? octave + 1 : octave
+        let seventhPitch = Pitch(name: scaleNotes[seventhIndex], octave: seventhOctave, accidental: scale[scaleNotes[seventhIndex]] ?? .natural)
+
+        return [rootPitch, thirdPitch, fifthPitch, seventhPitch]
     }
 
     /// Returns the accidentals for each note in the scale based on key signature (fifths)

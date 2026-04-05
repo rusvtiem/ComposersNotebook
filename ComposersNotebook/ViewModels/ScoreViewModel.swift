@@ -4,9 +4,9 @@ import Combine
 // MARK: - Input Mode
 
 enum InputMode: Equatable {
-    case note
-    case rest
-    case select
+    case navigate  // Default: tap = select measure, scroll freely
+    case note      // Tap = insert note at pitch
+    case rest      // Tap = insert rest with selected duration
 }
 
 // MARK: - Score View Model
@@ -23,7 +23,7 @@ class ScoreViewModel: ObservableObject {
     @Published var selectedEventIndex: Int? = nil  // index of selected note in current measure
 
     // Input state
-    @Published var inputMode: InputMode = .note
+    @Published var inputMode: InputMode = .navigate
     @Published var selectedDuration: DurationValue = .quarter
     @Published var selectedAccidental: Accidental? = nil  // nil = без альтерации, .natural = явный бекар
     @Published var isDotted: Bool = false
@@ -95,6 +95,15 @@ class ScoreViewModel: ObservableObject {
 
     func addNote(pitch: Pitch) {
         guard inputMode == .note else { return }
+
+        // If a note/chord is selected, add pitch to it (build chord)
+        if selectedEventIndex != nil {
+            addPitchToSelectedEvent(pitch)
+            let midiProg = currentPart?.instrument.midiProgram ?? 0
+            midiEngine.playNote(pitch: pitch, velocity: 80, duration: 0.3, midiProgram: midiProg)
+            return
+        }
+
         saveUndoState()
 
         let duration = makeDuration()
@@ -127,6 +136,7 @@ class ScoreViewModel: ObservableObject {
     }
 
     func addRest() {
+        guard inputMode == .rest else { return }
         saveUndoState()
         let duration = makeDuration()
         let event = NoteEvent.rest(duration: duration)
@@ -313,6 +323,34 @@ class ScoreViewModel: ObservableObject {
 
     func moveSelectedEvent(toPitch pitch: Pitch) {
         updateSelectedEventPitch(pitch)
+    }
+
+    /// Add a pitch to the selected event, converting a note to a chord if needed
+    func addPitchToSelectedEvent(_ pitch: Pitch) {
+        guard let idx = selectedEventIndex,
+              selectedPartIndex < score.parts.count,
+              selectedMeasureIndex < score.parts[selectedPartIndex].measures.count,
+              idx < score.parts[selectedPartIndex].measures[selectedMeasureIndex].events.count else { return }
+        saveUndoState()
+        var event = score.parts[selectedPartIndex].measures[selectedMeasureIndex].events[idx]
+        switch event.type {
+        case .note(let existing):
+            // Convert note to chord
+            if existing != pitch {
+                event.type = .chord(pitches: [existing, pitch])
+            }
+        case .chord(var pitches):
+            // Add pitch to chord if not already present
+            if !pitches.contains(where: { $0.name == pitch.name && $0.octave == pitch.octave }) {
+                pitches.append(pitch)
+                pitches.sort { $0.staffPosition > $1.staffPosition } // low to high on staff
+                event.type = .chord(pitches: pitches)
+            }
+        case .rest:
+            break
+        }
+        score.parts[selectedPartIndex].measures[selectedMeasureIndex].events[idx] = event
+        score.touch()
     }
 
     // MARK: - Delete

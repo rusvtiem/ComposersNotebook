@@ -53,6 +53,7 @@ struct StaffAreaView: View {
                         isSelected: isCurrentMeasure,
                         selectedEventIndex: isCurrentMeasure ? viewModel.selectedEventIndex : nil,
                         timeSignature: effectiveTimeSignature(partIndex: partIndex, measureIndex: measureIndex),
+                        keySignature: effectiveKeySignature(partIndex: partIndex, measureIndex: measureIndex),
                         clef: effectiveClef(partIndex: partIndex, measureIndex: measureIndex),
                         staffLineSpacing: staffLineSpacing,
                         zoomScale: viewModel.zoomScale
@@ -62,8 +63,14 @@ struct StaffAreaView: View {
                     .gesture(
                         SpatialTapGesture()
                             .onEnded { value in
+                                let wasDifferentMeasure = viewModel.selectedMeasureIndex != measureIndex
+                                    || viewModel.selectedPartIndex != partIndex
                                 viewModel.selectPart(at: partIndex)
                                 viewModel.selectedMeasureIndex = measureIndex
+                                // Reset cursor when switching to a different measure
+                                if wasDifferentMeasure {
+                                    viewModel.cursorPosition = currentMeasureBeats(measure: measure, ts: effectiveTimeSignature(partIndex: partIndex, measureIndex: measureIndex))
+                                }
 
                                 let clef = effectiveClef(partIndex: partIndex, measureIndex: measureIndex)
                                 let ts = effectiveTimeSignature(partIndex: partIndex, measureIndex: measureIndex)
@@ -82,20 +89,25 @@ struct StaffAreaView: View {
                                     return
                                 }
 
-                                // No note hit — deselect and optionally add note
+                                // No note hit
                                 viewModel.deselectEvent()
-                                if viewModel.inputMode == .note {
+
+                                switch viewModel.inputMode {
+                                case .note:
                                     if let pitch = pitchFromTap(y: value.location.y, clef: clef) {
                                         viewModel.addNote(pitch: pitch)
                                     }
-                                } else {
+                                case .rest:
+                                    viewModel.addRest()
+                                case .navigate:
+                                    // Just select the measure, no insertion
                                     viewModel.cursorPosition = 0
                                 }
                             }
                     )
                     .simultaneousGesture(
                         LongPressGesture(minimumDuration: 0.3)
-                            .sequenced(before: DragGesture())
+                            .sequenced(before: DragGesture(minimumDistance: 0))
                             .onChanged { value in
                                 switch value {
                                 case .second(true, let drag):
@@ -215,6 +227,11 @@ struct StaffAreaView: View {
         return Pitch(name: noteNames[noteIndex], octave: octave, accidental: viewModel.selectedAccidental ?? .natural)
     }
 
+    /// Total beats currently used in the measure
+    private func currentMeasureBeats(measure: Measure, ts: TimeSignature) -> Double {
+        measure.usedBeats
+    }
+
     private func effectiveTimeSignature(partIndex: Int, measureIndex: Int) -> TimeSignature {
         let part = viewModel.score.parts[partIndex]
         for i in stride(from: measureIndex, through: 0, by: -1) {
@@ -223,6 +240,16 @@ struct StaffAreaView: View {
             }
         }
         return viewModel.score.timeSignature
+    }
+
+    private func effectiveKeySignature(partIndex: Int, measureIndex: Int) -> KeySignature {
+        let part = viewModel.score.parts[partIndex]
+        for i in stride(from: measureIndex, through: 0, by: -1) {
+            if let ks = part.measures[i].keySignature {
+                return ks
+            }
+        }
+        return viewModel.score.keySignature
     }
 
     private func effectiveClef(partIndex: Int, measureIndex: Int) -> Clef {
@@ -244,6 +271,7 @@ struct MeasureView: View {
     let isSelected: Bool
     let selectedEventIndex: Int?
     let timeSignature: TimeSignature
+    let keySignature: KeySignature
     let clef: Clef
     let staffLineSpacing: CGFloat
     var zoomScale: CGFloat = 1.0
@@ -291,16 +319,24 @@ struct MeasureView: View {
             }
 
             // Draw time signature at start of first measure
+            var headerEndX: CGFloat = measureIndex == 0 ? startX + scaled(25) : startX
             if measureIndex == 0 || measure.timeSignature != nil {
-                let tsX: CGFloat = measureIndex == 0 ? startX + scaled(30) : startX + scaled(5)
+                let tsX: CGFloat = headerEndX + scaled(8)
                 let topNum = Text("\(timeSignature.beats)").font(.system(size: scaled(14), weight: .bold))
                 let botNum = Text("\(timeSignature.beatValue)").font(.system(size: scaled(14), weight: .bold))
                 context.draw(topNum, at: CGPoint(x: tsX, y: staffTop + staffLineSpacing))
                 context.draw(botNum, at: CGPoint(x: tsX, y: staffTop + 3 * staffLineSpacing))
+                headerEndX = tsX + scaled(10)
+            }
+
+            // Draw key signature accidentals
+            if keySignature.fifths != 0 && (measureIndex == 0 || measure.keySignature != nil) {
+                let ksX = headerEndX + scaled(4)
+                headerEndX = drawKeySignature(context: context, fifths: keySignature.fifths, x: ksX, staffTop: staffTop)
             }
 
             // Draw notes
-            let noteStartX: CGFloat = measureIndex == 0 ? startX + scaled(45) : startX + scaled(15)
+            let noteStartX: CGFloat = headerEndX + scaled(8)
             let availableWidth = size.width - noteStartX - 10
             let totalBeats = measure.usedBeats
             guard totalBeats > 0 else { return }
@@ -312,6 +348,7 @@ struct MeasureView: View {
                 let eventIndex: Int
             }
             var notePositions: [NotePosition] = []
+            var beamCandidates: [MeasureView.BeamCandidate] = []
             var currentX = noteStartX
 
             for (eventIndex, event) in measure.events.enumerated() {
@@ -326,12 +363,16 @@ struct MeasureView: View {
                     if isEventSelected {
                         drawSelectionHighlight(context: context, x: noteX, y: y)
                     }
-                    drawNoteHead(context: context, x: noteX, y: y, duration: event.duration.value, stemUp: stemUp, selected: isEventSelected)
+                    let isBeamable = event.duration.value == .eighth || event.duration.value == .sixteenth || event.duration.value == .thirtySecond
+                    drawNoteHead(context: context, x: noteX, y: y, duration: event.duration.value, stemUp: stemUp, selected: isEventSelected, skipFlags: isBeamable)
                     drawLedgerLines(context: context, pitch: pitch, x: noteX, staffTop: staffTop)
                     drawAccidental(context: context, pitch: pitch, x: noteX, y: y, showNatural: event.showNatural)
                     notePositions.append(NotePosition(x: noteX, y: y, eventIndex: eventIndex))
-                    if !event.articulations.isEmpty {
-                        drawArticulation(context: context, symbol: event.articulations.first!.displaySymbol, x: noteX, y: y, stemUp: stemUp, duration: event.duration.value)
+                    if isBeamable {
+                        beamCandidates.append(BeamCandidate(x: noteX, y: y, stemUp: stemUp, duration: event.duration.value, eventIndex: eventIndex))
+                    }
+                    for (artIdx, articulation) in event.articulations.enumerated() {
+                        drawArticulation(context: context, symbol: articulation.displaySymbol, x: noteX, y: y, stemUp: stemUp, duration: event.duration.value, stackIndex: artIdx)
                     }
 
                 case .chord(let pitches):
@@ -339,19 +380,24 @@ struct MeasureView: View {
                     let chordY = topPitch.map { noteY(pitch: $0, staffTop: staffTop) } ?? staffTop + 2 * staffLineSpacing
                     let stemUp = resolveStemDirection(event.stemDirection, noteY: chordY, staffTop: staffTop)
                     let isEventSelected = selectedEventIndex == eventIndex
+                    let isBeamable = event.duration.value == .eighth || event.duration.value == .sixteenth || event.duration.value == .thirtySecond
                     for pitch in pitches {
                         let y = noteY(pitch: pitch, staffTop: staffTop)
                         let noteX = currentX + eventWidth / 2
                         if isEventSelected {
                             drawSelectionHighlight(context: context, x: noteX, y: y)
                         }
-                        drawNoteHead(context: context, x: noteX, y: y, duration: event.duration.value, stemUp: stemUp, selected: isEventSelected)
+                        drawNoteHead(context: context, x: noteX, y: y, duration: event.duration.value, stemUp: stemUp, selected: isEventSelected, skipFlags: isBeamable)
                         drawLedgerLines(context: context, pitch: pitch, x: noteX, staffTop: staffTop)
                         drawAccidental(context: context, pitch: pitch, x: noteX, y: y, showNatural: event.showNatural)
                     }
                     if let tp = topPitch {
                         let y = noteY(pitch: tp, staffTop: staffTop)
-                        notePositions.append(NotePosition(x: currentX + eventWidth / 2, y: y, eventIndex: eventIndex))
+                        let noteX = currentX + eventWidth / 2
+                        notePositions.append(NotePosition(x: noteX, y: y, eventIndex: eventIndex))
+                        if isBeamable {
+                            beamCandidates.append(BeamCandidate(x: noteX, y: y, stemUp: stemUp, duration: event.duration.value, eventIndex: eventIndex))
+                        }
                     }
 
                 case .rest:
@@ -376,6 +422,22 @@ struct MeasureView: View {
 
                 currentX += eventWidth
             }
+
+            // Draw ghost rests for remaining beats in the measure
+            let remainingBeats = timeSignature.totalBeats - measure.usedBeats
+            if remainingBeats > 0.01 && !measure.events.isEmpty {
+                let remainingWidth = availableWidth * CGFloat(remainingBeats / max(totalBeats, timeSignature.totalBeats))
+                let ghostX = currentX + remainingWidth / 2
+                let restY = staffTop + 2 * staffLineSpacing
+                let ghostSymbol = restSymbolForBeats(remainingBeats)
+                let ghostText = Text(ghostSymbol)
+                    .font(.system(size: scaled(16)))
+                    .foregroundColor(.secondary.opacity(0.4))
+                context.draw(ghostText, at: CGPoint(x: ghostX, y: restY))
+            }
+
+            // Draw beams for grouped eighth/sixteenth notes
+            drawBeams(context: context, candidates: beamCandidates, staffTop: staffTop)
 
             // Second pass: draw ties and slurs as Bézier curves
             for (i, event) in measure.events.enumerated() {
@@ -451,7 +513,7 @@ struct MeasureView: View {
         context.stroke(circle, with: .color(.blue.opacity(0.6)), lineWidth: 1.5)
     }
 
-    private func drawNoteHead(context: GraphicsContext, x: CGFloat, y: CGFloat, duration: DurationValue, stemUp: Bool = true, selected: Bool = false) {
+    private func drawNoteHead(context: GraphicsContext, x: CGFloat, y: CGFloat, duration: DurationValue, stemUp: Bool = true, selected: Bool = false, skipFlags: Bool = false) {
         let radius: CGFloat = staffLineSpacing / 2 - 1
         let rect = CGRect(x: x - radius, y: y - radius * 0.75, width: radius * 2, height: radius * 1.5)
         let ellipse = Path(ellipseIn: rect)
@@ -466,7 +528,9 @@ struct MeasureView: View {
         default:
             context.fill(ellipse, with: .color(noteColor))
             drawStem(context: context, x: x, y: y, radius: radius, stemUp: stemUp, color: noteColor)
-            drawFlags(context: context, x: x, y: y, radius: radius, stemUp: stemUp, duration: duration)
+            if !skipFlags {
+                drawFlags(context: context, x: x, y: y, radius: radius, stemUp: stemUp, duration: duration)
+            }
         }
     }
 
@@ -554,32 +618,192 @@ struct MeasureView: View {
         context.draw(accText, at: CGPoint(x: x - radius * 2 - scaled(6), y: y))
     }
 
-    private func drawArticulation(context: GraphicsContext, symbol: String, x: CGFloat, y: CGFloat, stemUp: Bool, duration: DurationValue) {
+    private func drawArticulation(context: GraphicsContext, symbol: String, x: CGFloat, y: CGFloat, stemUp: Bool, duration: DurationValue, stackIndex: Int = 0) {
         let artOffset: CGFloat = staffLineSpacing * 0.8
-        let artY: CGFloat
+        let stackSpacing: CGFloat = staffLineSpacing * 0.6
+        let baseY: CGFloat
         if duration == .whole {
-            // No stem — place above
-            artY = y - artOffset
+            baseY = y - artOffset
         } else if stemUp {
-            // Stem goes up — articulation below the note head
-            artY = y + artOffset
+            baseY = y + artOffset
         } else {
-            // Stem goes down — articulation above the note head
-            artY = y - artOffset
+            baseY = y - artOffset
         }
+        // Stack multiple articulations away from note head
+        let direction: CGFloat = (duration == .whole || !stemUp) ? -1 : 1
+        let artY = baseY + direction * CGFloat(stackIndex) * stackSpacing
         let artText = Text(symbol).font(.system(size: scaled(10)))
         context.draw(artText, at: CGPoint(x: x, y: artY))
     }
 
-    private func restSymbol(for duration: DurationValue) -> String {
-        // Using simple text since iOS doesn't render musical Unicode rest symbols
-        switch duration {
-        case .whole: return "■"
-        case .half: return "▬"
-        case .quarter: return "𝄾"
-        case .eighth: return "♩̸"
-        case .sixteenth: return "≋"
-        case .thirtySecond: return "≋≋"
+    // MARK: - Beam Drawing
+
+    struct BeamCandidate {
+        let x: CGFloat
+        let y: CGFloat
+        let stemUp: Bool
+        let duration: DurationValue
+        let eventIndex: Int
+    }
+
+    private func drawBeams(context: GraphicsContext, candidates: [BeamCandidate], staffTop: CGFloat) {
+        guard candidates.count >= 1 else { return }
+
+        // Group consecutive beamable notes (adjacent eventIndex)
+        var groups: [[BeamCandidate]] = []
+        var currentGroup: [BeamCandidate] = []
+
+        for candidate in candidates {
+            if let last = currentGroup.last {
+                if candidate.eventIndex == last.eventIndex + 1 {
+                    currentGroup.append(candidate)
+                } else {
+                    groups.append(currentGroup)
+                    currentGroup = [candidate]
+                }
+            } else {
+                currentGroup.append(candidate)
+            }
         }
+        if !currentGroup.isEmpty {
+            groups.append(currentGroup)
+        }
+
+        let radius: CGFloat = staffLineSpacing / 2 - 1
+        let stemLength = staffLineSpacing * 3.5
+        let beamThickness: CGFloat = scaled(2.5)
+
+        for group in groups {
+            if group.count == 1 {
+                // Single note — draw flag instead
+                let c = group[0]
+                drawFlags(context: context, x: c.x, y: c.y, radius: radius, stemUp: c.stemUp, duration: c.duration)
+                continue
+            }
+
+            // Determine beam direction: majority vote
+            let stemUp = group.filter(\.stemUp).count >= group.count / 2
+
+            // Draw primary beam (eighth note level)
+            let stemEndPoints: [(x: CGFloat, y: CGFloat)] = group.map { c in
+                let stemX = stemUp ? c.x + radius : c.x - radius
+                let stemEnd = stemUp ? c.y - stemLength : c.y + stemLength
+                return (stemX, stemEnd)
+            }
+
+            guard let first = stemEndPoints.first, let last = stemEndPoints.last else { continue }
+
+            // Primary beam line
+            var beam = Path()
+            beam.move(to: CGPoint(x: first.x, y: first.y))
+            beam.addLine(to: CGPoint(x: last.x, y: last.y))
+            context.stroke(beam, with: .color(.primary), lineWidth: beamThickness)
+
+            // Secondary beam for sixteenth notes
+            let sixteenthNotes = group.filter { $0.duration == .sixteenth || $0.duration == .thirtySecond }
+            if sixteenthNotes.count >= 2 {
+                // Find consecutive sixteenth groups within this group
+                var sixteenthGroups: [[Int]] = []
+                var curSixteenthGroup: [Int] = []
+                for (i, c) in group.enumerated() {
+                    if c.duration == .sixteenth || c.duration == .thirtySecond {
+                        curSixteenthGroup.append(i)
+                    } else {
+                        if curSixteenthGroup.count >= 2 { sixteenthGroups.append(curSixteenthGroup) }
+                        curSixteenthGroup = []
+                    }
+                }
+                if curSixteenthGroup.count >= 2 { sixteenthGroups.append(curSixteenthGroup) }
+
+                let secondBeamOffset: CGFloat = stemUp ? beamThickness + scaled(2) : -(beamThickness + scaled(2))
+                for subGroup in sixteenthGroups {
+                    guard let firstIdx = subGroup.first, let lastIdx = subGroup.last else { continue }
+                    let p1 = stemEndPoints[firstIdx]
+                    let p2 = stemEndPoints[lastIdx]
+                    var beam2 = Path()
+                    beam2.move(to: CGPoint(x: p1.x, y: p1.y + secondBeamOffset))
+                    beam2.addLine(to: CGPoint(x: p2.x, y: p2.y + secondBeamOffset))
+                    context.stroke(beam2, with: .color(.primary), lineWidth: beamThickness)
+                }
+            }
+        }
+    }
+
+    // MARK: - Key Signature Drawing
+
+    /// Draw key signature accidentals and return the X position after the last accidental
+    private func drawKeySignature(context: GraphicsContext, fifths: Int, x: CGFloat, staffTop: CGFloat) -> CGFloat {
+        // Staff line positions from top: 0 = F5, 1 = E5, 2 = D5, 3 = C5, 4 = B4 (treble)
+        // Sharp order positions on treble clef (line/space index from top line):
+        // F♯(0), C♯(1.5), G♯(-0.5), D♯(1), A♯(2.5), E♯(0.5), B♯(2)
+        let sharpPositions: [CGFloat]  // half-spaces from top line
+        let flatPositions: [CGFloat]
+
+        switch clef {
+        case .treble:
+            // Sharp order: F C G D A E B — positions as half-spaces from top line
+            sharpPositions = [0, 3, -1, 2, 5, 1, 4]
+            // Flat order: B E A D G C F
+            flatPositions = [4, 1, 5, 2, 6, 3, 7]
+        case .bass:
+            // Sharp order on bass: shifted down 2 positions from treble
+            sharpPositions = [2, 5, 1, 4, 7, 3, 6]
+            flatPositions = [6, 3, 7, 4, 8, 5, 9]
+        case .alto:
+            sharpPositions = [1, 4, 0, 3, 6, 2, 5]
+            flatPositions = [5, 2, 6, 3, 7, 4, 8]
+        case .tenor:
+            sharpPositions = [3, 6, 2, 5, 8, 4, 7]
+            flatPositions = [7, 4, 8, 5, 9, 6, 10]
+        }
+
+        let symbol: String
+        let positions: [CGFloat]
+        let count: Int
+
+        if fifths > 0 {
+            symbol = "♯"
+            positions = sharpPositions
+            count = min(fifths, 7)
+        } else {
+            symbol = "♭"
+            positions = flatPositions
+            count = min(-fifths, 7)
+        }
+
+        let spacing = scaled(8)
+        var currentX = x
+
+        for i in 0..<count {
+            let halfSpaces = positions[i]
+            let y = staffTop + halfSpaces * (staffLineSpacing / 2)
+            let accText = Text(symbol).font(.system(size: scaled(12), weight: .bold))
+            context.draw(accText, at: CGPoint(x: currentX, y: y))
+            currentX += spacing
+        }
+
+        return currentX
+    }
+
+    private func restSymbol(for duration: DurationValue) -> String {
+        // SMuFL-compatible rest symbols (Unicode Musical Symbols block)
+        switch duration {
+        case .whole: return "𝄻"      // U+1D13B Whole rest
+        case .half: return "𝄼"       // U+1D13C Half rest
+        case .quarter: return "𝄽"    // U+1D13D Quarter rest
+        case .eighth: return "𝄾"     // U+1D13E Eighth rest
+        case .sixteenth: return "𝄿"  // U+1D13F Sixteenth rest
+        case .thirtySecond: return "𝅀" // U+1D140 Thirty-second rest
+        }
+    }
+
+    /// Pick the best rest symbol to represent a given number of remaining beats
+    private func restSymbolForBeats(_ beats: Double) -> String {
+        if beats >= 4.0 { return "𝄻" }
+        if beats >= 2.0 { return "𝄼" }
+        if beats >= 1.0 { return "𝄽" }
+        if beats >= 0.5 { return "𝄾" }
+        if beats >= 0.25 { return "𝄿" }
+        return "𝅀"
     }
 }

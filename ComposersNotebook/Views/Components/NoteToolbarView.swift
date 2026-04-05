@@ -168,6 +168,12 @@ struct NoteToolbarView: View {
     private var modeButtons: some View {
         HStack(spacing: 4) {
             NoteToolbarButton(
+                icon: "hand.tap",
+                label: "Навиг.",
+                isActive: viewModel.inputMode == .navigate
+            ) { viewModel.inputMode = .navigate }
+
+            NoteToolbarButton(
                 icon: "pencil",
                 label: "Нота",
                 isActive: viewModel.inputMode == .note
@@ -177,11 +183,7 @@ struct NoteToolbarView: View {
                 icon: "pause.fill",
                 label: "Пауза",
                 isActive: viewModel.inputMode == .rest
-            ) {
-                viewModel.inputMode = .rest
-                viewModel.addRest()
-                viewModel.inputMode = .note
-            }
+            ) { viewModel.inputMode = .rest }
         }
     }
 

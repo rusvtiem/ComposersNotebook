@@ -19,6 +19,7 @@ struct ScoreEditorView: View {
     @State private var showKeySignaturePicker = false
     @State private var showSoundSettings = false
     @State private var showImportPicker = false
+    @State private var showTempoPicker = false
     @State private var showExportSheet = false
     @State private var showShareSheet = false
     @State private var shareURL: URL?
@@ -63,8 +64,10 @@ struct ScoreEditorView: View {
 
             Divider()
 
-            // Keyboard mode selector + input
-            inputArea
+            // Keyboard mode selector + input (hidden in navigate mode)
+            if viewModel.inputMode != .navigate {
+                inputArea
+            }
         }
         .navigationTitle(viewModel.score.title)
         .navigationBarTitleDisplayMode(.inline)
@@ -276,6 +279,9 @@ struct ScoreEditorView: View {
                     Button { showKeySignaturePicker = true } label: {
                         Label("Сменить тональность", systemImage: "music.note")
                     }
+                    Button { showTempoPicker = true } label: {
+                        Label("Сменить темп", systemImage: "metronome")
+                    }
                 } label: {
                     Image(systemName: "ruler")
                         .font(.system(size: 14))
@@ -302,6 +308,10 @@ struct ScoreEditorView: View {
         .sheet(isPresented: $showKeySignaturePicker) {
             KeySignaturePickerSheet(viewModel: viewModel)
                 .presentationDetents([.height(250)])
+        }
+        .sheet(isPresented: $showTempoPicker) {
+            TempoPickerSheet(viewModel: viewModel)
+                .presentationDetents([.height(300)])
         }
     }
 
@@ -352,6 +362,26 @@ struct ScoreEditorView: View {
                 .foregroundStyle(.secondary)
 
             Spacer()
+
+            // Zoom controls
+            HStack(spacing: 4) {
+                Button {
+                    viewModel.zoomScale = max(0.5, viewModel.zoomScale - 0.25)
+                } label: {
+                    Image(systemName: "minus.magnifyingglass")
+                        .font(.system(size: 12))
+                }
+                Text("\(Int(viewModel.zoomScale * 100))%")
+                    .font(.system(size: 9))
+                    .foregroundStyle(.secondary)
+                    .frame(width: 30)
+                Button {
+                    viewModel.zoomScale = min(3.0, viewModel.zoomScale + 0.25)
+                } label: {
+                    Image(systemName: "plus.magnifyingglass")
+                        .font(.system(size: 12))
+                }
+            }
 
             // Measure info
             Text("Такт \(viewModel.selectedMeasureIndex + 1)/\(viewModel.score.measureCount)")
@@ -590,6 +620,77 @@ struct KeySignaturePickerSheet: View {
                 ToolbarItem(placement: .cancellationAction) {
                     Button("Отмена") { dismiss() }
                 }
+            }
+        }
+    }
+}
+
+// MARK: - Tempo Picker Sheet
+
+struct TempoPickerSheet: View {
+    @ObservedObject var viewModel: ScoreViewModel
+    @Environment(\.dismiss) var dismiss
+    @State private var customBPM: Double = 120
+
+    var body: some View {
+        NavigationStack {
+            VStack(spacing: 12) {
+                Text("Сменить темп с такта \(viewModel.selectedMeasureIndex + 1)")
+                    .font(.subheadline)
+                    .foregroundStyle(.secondary)
+
+                // Custom BPM slider
+                VStack(spacing: 4) {
+                    HStack {
+                        Text("♩= \(Int(customBPM))")
+                            .font(.system(size: 18, weight: .bold))
+                        Spacer()
+                        Button("Применить") {
+                            viewModel.setTempo(TempoMarking(bpm: customBPM))
+                            dismiss()
+                        }
+                        .buttonStyle(.borderedProminent)
+                    }
+                    Slider(value: $customBPM, in: 20...300, step: 1)
+                }
+                .padding(.horizontal)
+
+                Divider()
+
+                // Preset tempos
+                LazyVGrid(columns: [GridItem(.adaptive(minimum: 120))], spacing: 6) {
+                    ForEach(TempoMarking.commonTempos, id: \.0) { name, bpm in
+                        Button {
+                            viewModel.setTempo(TempoMarking(bpm: bpm, name: name))
+                            dismiss()
+                        } label: {
+                            HStack {
+                                Text(name)
+                                    .font(.system(size: 13, weight: .medium))
+                                Spacer()
+                                Text("♩=\(Int(bpm))")
+                                    .font(.system(size: 11))
+                                    .foregroundStyle(.secondary)
+                            }
+                            .padding(.horizontal, 10)
+                            .padding(.vertical, 6)
+                            .background(Color(.tertiarySystemFill))
+                            .clipShape(RoundedRectangle(cornerRadius: 6))
+                        }
+                        .buttonStyle(.plain)
+                    }
+                }
+                .padding(.horizontal)
+            }
+            .navigationTitle("Темп")
+            .navigationBarTitleDisplayMode(.inline)
+            .toolbar {
+                ToolbarItem(placement: .cancellationAction) {
+                    Button("Отмена") { dismiss() }
+                }
+            }
+            .onAppear {
+                customBPM = viewModel.score.tempo.bpm
             }
         }
     }
