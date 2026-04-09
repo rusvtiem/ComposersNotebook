@@ -163,6 +163,41 @@ extension Instrument {
         highestNote: Pitch(name: .C, octave: 4)
     )
 
+    static let xylophone = Instrument(
+        name: "Ксилофон", shortName: "Ксл.",
+        group: .percussion, defaultClef: .treble, midiProgram: 13,
+        lowestNote: Pitch(name: .F, octave: 4),
+        highestNote: Pitch(name: .C, octave: 8)
+    )
+
+    static let glockenspiel = Instrument(
+        name: "Глокеншпиль", shortName: "Глк.",
+        group: .percussion, defaultClef: .treble, midiProgram: 9,
+        lowestNote: Pitch(name: .G, octave: 5),
+        highestNote: Pitch(name: .C, octave: 8)
+    )
+
+    static let snare = Instrument(
+        name: "Малый барабан", shortName: "М.б.",
+        group: .percussion, defaultClef: .treble, midiProgram: 115,
+        lowestNote: Pitch(name: .C, octave: 4),
+        highestNote: Pitch(name: .C, octave: 5)
+    )
+
+    static let bassDrum = Instrument(
+        name: "Большой барабан", shortName: "Б.б.",
+        group: .percussion, defaultClef: .bass, midiProgram: 116,
+        lowestNote: Pitch(name: .C, octave: 2),
+        highestNote: Pitch(name: .C, octave: 3)
+    )
+
+    static let cymbals = Instrument(
+        name: "Тарелки", shortName: "Тар.",
+        group: .percussion, defaultClef: .treble, midiProgram: 119,
+        lowestNote: Pitch(name: .C, octave: 4),
+        highestNote: Pitch(name: .C, octave: 5)
+    )
+
     // MARK: Strings
 
     static let violin = Instrument(
@@ -194,12 +229,51 @@ extension Instrument {
         transposition: -12
     )
 
+    // MARK: Plucked Strings
+
+    static let acousticGuitar = Instrument(
+        name: "Акустическая гитара", shortName: "Ак.г.",
+        group: .strings, defaultClef: .treble, midiProgram: 25,
+        lowestNote: Pitch(name: .E, octave: 2),
+        highestNote: Pitch(name: .E, octave: 6),
+        transposition: -12
+    )
+
+    static let classicalGuitar = Instrument(
+        name: "Классическая гитара", shortName: "Кл.г.",
+        group: .strings, defaultClef: .treble, midiProgram: 24,
+        lowestNote: Pitch(name: .E, octave: 2),
+        highestNote: Pitch(name: .B, octave: 5),
+        transposition: -12
+    )
+
+    static let harp = Instrument(
+        name: "Арфа", shortName: "Арф.",
+        group: .strings, defaultClef: .treble, midiProgram: 46,
+        lowestNote: Pitch(name: .C, octave: 1),
+        highestNote: Pitch(name: .G, octave: 7)
+    )
+
     // MARK: Keyboards
 
     static let piano = Instrument(
         name: "Фортепиано", shortName: "Ф-но",
         group: .keyboards, defaultClef: .treble, midiProgram: 0,
         lowestNote: Pitch(name: .A, octave: 0),
+        highestNote: Pitch(name: .C, octave: 8)
+    )
+
+    static let organ = Instrument(
+        name: "Орган", shortName: "Орг.",
+        group: .keyboards, defaultClef: .treble, midiProgram: 19,
+        lowestNote: Pitch(name: .C, octave: 2),
+        highestNote: Pitch(name: .C, octave: 7)
+    )
+
+    static let celesta = Instrument(
+        name: "Челеста", shortName: "Чел.",
+        group: .keyboards, defaultClef: .treble, midiProgram: 8,
+        lowestNote: Pitch(name: .C, octave: 4),
         highestNote: Pitch(name: .C, octave: 8)
     )
 
@@ -241,11 +315,13 @@ extension Instrument {
         // Brass
         .hornF, .trumpet, .trombone, .tuba,
         // Percussion
-        .timpani,
-        // Strings
+        .timpani, .xylophone, .glockenspiel, .snare, .bassDrum, .cymbals,
+        // Strings (bowed)
         .violin, .viola, .cello, .doubleBass,
+        // Strings (plucked)
+        .acousticGuitar, .classicalGuitar, .harp,
         // Keyboards
-        .piano,
+        .piano, .organ, .celesta,
         // Voices
         .soprano, .alto, .tenorVoice, .bassVoice,
     ]

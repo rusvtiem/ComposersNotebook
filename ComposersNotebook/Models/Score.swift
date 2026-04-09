@@ -115,3 +115,168 @@ struct Score: Codable, Equatable, Identifiable {
         return score
     }
 }
+
+// MARK: - Score Templates
+
+struct ScoreTemplate: Identifiable {
+    let id = UUID()
+    let name: String
+    let icon: String
+    let description: String
+    let instruments: [Instrument]
+
+    func createScore(title: String = "", composer: String = "") -> Score {
+        var score = Score(
+            title: title.isEmpty ? name : title,
+            composer: composer
+        )
+        for instrument in instruments {
+            score.addPart(instrument: instrument)
+        }
+        score.sortPartsByOrchestralOrder()
+        return score
+    }
+}
+
+extension ScoreTemplate {
+
+    // MARK: Solo
+
+    static let pianoSolo = ScoreTemplate(
+        name: "Фортепиано соло",
+        icon: "pianokeys",
+        description: "Одна партия фортепиано",
+        instruments: [.piano]
+    )
+
+    static let guitarSolo = ScoreTemplate(
+        name: "Гитара соло",
+        icon: "guitars",
+        description: "Классическая гитара",
+        instruments: [.classicalGuitar]
+    )
+
+    static let violinSolo = ScoreTemplate(
+        name: "Скрипка соло",
+        icon: "music.note",
+        description: "Одна партия скрипки",
+        instruments: [.violin]
+    )
+
+    static let celloSolo = ScoreTemplate(
+        name: "Виолончель соло",
+        icon: "music.note",
+        description: "Одна партия виолончели",
+        instruments: [.cello]
+    )
+
+    static let fluteSolo = ScoreTemplate(
+        name: "Флейта соло",
+        icon: "music.note",
+        description: "Одна партия флейты",
+        instruments: [.flute]
+    )
+
+    // MARK: Chamber
+
+    static let stringQuartet = ScoreTemplate(
+        name: "Струнный квартет",
+        icon: "music.note.list",
+        description: "Скрипка I, Скрипка II, Альт, Виолончель",
+        instruments: [.violin, .violin, .viola, .cello]
+    )
+
+    static let pianoTrio = ScoreTemplate(
+        name: "Фортепианное трио",
+        icon: "music.note.list",
+        description: "Скрипка, Виолончель, Фортепиано",
+        instruments: [.violin, .cello, .piano]
+    )
+
+    static let windQuintet = ScoreTemplate(
+        name: "Духовой квинтет",
+        icon: "wind",
+        description: "Флейта, Гобой, Кларнет, Валторна, Фагот",
+        instruments: [.flute, .oboe, .clarinetBb, .hornF, .bassoon]
+    )
+
+    static let brassQuintet = ScoreTemplate(
+        name: "Медный квинтет",
+        icon: "music.note.list",
+        description: "2 Трубы, Валторна, Тромбон, Туба",
+        instruments: [.trumpet, .trumpet, .hornF, .trombone, .tuba]
+    )
+
+    static let guitarDuo = ScoreTemplate(
+        name: "Гитарный дуэт",
+        icon: "guitars",
+        description: "Две классические гитары",
+        instruments: [.classicalGuitar, .classicalGuitar]
+    )
+
+    // MARK: Vocal
+
+    static let choirSATB = ScoreTemplate(
+        name: "Хор SATB",
+        icon: "person.3",
+        description: "Сопрано, Контральто, Тенор, Бас",
+        instruments: [.soprano, .alto, .tenorVoice, .bassVoice]
+    )
+
+    static let choirSATBPiano = ScoreTemplate(
+        name: "Хор SATB + Фортепиано",
+        icon: "person.3",
+        description: "SATB хор с фортепианным аккомпанементом",
+        instruments: [.soprano, .alto, .tenorVoice, .bassVoice, .piano]
+    )
+
+    static let voicePiano = ScoreTemplate(
+        name: "Голос + Фортепиано",
+        icon: "person.wave.2",
+        description: "Сольный голос с фортепиано",
+        instruments: [.soprano, .piano]
+    )
+
+    // MARK: Orchestra
+
+    static let chamberOrchestra = ScoreTemplate(
+        name: "Камерный оркестр",
+        icon: "person.3.sequence",
+        description: "Флейта, Гобой, 2 Скрипки, Альт, Виолончель, Контрабас",
+        instruments: [.flute, .oboe, .violin, .violin, .viola, .cello, .doubleBass]
+    )
+
+    static let symphonyOrchestra = ScoreTemplate(
+        name: "Симфонический оркестр",
+        icon: "person.3.sequence",
+        description: "Полный состав: духовые, медные, ударные, струнные",
+        instruments: [
+            // Woodwinds
+            .flute, .flute, .oboe, .oboe, .clarinetBb, .clarinetBb, .bassoon, .bassoon,
+            // Brass
+            .hornF, .hornF, .hornF, .hornF, .trumpet, .trumpet, .trombone, .trombone, .tuba,
+            // Percussion
+            .timpani,
+            // Strings
+            .violin, .violin, .viola, .cello, .doubleBass,
+        ]
+    )
+
+    // MARK: All templates grouped
+
+    static let soloTemplates: [ScoreTemplate] = [
+        .pianoSolo, .guitarSolo, .violinSolo, .celloSolo, .fluteSolo,
+    ]
+
+    static let chamberTemplates: [ScoreTemplate] = [
+        .stringQuartet, .pianoTrio, .windQuintet, .brassQuintet, .guitarDuo,
+    ]
+
+    static let vocalTemplates: [ScoreTemplate] = [
+        .choirSATB, .choirSATBPiano, .voicePiano,
+    ]
+
+    static let orchestralTemplates: [ScoreTemplate] = [
+        .chamberOrchestra, .symphonyOrchestra,
+    ]
+}

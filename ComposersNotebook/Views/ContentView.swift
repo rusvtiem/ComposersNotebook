@@ -203,6 +203,7 @@ struct NewScoreSheet: View {
     @State private var selectedKeyFifths = 0
     @State private var selectedKeyMode = KeySignatureType.major
     @State private var selectedTempoBPM: Double = 120
+    @State private var showCustomSetup = false
 
     let onCreate: (Score) -> Void
 
@@ -218,52 +219,17 @@ struct NewScoreSheet: View {
                     TextField("Композитор", text: $composer)
                 }
 
-                Section("Размер") {
-                    Picker("Размер такта", selection: $selectedTimeSignature) {
-                        ForEach(timeSignatures, id: \.displayString) { ts in
-                            Text(ts.displayString).tag(ts)
-                        }
-                    }
-                }
+                // Templates section
+                templateSection("Соло", templates: ScoreTemplate.soloTemplates)
+                templateSection("Камерная музыка", templates: ScoreTemplate.chamberTemplates)
+                templateSection("Вокал", templates: ScoreTemplate.vocalTemplates)
+                templateSection("Оркестр", templates: ScoreTemplate.orchestralTemplates)
 
-                Section("Тональность") {
-                    Picker("Знаки", selection: $selectedKeyFifths) {
-                        ForEach(-7...7, id: \.self) { fifths in
-                            let ks = KeySignature(fifths: fifths, mode: selectedKeyMode)
-                            Text(ks.displayName).tag(fifths)
-                        }
+                // Custom setup toggle
+                Section {
+                    DisclosureGroup("Свой состав", isExpanded: $showCustomSetup) {
+                        customSetupContent
                     }
-                    Picker("Лад", selection: $selectedKeyMode) {
-                        Text("Мажор").tag(KeySignatureType.major)
-                        Text("Минор").tag(KeySignatureType.minor)
-                    }
-                    .pickerStyle(.segmented)
-                }
-
-                Section("Темп") {
-                    HStack {
-                        Text("♩= \(Int(selectedTempoBPM))")
-                            .monospacedDigit()
-                        Slider(value: $selectedTempoBPM, in: 20...240, step: 1)
-                    }
-                    tempoPresets
-                }
-
-                Section("Инструменты") {
-                    ForEach(Array(selectedInstruments.enumerated()), id: \.offset) { index, instrument in
-                        HStack {
-                            Text(instrument.name)
-                            Spacer()
-                            Text(instrument.group.displayName)
-                                .font(.caption)
-                                .foregroundStyle(.secondary)
-                        }
-                    }
-                    .onDelete { indices in
-                        selectedInstruments.remove(atOffsets: indices)
-                    }
-
-                    instrumentPicker
                 }
             }
             .navigationTitle("Новая партитура")
@@ -272,13 +238,87 @@ struct NewScoreSheet: View {
                 ToolbarItem(placement: .cancellationAction) {
                     Button("Отмена") { dismiss() }
                 }
-                ToolbarItem(placement: .confirmationAction) {
-                    Button("Создать") {
-                        createScore()
+            }
+        }
+    }
+
+    private func templateSection(_ header: String, templates: [ScoreTemplate]) -> some View {
+        Section(header) {
+            ForEach(templates) { template in
+                Button {
+                    createFromTemplate(template)
+                } label: {
+                    HStack {
+                        Image(systemName: template.icon)
+                            .frame(width: 24)
+                            .foregroundColor(.accentColor)
+                        VStack(alignment: .leading) {
+                            Text(template.name)
+                                .font(.body)
+                                .foregroundStyle(.primary)
+                            Text(template.description)
+                                .font(.caption)
+                                .foregroundStyle(.secondary)
+                        }
+                        Spacer()
+                        Image(systemName: "chevron.right")
+                            .font(.caption)
+                            .foregroundStyle(.tertiary)
                     }
-                    .disabled(selectedInstruments.isEmpty)
                 }
             }
+        }
+    }
+
+    @ViewBuilder
+    private var customSetupContent: some View {
+        Picker("Размер такта", selection: $selectedTimeSignature) {
+            ForEach(timeSignatures, id: \.displayString) { ts in
+                Text(ts.displayString).tag(ts)
+            }
+        }
+
+        Picker("Знаки", selection: $selectedKeyFifths) {
+            ForEach(-7...7, id: \.self) { fifths in
+                let ks = KeySignature(fifths: fifths, mode: selectedKeyMode)
+                Text(ks.displayName).tag(fifths)
+            }
+        }
+        Picker("Лад", selection: $selectedKeyMode) {
+            Text("Мажор").tag(KeySignatureType.major)
+            Text("Минор").tag(KeySignatureType.minor)
+        }
+        .pickerStyle(.segmented)
+
+        HStack {
+            Text("♩= \(Int(selectedTempoBPM))")
+                .monospacedDigit()
+            Slider(value: $selectedTempoBPM, in: 20...240, step: 1)
+        }
+        tempoPresets
+
+        ForEach(Array(selectedInstruments.enumerated()), id: \.offset) { index, instrument in
+            HStack {
+                Text(instrument.name)
+                Spacer()
+                Text(instrument.group.displayName)
+                    .font(.caption)
+                    .foregroundStyle(.secondary)
+            }
+        }
+        .onDelete { indices in
+            selectedInstruments.remove(atOffsets: indices)
+        }
+
+        instrumentPicker
+
+        if !selectedInstruments.isEmpty {
+            Button("Создать") {
+                createScore()
+            }
+            .frame(maxWidth: .infinity)
+            .foregroundColor(.white)
+            .listRowBackground(Color.accentColor)
         }
     }
 
@@ -320,6 +360,15 @@ struct NewScoreSheet: View {
                 }
             }
         }
+    }
+
+    private func createFromTemplate(_ template: ScoreTemplate) {
+        let score = template.createScore(
+            title: title.isEmpty ? "" : title,
+            composer: composer
+        )
+        onCreate(score)
+        dismiss()
     }
 
     private func createScore() {
