@@ -370,7 +370,7 @@ struct MeasureView: View {
                         drawSelectionHighlight(context: context, x: noteX, y: y)
                     }
                     let isBeamable = event.duration.value == .eighth || event.duration.value == .sixteenth || event.duration.value == .thirtySecond
-                    drawNoteHead(context: context, x: noteX, y: y, duration: event.duration.value, stemUp: stemUp, selected: isEventSelected, skipFlags: isBeamable)
+                    drawNoteHead(context: context, x: noteX, y: y, duration: event.duration.value, stemUp: stemUp, selected: isEventSelected, skipFlags: isBeamable, staffTop: staffTop)
                     drawLedgerLines(context: context, pitch: pitch, x: noteX, staffTop: staffTop)
                     drawAccidental(context: context, pitch: pitch, x: noteX, y: y, showNatural: event.showNatural)
                     notePositions.append(NotePosition(x: noteX, y: y, eventIndex: eventIndex))
@@ -393,7 +393,7 @@ struct MeasureView: View {
                         if isEventSelected {
                             drawSelectionHighlight(context: context, x: noteX, y: y)
                         }
-                        drawNoteHead(context: context, x: noteX, y: y, duration: event.duration.value, stemUp: stemUp, selected: isEventSelected, skipFlags: isBeamable)
+                        drawNoteHead(context: context, x: noteX, y: y, duration: event.duration.value, stemUp: stemUp, selected: isEventSelected, skipFlags: isBeamable, staffTop: staffTop)
                         drawLedgerLines(context: context, pitch: pitch, x: noteX, staffTop: staffTop)
                         drawAccidental(context: context, pitch: pitch, x: noteX, y: y, showNatural: event.showNatural)
                     }
@@ -517,7 +517,7 @@ struct MeasureView: View {
         context.stroke(circle, with: .color(theme.selectedNote.opacity(0.6)), lineWidth: 1.5)
     }
 
-    private func drawNoteHead(context: GraphicsContext, x: CGFloat, y: CGFloat, duration: DurationValue, stemUp: Bool = true, selected: Bool = false, skipFlags: Bool = false) {
+    private func drawNoteHead(context: GraphicsContext, x: CGFloat, y: CGFloat, duration: DurationValue, stemUp: Bool = true, selected: Bool = false, skipFlags: Bool = false, staffTop: CGFloat = 0) {
         let radius: CGFloat = staffLineSpacing / 2 - 1
         let rect = CGRect(x: x - radius, y: y - radius * 0.75, width: radius * 2, height: radius * 1.5)
         let ellipse = Path(ellipseIn: rect)
@@ -528,13 +528,12 @@ struct MeasureView: View {
             context.stroke(ellipse, with: .color(noteColor), lineWidth: 1.5)
         case .half:
             context.stroke(ellipse, with: .color(noteColor), lineWidth: 1.5)
-            drawStem(context: context, x: x, y: y, radius: radius, stemUp: stemUp, color: noteColor)
+            drawStem(context: context, x: x, y: y, radius: radius, stemUp: stemUp, color: noteColor, staffTop: staffTop)
         default:
             context.fill(ellipse, with: .color(noteColor))
             if !skipFlags {
-                // For beamable notes, stem is drawn by drawBeams with unified direction
-                drawStem(context: context, x: x, y: y, radius: radius, stemUp: stemUp, color: noteColor)
-                drawFlags(context: context, x: x, y: y, radius: radius, stemUp: stemUp, duration: duration)
+                drawStem(context: context, x: x, y: y, radius: radius, stemUp: stemUp, color: noteColor, staffTop: staffTop)
+                drawFlags(context: context, x: x, y: y, radius: radius, stemUp: stemUp, duration: duration, staffTop: staffTop)
             }
         }
     }
@@ -547,17 +546,34 @@ struct MeasureView: View {
         }
     }
 
-    private func drawStem(context: GraphicsContext, x: CGFloat, y: CGFloat, radius: CGFloat, stemUp: Bool, color: Color? = nil) {
+    private func drawStem(context: GraphicsContext, x: CGFloat, y: CGFloat, radius: CGFloat, stemUp: Bool, color: Color? = nil, staffTop: CGFloat? = nil) {
         let stemColor = color ?? theme.noteHead
         var stem = Path()
-        let stemLength = staffLineSpacing * 3.5
+        let defaultStemLength = staffLineSpacing * 3.5
         let stemX = stemUp ? x + radius : x - radius
+
+        // Calculate stem end, ensuring it reaches at least the middle of the staff
+        var stemEnd: CGFloat
+        if stemUp {
+            stemEnd = y - defaultStemLength
+            if let top = staffTop {
+                let midStaff = top + staffLineSpacing * 2
+                stemEnd = min(stemEnd, midStaff)
+            }
+        } else {
+            stemEnd = y + defaultStemLength
+            if let top = staffTop {
+                let midStaff = top + staffLineSpacing * 2
+                stemEnd = max(stemEnd, midStaff)
+            }
+        }
+
         stem.move(to: CGPoint(x: stemX, y: y))
-        stem.addLine(to: CGPoint(x: stemX, y: stemUp ? y - stemLength : y + stemLength))
+        stem.addLine(to: CGPoint(x: stemX, y: stemEnd))
         context.stroke(stem, with: .color(stemColor), lineWidth: 1)
     }
 
-    private func drawFlags(context: GraphicsContext, x: CGFloat, y: CGFloat, radius: CGFloat, stemUp: Bool, duration: DurationValue) {
+    private func drawFlags(context: GraphicsContext, x: CGFloat, y: CGFloat, radius: CGFloat, stemUp: Bool, duration: DurationValue, staffTop: CGFloat = 0) {
         let flagCount: Int
         switch duration {
         case .eighth: flagCount = 1
@@ -566,9 +582,12 @@ struct MeasureView: View {
         default: return
         }
 
-        let stemLength = staffLineSpacing * 3.5
+        let defaultStemLength = staffLineSpacing * 3.5
+        let midStaff = staffTop + staffLineSpacing * 2
         let stemX = stemUp ? x + radius : x - radius
-        let stemEnd = stemUp ? y - stemLength : y + stemLength
+        var stemEnd = stemUp ? y - defaultStemLength : y + defaultStemLength
+        if stemUp { stemEnd = min(stemEnd, midStaff) }
+        else { stemEnd = max(stemEnd, midStaff) }
         let flagLength: CGFloat = staffLineSpacing * 1.5
         let flagSpacing: CGFloat = staffLineSpacing * 0.8
 
@@ -711,41 +730,57 @@ struct MeasureView: View {
         }
 
         let radius: CGFloat = staffLineSpacing / 2 - 1
-        let stemLength = staffLineSpacing * 3.5
+        let minStemLength = staffLineSpacing * 2.5
+        let defaultStemLength = staffLineSpacing * 3.5
         let beamThickness: CGFloat = scaled(2.5)
+        let midStaff = staffTop + staffLineSpacing * 2
 
         for group in beatGroups {
             if group.count == 1 {
                 // Single note — draw stem and flag
                 let c = group[0]
-                drawStem(context: context, x: c.x, y: c.y, radius: radius, stemUp: c.stemUp, color: theme.noteHead)
-                drawFlags(context: context, x: c.x, y: c.y, radius: radius, stemUp: c.stemUp, duration: c.duration)
+                drawStem(context: context, x: c.x, y: c.y, radius: radius, stemUp: c.stemUp, color: theme.noteHead, staffTop: staffTop)
+                drawFlags(context: context, x: c.x, y: c.y, radius: radius, stemUp: c.stemUp, duration: c.duration, staffTop: staffTop)
                 continue
             }
 
             // Determine beam direction: use average note position
             let avgY = group.map(\.y).reduce(0, +) / CGFloat(group.count)
-            let midStaff = staffTop + staffLineSpacing * 2
             let stemUp = avgY >= midStaff
 
-            // Calculate stem endpoints with unified direction
-            let stemEndPoints: [(x: CGFloat, y: CGFloat)] = group.map { c in
-                let stemX = stemUp ? c.x + radius : c.x - radius
-                let stemEnd = stemUp ? c.y - stemLength : c.y + stemLength
-                return (stemX, stemEnd)
+            // Calculate flat beam Y position:
+            // For stem up: beam above the highest note (smallest y) by minStemLength
+            // For stem down: beam below the lowest note (largest y) by minStemLength
+            let beamY: CGFloat
+            if stemUp {
+                let highestNoteY = group.map(\.y).min()!
+                beamY = min(highestNoteY - minStemLength, midStaff)
+            } else {
+                let lowestNoteY = group.map(\.y).max()!
+                beamY = max(lowestNoteY + minStemLength, midStaff)
             }
 
-            // Re-draw stems with unified direction (override individual stem directions)
+            // Draw stems from each notehead to the beam position
             for c in group {
-                drawStem(context: context, x: c.x, y: c.y, radius: radius, stemUp: stemUp, color: theme.noteHead)
+                let stemX = stemUp ? c.x + radius : c.x - radius
+                var stem = Path()
+                stem.move(to: CGPoint(x: stemX, y: c.y))
+                stem.addLine(to: CGPoint(x: stemX, y: beamY))
+                context.stroke(stem, with: .color(theme.noteHead), lineWidth: 1)
+            }
+
+            // Calculate stem endpoint positions (for beam and secondary beam drawing)
+            let stemEndPoints: [(x: CGFloat, y: CGFloat)] = group.map { c in
+                let stemX = stemUp ? c.x + radius : c.x - radius
+                return (stemX, beamY)
             }
 
             guard let first = stemEndPoints.first, let last = stemEndPoints.last else { continue }
 
-            // Primary beam line (straight between first and last stem endpoints)
+            // Primary beam line (flat, at beamY)
             var beam = Path()
-            beam.move(to: CGPoint(x: first.x, y: first.y))
-            beam.addLine(to: CGPoint(x: last.x, y: last.y))
+            beam.move(to: CGPoint(x: first.x, y: beamY))
+            beam.addLine(to: CGPoint(x: last.x, y: beamY))
             context.stroke(beam, with: .color(theme.noteHead), lineWidth: beamThickness)
 
             // Secondary beam for sixteenth notes
