@@ -43,7 +43,7 @@ struct ScoreEditorView: View {
                 StaffAreaView(viewModel: viewModel)
                     .padding()
             }
-            .gesture(
+            .simultaneousGesture(
                 MagnifyGesture()
                     .onChanged { value in
                         let newScale = baseZoomScale * value.magnification
@@ -53,6 +53,18 @@ struct ScoreEditorView: View {
                         baseZoomScale = viewModel.zoomScale
                     }
             )
+            .onTapGesture(count: 2) {
+                // Double-tap: toggle between 100% and 150%
+                withAnimation(.easeInOut(duration: 0.25)) {
+                    if viewModel.zoomScale > 1.1 {
+                        viewModel.zoomScale = 1.0
+                        baseZoomScale = 1.0
+                    } else {
+                        viewModel.zoomScale = 1.5
+                        baseZoomScale = 1.5
+                    }
+                }
+            }
             .frame(maxHeight: .infinity)
 
             // Metronome + Playback bar

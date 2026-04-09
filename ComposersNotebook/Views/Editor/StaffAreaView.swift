@@ -355,6 +355,7 @@ struct MeasureView: View {
             var notePositions: [NotePosition] = []
             var beamCandidates: [MeasureView.BeamCandidate] = []
             var currentX = noteStartX
+            var cumulativeBeats: Double = 0
 
             for (eventIndex, event) in measure.events.enumerated() {
                 let eventWidth = availableWidth * CGFloat(event.duration.beats / max(totalBeats, timeSignature.totalBeats))
@@ -374,7 +375,7 @@ struct MeasureView: View {
                     drawAccidental(context: context, pitch: pitch, x: noteX, y: y, showNatural: event.showNatural)
                     notePositions.append(NotePosition(x: noteX, y: y, eventIndex: eventIndex))
                     if isBeamable {
-                        beamCandidates.append(BeamCandidate(x: noteX, y: y, stemUp: stemUp, duration: event.duration.value, eventIndex: eventIndex))
+                        beamCandidates.append(BeamCandidate(x: noteX, y: y, stemUp: stemUp, duration: event.duration.value, eventIndex: eventIndex, beatPosition: cumulativeBeats))
                     }
                     for (artIdx, articulation) in event.articulations.enumerated() {
                         drawArticulation(context: context, symbol: articulation.displaySymbol, x: noteX, y: y, stemUp: stemUp, duration: event.duration.value, stackIndex: artIdx)
@@ -401,7 +402,7 @@ struct MeasureView: View {
                         let noteX = currentX + eventWidth / 2
                         notePositions.append(NotePosition(x: noteX, y: y, eventIndex: eventIndex))
                         if isBeamable {
-                            beamCandidates.append(BeamCandidate(x: noteX, y: y, stemUp: stemUp, duration: event.duration.value, eventIndex: eventIndex))
+                            beamCandidates.append(BeamCandidate(x: noteX, y: y, stemUp: stemUp, duration: event.duration.value, eventIndex: eventIndex, beatPosition: cumulativeBeats))
                         }
                     }
 
@@ -411,9 +412,7 @@ struct MeasureView: View {
                     if selectedEventIndex == eventIndex {
                         drawSelectionHighlight(context: context, x: restX, y: restY)
                     }
-                    let restText = Text(restSymbol(for: event.duration.value))
-                        .font(.system(size: scaled(18)))
-                    context.draw(restText, at: CGPoint(x: restX, y: restY))
+                    drawRestShape(context: context, x: restX, y: restY, duration: event.duration.value, staffTop: staffTop)
                     notePositions.append(NotePosition(x: restX, y: restY, eventIndex: eventIndex))
                 }
 
@@ -425,6 +424,7 @@ struct MeasureView: View {
                     context.draw(dynText, at: CGPoint(x: currentX + eventWidth / 2, y: staffTop + 5 * staffLineSpacing + scaled(5)))
                 }
 
+                cumulativeBeats += event.duration.beats
                 currentX += eventWidth
             }
 
@@ -433,12 +433,11 @@ struct MeasureView: View {
             if remainingBeats > 0.01 && !measure.events.isEmpty {
                 let remainingWidth = availableWidth * CGFloat(remainingBeats / max(totalBeats, timeSignature.totalBeats))
                 let ghostX = currentX + remainingWidth / 2
-                let restY = staffTop + 2 * staffLineSpacing
-                let ghostSymbol = restSymbolForBeats(remainingBeats)
-                let ghostText = Text(ghostSymbol)
-                    .font(.system(size: scaled(16)))
-                    .foregroundColor(theme.textSecondary.opacity(0.4))
-                context.draw(ghostText, at: CGPoint(x: ghostX, y: restY))
+                let ghostDuration = restSymbolForBeats(remainingBeats)
+                // Draw ghost rest with reduced opacity
+                var ghostContext = context
+                ghostContext.opacity = 0.3
+                drawRestShape(context: ghostContext, x: ghostX, y: staffTop + 2 * staffLineSpacing, duration: ghostDuration, staffTop: staffTop)
             }
 
             // Draw beams for grouped eighth/sixteenth notes
@@ -619,9 +618,9 @@ struct MeasureView: View {
     private func drawAccidental(context: GraphicsContext, pitch: Pitch, x: CGFloat, y: CGFloat, showNatural: Bool = false) {
         if pitch.accidental == .natural && !showNatural { return }
         let symbol = pitch.accidental.displaySymbol
-        let accText = Text(symbol).font(.system(size: scaled(12), weight: .bold))
+        let accText = Text(symbol).font(.system(size: scaled(16), weight: .bold))
         let radius: CGFloat = staffLineSpacing / 2 - 1
-        context.draw(accText, at: CGPoint(x: x - radius * 2 - scaled(6), y: y))
+        context.draw(accText, at: CGPoint(x: x - radius * 2 - scaled(8), y: y))
     }
 
     private func drawArticulation(context: GraphicsContext, symbol: String, x: CGFloat, y: CGFloat, stemUp: Bool, duration: DurationValue, stackIndex: Int = 0) {
@@ -650,13 +649,14 @@ struct MeasureView: View {
         let stemUp: Bool
         let duration: DurationValue
         let eventIndex: Int
+        let beatPosition: Double  // cumulative beat position within measure
     }
 
     private func drawBeams(context: GraphicsContext, candidates: [BeamCandidate], staffTop: CGFloat) {
-        guard candidates.count >= 1 else { return }
+        guard !candidates.isEmpty else { return }
 
-        // Group consecutive beamable notes (adjacent eventIndex)
-        var groups: [[BeamCandidate]] = []
+        // Step 1: Group consecutive beamable notes (adjacent eventIndex)
+        var consecutiveGroups: [[BeamCandidate]] = []
         var currentGroup: [BeamCandidate] = []
 
         for candidate in candidates {
@@ -664,7 +664,7 @@ struct MeasureView: View {
                 if candidate.eventIndex == last.eventIndex + 1 {
                     currentGroup.append(candidate)
                 } else {
-                    groups.append(currentGroup)
+                    consecutiveGroups.append(currentGroup)
                     currentGroup = [candidate]
                 }
             } else {
@@ -672,14 +672,48 @@ struct MeasureView: View {
             }
         }
         if !currentGroup.isEmpty {
-            groups.append(currentGroup)
+            consecutiveGroups.append(currentGroup)
+        }
+
+        // Step 2: Split each consecutive group by beat boundaries
+        // In 4/4: beat at 0, 1, 2, 3. Group = notes within same beat.
+        // In 6/8: compound meter, group by dotted quarter (1.5 beats)
+        let beatUnit: Double
+        if timeSignature.beatValue == 8 && timeSignature.beats % 3 == 0 {
+            // Compound meter (6/8, 9/8, 12/8): group by dotted quarter
+            beatUnit = 1.5
+        } else {
+            // Simple meter: group by one beat
+            beatUnit = 1.0
+        }
+
+        var beatGroups: [[BeamCandidate]] = []
+        for group in consecutiveGroups {
+            var subGroup: [BeamCandidate] = []
+            for candidate in group {
+                if let last = subGroup.last {
+                    let lastBeat = Int(last.beatPosition / beatUnit)
+                    let curBeat = Int(candidate.beatPosition / beatUnit)
+                    if curBeat != lastBeat {
+                        beatGroups.append(subGroup)
+                        subGroup = [candidate]
+                    } else {
+                        subGroup.append(candidate)
+                    }
+                } else {
+                    subGroup.append(candidate)
+                }
+            }
+            if !subGroup.isEmpty {
+                beatGroups.append(subGroup)
+            }
         }
 
         let radius: CGFloat = staffLineSpacing / 2 - 1
         let stemLength = staffLineSpacing * 3.5
         let beamThickness: CGFloat = scaled(2.5)
 
-        for group in groups {
+        for group in beatGroups {
             if group.count == 1 {
                 // Single note — draw flag instead
                 let c = group[0]
@@ -687,50 +721,53 @@ struct MeasureView: View {
                 continue
             }
 
-            // Determine beam direction: majority vote
-            let stemUp = group.filter(\.stemUp).count >= group.count / 2
+            // Determine beam direction: use average note position
+            let avgY = group.map(\.y).reduce(0, +) / CGFloat(group.count)
+            let midStaff = staffTop + staffLineSpacing * 2
+            let stemUp = avgY >= midStaff
 
-            // Draw primary beam (eighth note level)
+            // Calculate stem endpoints with unified direction
             let stemEndPoints: [(x: CGFloat, y: CGFloat)] = group.map { c in
                 let stemX = stemUp ? c.x + radius : c.x - radius
                 let stemEnd = stemUp ? c.y - stemLength : c.y + stemLength
                 return (stemX, stemEnd)
             }
 
+            // Re-draw stems with unified direction (override individual stem directions)
+            for c in group {
+                drawStem(context: context, x: c.x, y: c.y, radius: radius, stemUp: stemUp, color: theme.noteHead)
+            }
+
             guard let first = stemEndPoints.first, let last = stemEndPoints.last else { continue }
 
-            // Primary beam line
+            // Primary beam line (straight between first and last stem endpoints)
             var beam = Path()
             beam.move(to: CGPoint(x: first.x, y: first.y))
             beam.addLine(to: CGPoint(x: last.x, y: last.y))
             context.stroke(beam, with: .color(theme.noteHead), lineWidth: beamThickness)
 
             // Secondary beam for sixteenth notes
-            let sixteenthNotes = group.filter { $0.duration == .sixteenth || $0.duration == .thirtySecond }
-            if sixteenthNotes.count >= 2 {
-                // Find consecutive sixteenth groups within this group
-                var sixteenthGroups: [[Int]] = []
-                var curSixteenthGroup: [Int] = []
-                for (i, c) in group.enumerated() {
-                    if c.duration == .sixteenth || c.duration == .thirtySecond {
-                        curSixteenthGroup.append(i)
-                    } else {
-                        if curSixteenthGroup.count >= 2 { sixteenthGroups.append(curSixteenthGroup) }
-                        curSixteenthGroup = []
-                    }
+            var sixteenthGroups: [[Int]] = []
+            var curSixteenthGroup: [Int] = []
+            for (i, c) in group.enumerated() {
+                if c.duration == .sixteenth || c.duration == .thirtySecond {
+                    curSixteenthGroup.append(i)
+                } else {
+                    if curSixteenthGroup.count >= 2 { sixteenthGroups.append(curSixteenthGroup) }
+                    curSixteenthGroup = []
                 }
-                if curSixteenthGroup.count >= 2 { sixteenthGroups.append(curSixteenthGroup) }
+            }
+            if curSixteenthGroup.count >= 2 { sixteenthGroups.append(curSixteenthGroup) }
 
-                let secondBeamOffset: CGFloat = stemUp ? beamThickness + scaled(2) : -(beamThickness + scaled(2))
-                for subGroup in sixteenthGroups {
-                    guard let firstIdx = subGroup.first, let lastIdx = subGroup.last else { continue }
-                    let p1 = stemEndPoints[firstIdx]
-                    let p2 = stemEndPoints[lastIdx]
-                    var beam2 = Path()
-                    beam2.move(to: CGPoint(x: p1.x, y: p1.y + secondBeamOffset))
-                    beam2.addLine(to: CGPoint(x: p2.x, y: p2.y + secondBeamOffset))
-                    context.stroke(beam2, with: .color(theme.noteHead), lineWidth: beamThickness)
-                }
+            let secondBeamOffset: CGFloat = stemUp ? beamThickness + scaled(2) : -(beamThickness + scaled(2))
+            for subGroup in sixteenthGroups {
+                guard let firstIdx = subGroup.first, let lastIdx = subGroup.last else { continue }
+                let p1 = stemEndPoints[firstIdx]
+                let p2 = stemEndPoints[lastIdx]
+                var beam2 = Path()
+                beam2.move(to: CGPoint(x: p1.x, y: p1.y + secondBeamOffset))
+                beam2.addLine(to: CGPoint(x: p2.x, y: p2.y + secondBeamOffset))
+                context.stroke(beam2, with: .color(theme.noteHead), lineWidth: beamThickness)
             }
         }
     }
@@ -783,33 +820,99 @@ struct MeasureView: View {
         for i in 0..<count {
             let halfSpaces = positions[i]
             let y = staffTop + halfSpaces * (staffLineSpacing / 2)
-            let accText = Text(symbol).font(.system(size: scaled(12), weight: .bold))
+            let accText = Text(symbol).font(.system(size: scaled(16), weight: .bold))
             context.draw(accText, at: CGPoint(x: currentX, y: y))
-            currentX += spacing
+            currentX += scaled(10)
         }
 
         return currentX
     }
 
     private func restSymbol(for duration: DurationValue) -> String {
-        // SMuFL-compatible rest symbols (Unicode Musical Symbols block)
+        // Text-based rest symbols (iOS system fonts don't render Unicode Musical Symbols block)
         switch duration {
-        case .whole: return "𝄻"      // U+1D13B Whole rest
-        case .half: return "𝄼"       // U+1D13C Half rest
-        case .quarter: return "𝄽"    // U+1D13D Quarter rest
-        case .eighth: return "𝄾"     // U+1D13E Eighth rest
-        case .sixteenth: return "𝄿"  // U+1D13F Sixteenth rest
-        case .thirtySecond: return "𝅀" // U+1D140 Thirty-second rest
+        case .whole: return "—"       // Whole rest (horizontal bar)
+        case .half: return "▬"        // Half rest (filled bar)
+        case .quarter: return "𝄾"     // Try quarter rest, fallback below
+        case .eighth: return "𝄾"
+        case .sixteenth: return "𝄿"
+        case .thirtySecond: return "𝅀"
+        }
+    }
+
+    /// Draw rest as a graphical shape instead of text (fixes "?" rendering)
+    private func drawRestShape(context: GraphicsContext, x: CGFloat, y: CGFloat, duration: DurationValue, staffTop: CGFloat) {
+        let sp = staffLineSpacing
+
+        switch duration {
+        case .whole:
+            // Filled rectangle hanging below 2nd line (standard whole rest)
+            let rect = CGRect(x: x - sp * 0.6, y: staffTop + sp - sp * 0.05, width: sp * 1.2, height: sp * 0.45)
+            context.fill(Path(rect), with: .color(theme.noteHead))
+
+        case .half:
+            // Filled rectangle sitting on 3rd line (standard half rest)
+            let rect = CGRect(x: x - sp * 0.6, y: staffTop + 2 * sp - sp * 0.45, width: sp * 1.2, height: sp * 0.45)
+            context.fill(Path(rect), with: .color(theme.noteHead))
+
+        case .quarter:
+            // Zig-zag shape approximation for quarter rest
+            var path = Path()
+            let h = sp * 2.5
+            let top = staffTop + sp * 0.75
+            path.move(to: CGPoint(x: x + sp * 0.25, y: top))
+            path.addLine(to: CGPoint(x: x - sp * 0.2, y: top + h * 0.25))
+            path.addLine(to: CGPoint(x: x + sp * 0.25, y: top + h * 0.5))
+            path.addLine(to: CGPoint(x: x - sp * 0.15, y: top + h * 0.75))
+            path.addQuadCurve(to: CGPoint(x: x + sp * 0.1, y: top + h),
+                             control: CGPoint(x: x - sp * 0.3, y: top + h * 0.95))
+            context.stroke(path, with: .color(theme.noteHead), lineWidth: scaled(1.5))
+
+        case .eighth:
+            // Dot with a tail going down
+            let dotY = staffTop + sp * 1.5
+            let dotR: CGFloat = sp * 0.2
+            context.fill(Path(ellipseIn: CGRect(x: x - dotR, y: dotY - dotR, width: dotR * 2, height: dotR * 2)), with: .color(theme.noteHead))
+            var tail = Path()
+            tail.move(to: CGPoint(x: x, y: dotY))
+            tail.addLine(to: CGPoint(x: x - sp * 0.3, y: staffTop + sp * 2.75))
+            context.stroke(tail, with: .color(theme.noteHead), lineWidth: scaled(1.2))
+
+        case .sixteenth:
+            // Two dots with tail
+            let dotR: CGFloat = sp * 0.18
+            let dot1Y = staffTop + sp * 1.2
+            let dot2Y = staffTop + sp * 2.0
+            context.fill(Path(ellipseIn: CGRect(x: x - dotR, y: dot1Y - dotR, width: dotR * 2, height: dotR * 2)), with: .color(theme.noteHead))
+            context.fill(Path(ellipseIn: CGRect(x: x - dotR, y: dot2Y - dotR, width: dotR * 2, height: dotR * 2)), with: .color(theme.noteHead))
+            var tail = Path()
+            tail.move(to: CGPoint(x: x, y: dot1Y))
+            tail.addLine(to: CGPoint(x: x - sp * 0.3, y: staffTop + sp * 3.0))
+            context.stroke(tail, with: .color(theme.noteHead), lineWidth: scaled(1.2))
+
+        case .thirtySecond:
+            // Three dots with tail
+            let dotR: CGFloat = sp * 0.15
+            let dot1Y = staffTop + sp * 1.0
+            let dot2Y = staffTop + sp * 1.7
+            let dot3Y = staffTop + sp * 2.4
+            context.fill(Path(ellipseIn: CGRect(x: x - dotR, y: dot1Y - dotR, width: dotR * 2, height: dotR * 2)), with: .color(theme.noteHead))
+            context.fill(Path(ellipseIn: CGRect(x: x - dotR, y: dot2Y - dotR, width: dotR * 2, height: dotR * 2)), with: .color(theme.noteHead))
+            context.fill(Path(ellipseIn: CGRect(x: x - dotR, y: dot3Y - dotR, width: dotR * 2, height: dotR * 2)), with: .color(theme.noteHead))
+            var tail = Path()
+            tail.move(to: CGPoint(x: x, y: dot1Y))
+            tail.addLine(to: CGPoint(x: x - sp * 0.3, y: staffTop + sp * 3.25))
+            context.stroke(tail, with: .color(theme.noteHead), lineWidth: scaled(1.0))
         }
     }
 
     /// Pick the best rest symbol to represent a given number of remaining beats
-    private func restSymbolForBeats(_ beats: Double) -> String {
-        if beats >= 4.0 { return "𝄻" }
-        if beats >= 2.0 { return "𝄼" }
-        if beats >= 1.0 { return "𝄽" }
-        if beats >= 0.5 { return "𝄾" }
-        if beats >= 0.25 { return "𝄿" }
-        return "𝅀"
+    private func restSymbolForBeats(_ beats: Double) -> DurationValue {
+        if beats >= 4.0 { return .whole }
+        if beats >= 2.0 { return .half }
+        if beats >= 1.0 { return .quarter }
+        if beats >= 0.5 { return .eighth }
+        if beats >= 0.25 { return .sixteenth }
+        return .thirtySecond
     }
 }

@@ -250,26 +250,20 @@ struct NewScoreSheet: View {
                 }
 
                 Section("Инструменты") {
-                    if selectedInstruments.isEmpty {
-                        Button("Добавить инструмент") {
-                            selectedInstruments.append(.piano)
+                    ForEach(Array(selectedInstruments.enumerated()), id: \.offset) { index, instrument in
+                        HStack {
+                            Text(instrument.name)
+                            Spacer()
+                            Text(instrument.group.displayName)
+                                .font(.caption)
+                                .foregroundStyle(.secondary)
                         }
-                    } else {
-                        ForEach(Array(selectedInstruments.enumerated()), id: \.offset) { index, instrument in
-                            HStack {
-                                Text(instrument.name)
-                                Spacer()
-                                Text(instrument.group.displayName)
-                                    .font(.caption)
-                                    .foregroundStyle(.secondary)
-                            }
-                        }
-                        .onDelete { indices in
-                            selectedInstruments.remove(atOffsets: indices)
-                        }
-
-                        instrumentPicker
                     }
+                    .onDelete { indices in
+                        selectedInstruments.remove(atOffsets: indices)
+                    }
+
+                    instrumentPicker
                 }
             }
             .navigationTitle("Новая партитура")
