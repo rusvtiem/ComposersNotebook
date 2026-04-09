@@ -22,6 +22,7 @@ struct ScoreEditorView: View {
     @State private var showTempoPicker = false
     @State private var showExportSheet = false
     @State private var showShareSheet = false
+    @State private var showThemeSettings = false
     @State private var shareURL: URL?
     @State private var alertMessage: String?
     @State private var showAlert = false
@@ -123,12 +124,9 @@ struct ScoreEditorView: View {
                         Label(String(localized: "Sound Settings"), systemImage: "speaker.wave.2")
                     }
 
-                    // Theme toggle
-                    Button { appState.isDarkMode.toggle() } label: {
-                        Label(
-                            appState.isDarkMode ? String(localized: "Light Theme") : String(localized: "Dark Theme"),
-                            systemImage: appState.isDarkMode ? "sun.max.fill" : "moon.fill"
-                        )
+                    // Theme settings
+                    Button { showThemeSettings = true } label: {
+                        Label(String(localized: "Theme"), systemImage: "paintpalette")
                     }
                 } label: {
                     Image(systemName: "ellipsis.circle")
@@ -163,6 +161,10 @@ struct ScoreEditorView: View {
         }
         .alert(alertMessage ?? "", isPresented: $showAlert) {
             Button("OK") {}
+        }
+        .sheet(isPresented: $showThemeSettings) {
+            ThemeSettingsView()
+                .presentationDetents([.large])
         }
     }
 

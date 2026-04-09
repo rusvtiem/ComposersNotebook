@@ -4,12 +4,15 @@ import UniformTypeIdentifiers
 @main
 struct ComposersNotebookApp: App {
     @StateObject private var appState = AppState()
+    @StateObject private var themeManager = ThemeManager.shared
 
     var body: some Scene {
         WindowGroup {
             ContentView()
                 .environmentObject(appState)
-                .preferredColorScheme(appState.isDarkMode ? .dark : .light)
+                .environmentObject(themeManager)
+                .preferredColorScheme(themeManager.currentTheme.resolvedColorScheme)
+                .tint(themeManager.currentTheme.accent)
                 .onOpenURL { url in
                     handleOpenURL(url)
                 }

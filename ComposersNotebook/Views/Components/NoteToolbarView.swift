@@ -4,6 +4,7 @@ import SwiftUI
 
 struct NoteToolbarView: View {
     @ObservedObject var viewModel: ScoreViewModel
+    @EnvironmentObject var themeManager: ThemeManager
 
     private var isEditing: Bool {
         viewModel.selectedEventIndex != nil

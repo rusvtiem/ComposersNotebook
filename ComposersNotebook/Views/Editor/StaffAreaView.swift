@@ -12,6 +12,9 @@ struct NoteHitInfo {
 
 struct StaffAreaView: View {
     @ObservedObject var viewModel: ScoreViewModel
+    @EnvironmentObject var themeManager: ThemeManager
+
+    private var theme: AppTheme { themeManager.currentTheme }
 
     // Base sizes at 1.0x zoom
     private let baseStaffLineSpacing: CGFloat = 10
@@ -40,7 +43,7 @@ struct StaffAreaView: View {
             // Instrument name
             Text(part.instrument.shortName)
                 .font(.caption2)
-                .foregroundStyle(.secondary)
+                .foregroundStyle(theme.textSecondary)
 
             HStack(spacing: 0) {
                 ForEach(Array(part.measures.enumerated()), id: \.offset) { measureIndex, measure in
@@ -56,7 +59,8 @@ struct StaffAreaView: View {
                         keySignature: effectiveKeySignature(partIndex: partIndex, measureIndex: measureIndex),
                         clef: effectiveClef(partIndex: partIndex, measureIndex: measureIndex),
                         staffLineSpacing: staffLineSpacing,
-                        zoomScale: viewModel.zoomScale
+                        zoomScale: viewModel.zoomScale,
+                        theme: theme
                     )
                     .frame(width: measureWidth, height: staffHeight + 40 * viewModel.zoomScale)
                     .contentShape(Rectangle())
@@ -125,7 +129,7 @@ struct StaffAreaView: View {
                     .overlay(
                         RoundedRectangle(cornerRadius: 2)
                             .stroke(
-                                isCurrentMeasure ? Color.accentColor : Color.clear,
+                                isCurrentMeasure ? theme.accent : Color.clear,
                                 lineWidth: 2
                             )
                     )
@@ -275,6 +279,7 @@ struct MeasureView: View {
     let clef: Clef
     let staffLineSpacing: CGFloat
     var zoomScale: CGFloat = 1.0
+    var theme: AppTheme = .dark
 
     /// Static helper so StaffAreaView can compute positions without a MeasureView instance
     static func noteYStatic(pitch: Pitch, staffTop: CGFloat, staffLineSpacing: CGFloat, clef: Clef) -> CGFloat {
@@ -302,7 +307,7 @@ struct MeasureView: View {
                 var path = Path()
                 path.move(to: CGPoint(x: 0, y: y))
                 path.addLine(to: CGPoint(x: size.width, y: y))
-                context.stroke(path, with: .color(.primary.opacity(0.4)), lineWidth: 0.5)
+                context.stroke(path, with: .color(theme.staffLine.opacity(theme.staffLineOpacity)), lineWidth: 0.5)
             }
 
             // Draw barline at end
@@ -310,7 +315,7 @@ struct MeasureView: View {
             let barlineX = size.width - 1
             barline.move(to: CGPoint(x: barlineX, y: staffTop))
             barline.addLine(to: CGPoint(x: barlineX, y: staffTop + 4 * staffLineSpacing))
-            context.stroke(barline, with: .color(.primary.opacity(0.6)), lineWidth: 1)
+            context.stroke(barline, with: .color(theme.barline.opacity(0.6)), lineWidth: 1)
 
             // Draw clef symbol at start of first measure
             if measureIndex == 0 {
@@ -432,7 +437,7 @@ struct MeasureView: View {
                 let ghostSymbol = restSymbolForBeats(remainingBeats)
                 let ghostText = Text(ghostSymbol)
                     .font(.system(size: scaled(16)))
-                    .foregroundColor(.secondary.opacity(0.4))
+                    .foregroundColor(theme.textSecondary.opacity(0.4))
                 context.draw(ghostText, at: CGPoint(x: ghostX, y: restY))
             }
 
@@ -459,7 +464,7 @@ struct MeasureView: View {
                         )
                     )
                     let lineWidth: CGFloat = event.tiedToNext ? 1.5 : 1.0
-                    context.stroke(curve, with: .color(.primary), lineWidth: lineWidth)
+                    context.stroke(curve, with: .color(theme.noteHead), lineWidth: lineWidth)
                 }
             }
 
@@ -482,8 +487,8 @@ struct MeasureView: View {
                 let dotSize = scaled(4)
                 let dot = Path(ellipseIn: CGRect(x: barlineX - dotSize * 2, y: dotY1 - dotSize / 2, width: dotSize, height: dotSize))
                 let dot2 = Path(ellipseIn: CGRect(x: barlineX - dotSize * 2, y: dotY2 - dotSize / 2, width: dotSize, height: dotSize))
-                context.fill(dot, with: .color(.primary))
-                context.fill(dot2, with: .color(.primary))
+                context.fill(dot, with: .color(theme.noteHead))
+                context.fill(dot2, with: .color(theme.noteHead))
             }
         }
     }
@@ -509,15 +514,15 @@ struct MeasureView: View {
         let highlightRadius: CGFloat = staffLineSpacing * 0.9
         let rect = CGRect(x: x - highlightRadius, y: y - highlightRadius, width: highlightRadius * 2, height: highlightRadius * 2)
         let circle = Path(ellipseIn: rect)
-        context.fill(circle, with: .color(.blue.opacity(0.2)))
-        context.stroke(circle, with: .color(.blue.opacity(0.6)), lineWidth: 1.5)
+        context.fill(circle, with: .color(theme.selectedNote.opacity(0.2)))
+        context.stroke(circle, with: .color(theme.selectedNote.opacity(0.6)), lineWidth: 1.5)
     }
 
     private func drawNoteHead(context: GraphicsContext, x: CGFloat, y: CGFloat, duration: DurationValue, stemUp: Bool = true, selected: Bool = false, skipFlags: Bool = false) {
         let radius: CGFloat = staffLineSpacing / 2 - 1
         let rect = CGRect(x: x - radius, y: y - radius * 0.75, width: radius * 2, height: radius * 1.5)
         let ellipse = Path(ellipseIn: rect)
-        let noteColor: Color = selected ? .blue : .primary
+        let noteColor: Color = selected ? theme.selectedNote : theme.noteHead
 
         switch duration {
         case .whole:
@@ -542,13 +547,14 @@ struct MeasureView: View {
         }
     }
 
-    private func drawStem(context: GraphicsContext, x: CGFloat, y: CGFloat, radius: CGFloat, stemUp: Bool, color: Color = .primary) {
+    private func drawStem(context: GraphicsContext, x: CGFloat, y: CGFloat, radius: CGFloat, stemUp: Bool, color: Color? = nil) {
+        let stemColor = color ?? theme.noteHead
         var stem = Path()
         let stemLength = staffLineSpacing * 3.5
         let stemX = stemUp ? x + radius : x - radius
         stem.move(to: CGPoint(x: stemX, y: y))
         stem.addLine(to: CGPoint(x: stemX, y: stemUp ? y - stemLength : y + stemLength))
-        context.stroke(stem, with: .color(color), lineWidth: 1)
+        context.stroke(stem, with: .color(stemColor), lineWidth: 1)
     }
 
     private func drawFlags(context: GraphicsContext, x: CGFloat, y: CGFloat, radius: CGFloat, stemUp: Bool, duration: DurationValue) {
@@ -575,7 +581,7 @@ struct MeasureView: View {
                 to: CGPoint(x: stemX + flagLength * curveDir, y: flagY + flagLength * 0.6 * (stemUp ? 1 : -1)),
                 control: CGPoint(x: stemX + flagLength * 0.6 * curveDir, y: flagY)
             )
-            context.stroke(flag, with: .color(.primary), lineWidth: 1.2)
+            context.stroke(flag, with: .color(theme.noteHead), lineWidth: 1.2)
         }
     }
 
@@ -592,7 +598,7 @@ struct MeasureView: View {
                 var path = Path()
                 path.move(to: CGPoint(x: x - width / 2, y: lineY))
                 path.addLine(to: CGPoint(x: x + width / 2, y: lineY))
-                context.stroke(path, with: .color(.primary.opacity(0.6)), lineWidth: 0.5)
+                context.stroke(path, with: .color(theme.staffLine.opacity(0.6)), lineWidth: 0.5)
                 lineY -= staffLineSpacing
             }
         }
@@ -604,7 +610,7 @@ struct MeasureView: View {
                 var path = Path()
                 path.move(to: CGPoint(x: x - width / 2, y: lineY))
                 path.addLine(to: CGPoint(x: x + width / 2, y: lineY))
-                context.stroke(path, with: .color(.primary.opacity(0.6)), lineWidth: 0.5)
+                context.stroke(path, with: .color(theme.staffLine.opacity(0.6)), lineWidth: 0.5)
                 lineY += staffLineSpacing
             }
         }
@@ -697,7 +703,7 @@ struct MeasureView: View {
             var beam = Path()
             beam.move(to: CGPoint(x: first.x, y: first.y))
             beam.addLine(to: CGPoint(x: last.x, y: last.y))
-            context.stroke(beam, with: .color(.primary), lineWidth: beamThickness)
+            context.stroke(beam, with: .color(theme.noteHead), lineWidth: beamThickness)
 
             // Secondary beam for sixteenth notes
             let sixteenthNotes = group.filter { $0.duration == .sixteenth || $0.duration == .thirtySecond }
@@ -723,7 +729,7 @@ struct MeasureView: View {
                     var beam2 = Path()
                     beam2.move(to: CGPoint(x: p1.x, y: p1.y + secondBeamOffset))
                     beam2.addLine(to: CGPoint(x: p2.x, y: p2.y + secondBeamOffset))
-                    context.stroke(beam2, with: .color(.primary), lineWidth: beamThickness)
+                    context.stroke(beam2, with: .color(theme.noteHead), lineWidth: beamThickness)
                 }
             }
         }

@@ -2,6 +2,7 @@ import SwiftUI
 
 struct ContentView: View {
     @EnvironmentObject var appState: AppState
+    @EnvironmentObject var themeManager: ThemeManager
 
     var body: some View {
         NavigationStack {
@@ -18,8 +19,10 @@ struct ContentView: View {
 
 struct HomeView: View {
     @EnvironmentObject var appState: AppState
+    @EnvironmentObject var themeManager: ThemeManager
     @State private var showNewScoreSheet = false
     @State private var showImportPicker = false
+    @State private var showThemeSettings = false
     @State private var recentFiles: [URL] = []
 
     var body: some View {
@@ -118,11 +121,15 @@ struct HomeView: View {
         .toolbar {
             ToolbarItem(placement: .topBarTrailing) {
                 Button {
-                    appState.isDarkMode.toggle()
+                    showThemeSettings = true
                 } label: {
-                    Image(systemName: appState.isDarkMode ? "sun.max.fill" : "moon.fill")
+                    Image(systemName: "paintpalette")
                 }
             }
+        }
+        .sheet(isPresented: $showThemeSettings) {
+            ThemeSettingsView()
+                .presentationDetents([.large])
         }
         .onAppear {
             recentFiles = CNBFileManager.shared.listFiles()
