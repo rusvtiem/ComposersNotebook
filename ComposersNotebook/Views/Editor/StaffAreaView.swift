@@ -531,8 +531,9 @@ struct MeasureView: View {
             drawStem(context: context, x: x, y: y, radius: radius, stemUp: stemUp, color: noteColor)
         default:
             context.fill(ellipse, with: .color(noteColor))
-            drawStem(context: context, x: x, y: y, radius: radius, stemUp: stemUp, color: noteColor)
             if !skipFlags {
+                // For beamable notes, stem is drawn by drawBeams with unified direction
+                drawStem(context: context, x: x, y: y, radius: radius, stemUp: stemUp, color: noteColor)
                 drawFlags(context: context, x: x, y: y, radius: radius, stemUp: stemUp, duration: duration)
             }
         }
@@ -715,8 +716,9 @@ struct MeasureView: View {
 
         for group in beatGroups {
             if group.count == 1 {
-                // Single note — draw flag instead
+                // Single note — draw stem and flag
                 let c = group[0]
+                drawStem(context: context, x: c.x, y: c.y, radius: radius, stemUp: c.stemUp, color: theme.noteHead)
                 drawFlags(context: context, x: c.x, y: c.y, radius: radius, stemUp: c.stemUp, duration: c.duration)
                 continue
             }
