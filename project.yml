@@ -21,6 +21,8 @@ targets:
           - UIInterfaceOrientationPortrait
           - UIInterfaceOrientationLandscapeLeft
           - UIInterfaceOrientationLandscapeRight
+        UIAppFonts:
+          - Bravura.otf
         NSMicrophoneUsageDescription: "Нужен доступ к микрофону для записи музыкальных идей"
         LSSupportsOpeningDocumentsInPlace: true
         UIFileSharingEnabled: true
