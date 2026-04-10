@@ -113,7 +113,7 @@ class MIDIExporter {
         var currentTick = 0
         var pendingNoteOffs: [(tick: Int, note: UInt8)] = []
 
-        for (mIdx, measure) in part.measures.enumerated() {
+        for (_, measure) in part.measures.enumerated() {
             let ts = measure.timeSignature ?? score.timeSignature
             var beatPosition: Double = 0
 
