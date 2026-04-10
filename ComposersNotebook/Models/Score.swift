@@ -14,7 +14,7 @@ struct Score: Codable, Equatable, Identifiable {
     var modifiedAt: Date
 
     init(
-        title: String = "Без названия",
+        title: String = "",
         composer: String = "",
         parts: [Part] = [],
         tempo: TempoMarking = TempoMarking(bpm: 120, name: "Allegro"),
@@ -98,7 +98,7 @@ struct Score: Codable, Equatable, Identifiable {
     // MARK: - Quick constructors
 
     /// Piano solo score
-    static func pianoSolo(title: String = "Без названия") -> Score {
+    static func pianoSolo(title: String = "") -> Score {
         Score(
             title: title,
             parts: [Part(instrument: .piano)]
@@ -106,7 +106,7 @@ struct Score: Codable, Equatable, Identifiable {
     }
 
     /// Empty score with given instruments
-    static func withInstruments(_ instruments: [Instrument], title: String = "Без названия") -> Score {
+    static func withInstruments(_ instruments: [Instrument], title: String = "") -> Score {
         var score = Score(title: title)
         for instrument in instruments {
             score.addPart(instrument: instrument)

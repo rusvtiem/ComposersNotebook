@@ -1,4 +1,5 @@
 import SwiftUI
+import UniformTypeIdentifiers
 
 // MARK: - Sound Settings View
 // Two-level sound settings: Simple (default) + Advanced (expandable)
@@ -12,6 +13,8 @@ struct SoundSettingsView: View {
     @State private var showAdvanced = false
     @State private var showSavePreset = false
     @State private var newPresetName = ""
+    @State private var showSF2Picker = false
+    @State private var importError: String?
 
     private var instrumentId: String { instrument.id.uuidString }
 
@@ -326,21 +329,56 @@ struct SoundSettingsView: View {
                 }
             }
 
-            if soundFontManager.availableSoundFonts.count > 1 {
-                ForEach(soundFontManager.availableSoundFonts) { sf in
-                    Button {
-                        soundFontManager.activeSoundFont = sf
-                    } label: {
-                        HStack {
-                            Text(sf.name)
-                            Spacer()
-                            sourceLabel(sf.source)
-                            if sf == soundFontManager.activeSoundFont {
-                                Image(systemName: "checkmark").foregroundColor(.accentColor)
-                            }
+            ForEach(soundFontManager.availableSoundFonts) { sf in
+                Button {
+                    soundFontManager.activeSoundFont = sf
+                    MIDIEngine.shared.loadActiveSoundFont()
+                } label: {
+                    HStack {
+                        Text(sf.name)
+                        Spacer()
+                        sourceLabel(sf.source)
+                        if sf == soundFontManager.activeSoundFont {
+                            Image(systemName: "checkmark").foregroundColor(.accentColor)
                         }
                     }
                 }
+                .swipeActions(edge: .trailing) {
+                    if sf.source == .userImported {
+                        Button(role: .destructive) {
+                            try? soundFontManager.deleteUserSoundFont(sf)
+                            if soundFontManager.activeSoundFont == nil {
+                                MIDIEngine.shared.loadActiveSoundFont()
+                            }
+                        } label: {
+                            Label(String(localized: "Delete"), systemImage: "trash")
+                        }
+                    }
+                }
+            }
+
+            Button {
+                showSF2Picker = true
+            } label: {
+                Label(String(localized: "Import SoundFont"), systemImage: "square.and.arrow.down")
+            }
+            .sheet(isPresented: $showSF2Picker) {
+                SoundFontDocumentPicker { url in
+                    do {
+                        let info = try soundFontManager.importSoundFont(from: url)
+                        soundFontManager.activeSoundFont = info
+                        MIDIEngine.shared.loadActiveSoundFont()
+                        HapticManager.success()
+                    } catch {
+                        importError = error.localizedDescription
+                    }
+                }
+            }
+
+            if let error = importError {
+                Text(error)
+                    .font(.caption)
+                    .foregroundStyle(.red)
             }
         }
     }
@@ -414,3 +452,31 @@ struct SoundSettingsView: View {
 }
 
 // InstrumentGroup already conforms to RawRepresentable via String raw type in Instrument.swift
+
+// MARK: - SoundFont Document Picker
+
+struct SoundFontDocumentPicker: UIViewControllerRepresentable {
+    let onPick: (URL) -> Void
+
+    func makeUIViewController(context: Context) -> UIDocumentPickerViewController {
+        let sf2Type = UTType(filenameExtension: "sf2") ?? .data
+        let picker = UIDocumentPickerViewController(forOpeningContentTypes: [sf2Type])
+        picker.delegate = context.coordinator
+        picker.allowsMultipleSelection = false
+        return picker
+    }
+
+    func updateUIViewController(_ uiViewController: UIDocumentPickerViewController, context: Context) {}
+
+    func makeCoordinator() -> Coordinator { Coordinator(onPick: onPick) }
+
+    class Coordinator: NSObject, UIDocumentPickerDelegate {
+        let onPick: (URL) -> Void
+        init(onPick: @escaping (URL) -> Void) { self.onPick = onPick }
+
+        func documentPicker(_ controller: UIDocumentPickerViewController, didPickDocumentsAt urls: [URL]) {
+            guard let url = urls.first else { return }
+            onPick(url)
+        }
+    }
+}

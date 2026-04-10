@@ -1,8 +1,15 @@
 import SwiftUI
 
 enum InputKeyboardMode: String, CaseIterable {
-    case piano = "Пианино"
-    case letters = "Буквы"
+    case piano = "Piano"
+    case letters = "Letters"
+
+    var localizedName: String {
+        switch self {
+        case .piano: return String(localized: "Piano Keyboard")
+        case .letters: return String(localized: "Letter Input")
+        }
+    }
 }
 
 struct ScoreEditorView: View {
@@ -97,11 +104,13 @@ struct ScoreEditorView: View {
                     Image(systemName: "arrow.uturn.backward")
                 }
                 .disabled(!viewModel.canUndo)
+                .help("Отменить (Undo)")
 
                 Button { viewModel.redo() } label: {
                     Image(systemName: "arrow.uturn.forward")
                 }
                 .disabled(!viewModel.canRedo)
+                .help("Повторить (Redo)")
 
                 Menu {
                     // Save
@@ -218,6 +227,7 @@ struct ScoreEditorView: View {
                     Image(systemName: "backward.end.fill")
                         .font(.system(size: 14))
                 }
+                .help("В начало")
 
                 Button {
                     if viewModel.midiEngine.isPlaying {
@@ -229,6 +239,7 @@ struct ScoreEditorView: View {
                     Image(systemName: viewModel.midiEngine.isPlaying ? "pause.fill" : "play.fill")
                         .font(.system(size: 20))
                 }
+                .help(viewModel.midiEngine.isPlaying ? "Пауза" : "Воспроизвести (Play)")
 
                 Button {
                     viewModel.midiEngine.stop()
@@ -237,6 +248,7 @@ struct ScoreEditorView: View {
                         .font(.system(size: 14))
                 }
                 .disabled(!viewModel.midiEngine.isPlaying)
+                .help("Остановить (Stop)")
 
                 Button {
                     viewModel.selectedMeasureIndex = max(0, viewModel.score.measureCount - 1)
@@ -244,6 +256,7 @@ struct ScoreEditorView: View {
                     Image(systemName: "forward.end.fill")
                         .font(.system(size: 14))
                 }
+                .help("В конец")
             }
         }
         .padding(.horizontal, 12)
@@ -260,7 +273,7 @@ struct ScoreEditorView: View {
                     Button {
                         keyboardMode = mode
                     } label: {
-                        Text(mode.rawValue)
+                        Text(mode.localizedName)
                             .font(.system(size: 11, weight: .medium))
                             .padding(.horizontal, 10)
                             .padding(.vertical, 4)
@@ -276,25 +289,42 @@ struct ScoreEditorView: View {
                 // Measure operations
                 Menu {
                     Button { viewModel.insertMeasureBefore() } label: {
-                        Label("Вставить такт до", systemImage: "arrow.left.to.line")
+                        Label(String(localized: "Insert Measure Before"), systemImage: "arrow.left.to.line")
                     }
                     Button { viewModel.insertMeasureAfter() } label: {
-                        Label("Вставить такт после", systemImage: "arrow.right.to.line")
+                        Label(String(localized: "Insert Measure After"), systemImage: "arrow.right.to.line")
                     }
                     Divider()
                     Button(role: .destructive) { viewModel.deleteMeasure() } label: {
-                        Label("Удалить такт", systemImage: "trash")
+                        Label(String(localized: "Delete Measure"), systemImage: "trash")
                     }
                     .disabled(viewModel.score.measureCount <= 1)
                     Divider()
                     Button { showTimeSignaturePicker = true } label: {
-                        Label("Сменить размер", systemImage: "number")
+                        Label(String(localized: "Change Time Signature"), systemImage: "number")
                     }
                     Button { showKeySignaturePicker = true } label: {
-                        Label("Сменить тональность", systemImage: "music.note")
+                        Label(String(localized: "Change Key"), systemImage: "music.note")
                     }
                     Button { showTempoPicker = true } label: {
-                        Label("Сменить темп", systemImage: "metronome")
+                        Label(String(localized: "Change Tempo"), systemImage: "metronome")
+                    }
+                    Divider()
+                    Menu(String(localized: "Transpose Measure")) {
+                        Button(String(localized: "+1 semitone ↑")) { viewModel.transposeMeasure(semitones: 1) }
+                        Button(String(localized: "-1 semitone ↓")) { viewModel.transposeMeasure(semitones: -1) }
+                        Button(String(localized: "+1 octave ↑")) { viewModel.transposeMeasure(semitones: 12) }
+                        Button(String(localized: "-1 octave ↓")) { viewModel.transposeMeasure(semitones: -12) }
+                    }
+                    Menu(String(localized: "Copy")) {
+                        Button { viewModel.copyMeasure() } label: {
+                            Label(String(localized: "Copy Measure"), systemImage: "doc.on.doc")
+                        }
+                        if viewModel.hasClipboardContent {
+                            Button { viewModel.paste() } label: {
+                                Label(String(localized: "Paste"), systemImage: "doc.on.clipboard")
+                            }
+                        }
                     }
                 } label: {
                     Image(systemName: "ruler")
@@ -385,6 +415,7 @@ struct ScoreEditorView: View {
                     Image(systemName: "minus.magnifyingglass")
                         .font(.system(size: 12))
                 }
+                .help("Уменьшить масштаб")
                 Text("\(Int(viewModel.zoomScale * 100))%")
                     .font(.system(size: 9))
                     .foregroundStyle(.secondary)
@@ -395,10 +426,11 @@ struct ScoreEditorView: View {
                     Image(systemName: "plus.magnifyingglass")
                         .font(.system(size: 12))
                 }
+                .help("Увеличить масштаб")
             }
 
             // Measure info
-            Text("Такт \(viewModel.selectedMeasureIndex + 1)/\(viewModel.score.measureCount)")
+            Text(String(localized: "Measure \(viewModel.selectedMeasureIndex + 1)/\(viewModel.score.measureCount)"))
                 .font(.caption)
                 .foregroundStyle(.secondary)
         }
@@ -540,7 +572,7 @@ struct TimeSignaturePickerSheet: View {
     var body: some View {
         NavigationStack {
             VStack(spacing: 12) {
-                Text("Сменить размер с такта \(viewModel.selectedMeasureIndex + 1)")
+                Text(String(localized: "Change time signature from measure \(viewModel.selectedMeasureIndex + 1)"))
                     .font(.subheadline)
                     .foregroundStyle(.secondary)
 
@@ -561,11 +593,11 @@ struct TimeSignaturePickerSheet: View {
                 }
                 .padding(.horizontal)
             }
-            .navigationTitle("Размер")
+            .navigationTitle(String(localized: "Time Signature"))
             .navigationBarTitleDisplayMode(.inline)
             .toolbar {
                 ToolbarItem(placement: .cancellationAction) {
-                    Button("Отмена") { dismiss() }
+                    Button(String(localized: "Cancel")) { dismiss() }
                 }
             }
         }
@@ -607,7 +639,7 @@ struct KeySignaturePickerSheet: View {
     var body: some View {
         NavigationStack {
             VStack(spacing: 8) {
-                Text("Сменить тональность с такта \(viewModel.selectedMeasureIndex + 1)")
+                Text(String(localized: "Change key from measure \(viewModel.selectedMeasureIndex + 1)"))
                     .font(.subheadline)
                     .foregroundStyle(.secondary)
 
@@ -628,11 +660,11 @@ struct KeySignaturePickerSheet: View {
                 }
                 .listStyle(.plain)
             }
-            .navigationTitle("Тональность")
+            .navigationTitle(String(localized: "Key Signature"))
             .navigationBarTitleDisplayMode(.inline)
             .toolbar {
                 ToolbarItem(placement: .cancellationAction) {
-                    Button("Отмена") { dismiss() }
+                    Button(String(localized: "Cancel")) { dismiss() }
                 }
             }
         }
@@ -649,7 +681,7 @@ struct TempoPickerSheet: View {
     var body: some View {
         NavigationStack {
             VStack(spacing: 12) {
-                Text("Сменить темп с такта \(viewModel.selectedMeasureIndex + 1)")
+                Text(String(localized: "Change tempo from measure \(viewModel.selectedMeasureIndex + 1)"))
                     .font(.subheadline)
                     .foregroundStyle(.secondary)
 
@@ -659,7 +691,7 @@ struct TempoPickerSheet: View {
                         Text("♩= \(Int(customBPM))")
                             .font(.system(size: 18, weight: .bold))
                         Spacer()
-                        Button("Применить") {
+                        Button(String(localized: "Apply")) {
                             viewModel.setTempo(TempoMarking(bpm: customBPM))
                             dismiss()
                         }
@@ -696,11 +728,11 @@ struct TempoPickerSheet: View {
                 }
                 .padding(.horizontal)
             }
-            .navigationTitle("Темп")
+            .navigationTitle(String(localized: "Tempo"))
             .navigationBarTitleDisplayMode(.inline)
             .toolbar {
                 ToolbarItem(placement: .cancellationAction) {
-                    Button("Отмена") { dismiss() }
+                    Button(String(localized: "Cancel")) { dismiss() }
                 }
             }
             .onAppear {

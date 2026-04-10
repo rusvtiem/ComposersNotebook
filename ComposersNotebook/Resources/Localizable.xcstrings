@@ -66,14 +66,9 @@
         "ru": { "stringUnit": { "state": "translated", "value": "Настройки звука" } }
       }
     },
-    "Light Theme": {
+    "Theme": {
       "localizations": {
-        "ru": { "stringUnit": { "state": "translated", "value": "Светлая тема" } }
-      }
-    },
-    "Dark Theme": {
-      "localizations": {
-        "ru": { "stringUnit": { "state": "translated", "value": "Тёмная тема" } }
+        "ru": { "stringUnit": { "state": "translated", "value": "Тема оформления" } }
       }
     },
     "Advanced Settings": {
@@ -264,6 +259,221 @@
     "Percussion-specific settings": {
       "localizations": {
         "ru": { "stringUnit": { "state": "translated", "value": "Настройки ударных" } }
+      }
+    },
+    "Piano Keyboard": {
+      "localizations": {
+        "ru": { "stringUnit": { "state": "translated", "value": "Пианино" } }
+      }
+    },
+    "Letter Input": {
+      "localizations": {
+        "ru": { "stringUnit": { "state": "translated", "value": "Буквы" } }
+      }
+    },
+    "Insert Measure Before": {
+      "localizations": {
+        "ru": { "stringUnit": { "state": "translated", "value": "Вставить такт до" } }
+      }
+    },
+    "Insert Measure After": {
+      "localizations": {
+        "ru": { "stringUnit": { "state": "translated", "value": "Вставить такт после" } }
+      }
+    },
+    "Delete Measure": {
+      "localizations": {
+        "ru": { "stringUnit": { "state": "translated", "value": "Удалить такт" } }
+      }
+    },
+    "Change Time Signature": {
+      "localizations": {
+        "ru": { "stringUnit": { "state": "translated", "value": "Сменить размер" } }
+      }
+    },
+    "Change Key": {
+      "localizations": {
+        "ru": { "stringUnit": { "state": "translated", "value": "Сменить тональность" } }
+      }
+    },
+    "Change Tempo": {
+      "localizations": {
+        "ru": { "stringUnit": { "state": "translated", "value": "Сменить темп" } }
+      }
+    },
+    "Transpose Measure": {
+      "localizations": {
+        "ru": { "stringUnit": { "state": "translated", "value": "Транспозиция такта" } }
+      }
+    },
+    "+1 semitone ↑": {
+      "localizations": {
+        "ru": { "stringUnit": { "state": "translated", "value": "+1 полутон ↑" } }
+      }
+    },
+    "-1 semitone ↓": {
+      "localizations": {
+        "ru": { "stringUnit": { "state": "translated", "value": "-1 полутон ↓" } }
+      }
+    },
+    "+1 octave ↑": {
+      "localizations": {
+        "ru": { "stringUnit": { "state": "translated", "value": "+1 октава ↑" } }
+      }
+    },
+    "-1 octave ↓": {
+      "localizations": {
+        "ru": { "stringUnit": { "state": "translated", "value": "-1 октава ↓" } }
+      }
+    },
+    "Copy": {
+      "localizations": {
+        "ru": { "stringUnit": { "state": "translated", "value": "Копировать" } }
+      }
+    },
+    "Copy Measure": {
+      "localizations": {
+        "ru": { "stringUnit": { "state": "translated", "value": "Копировать такт" } }
+      }
+    },
+    "Paste": {
+      "localizations": {
+        "ru": { "stringUnit": { "state": "translated", "value": "Вставить" } }
+      }
+    },
+    "Time Signature": {
+      "localizations": {
+        "ru": { "stringUnit": { "state": "translated", "value": "Размер" } }
+      }
+    },
+    "Key Signature": {
+      "localizations": {
+        "ru": { "stringUnit": { "state": "translated", "value": "Тональность" } }
+      }
+    },
+    "Tempo": {
+      "localizations": {
+        "ru": { "stringUnit": { "state": "translated", "value": "Темп" } }
+      }
+    },
+    "Apply": {
+      "localizations": {
+        "ru": { "stringUnit": { "state": "translated", "value": "Применить" } }
+      }
+    },
+    "Edit": {
+      "localizations": {
+        "ru": { "stringUnit": { "state": "translated", "value": "Ред." } }
+      }
+    },
+    "General": {
+      "localizations": {
+        "ru": { "stringUnit": { "state": "translated", "value": "Основное" } }
+      }
+    },
+    "Title": {
+      "localizations": {
+        "ru": { "stringUnit": { "state": "translated", "value": "Название" } }
+      }
+    },
+    "Composer": {
+      "localizations": {
+        "ru": { "stringUnit": { "state": "translated", "value": "Композитор" } }
+      }
+    },
+    "Solo": {
+      "localizations": {
+        "ru": { "stringUnit": { "state": "translated", "value": "Соло" } }
+      }
+    },
+    "Chamber Music": {
+      "localizations": {
+        "ru": { "stringUnit": { "state": "translated", "value": "Камерная музыка" } }
+      }
+    },
+    "Vocal": {
+      "localizations": {
+        "ru": { "stringUnit": { "state": "translated", "value": "Вокал" } }
+      }
+    },
+    "Orchestra": {
+      "localizations": {
+        "ru": { "stringUnit": { "state": "translated", "value": "Оркестр" } }
+      }
+    },
+    "Custom Setup": {
+      "localizations": {
+        "ru": { "stringUnit": { "state": "translated", "value": "Свой состав" } }
+      }
+    },
+    "Key": {
+      "localizations": {
+        "ru": { "stringUnit": { "state": "translated", "value": "Знаки" } }
+      }
+    },
+    "Mode": {
+      "localizations": {
+        "ru": { "stringUnit": { "state": "translated", "value": "Лад" } }
+      }
+    },
+    "Major": {
+      "localizations": {
+        "ru": { "stringUnit": { "state": "translated", "value": "Мажор" } }
+      }
+    },
+    "Minor": {
+      "localizations": {
+        "ru": { "stringUnit": { "state": "translated", "value": "Минор" } }
+      }
+    },
+    "Create": {
+      "localizations": {
+        "ru": { "stringUnit": { "state": "translated", "value": "Создать" } }
+      }
+    },
+    "Add Instrument": {
+      "localizations": {
+        "ru": { "stringUnit": { "state": "translated", "value": "Добавить инструмент" } }
+      }
+    },
+    "Untitled": {
+      "localizations": {
+        "ru": { "stringUnit": { "state": "translated", "value": "Без названия" } }
+      }
+    },
+    "Octave %lld": {
+      "localizations": {
+        "ru": { "stringUnit": { "state": "translated", "value": "Октава %lld" } }
+      }
+    },
+    "Measure %lld/%lld": {
+      "localizations": {
+        "ru": { "stringUnit": { "state": "translated", "value": "Такт %lld/%lld" } }
+      }
+    },
+    "Change time signature from measure %lld": {
+      "localizations": {
+        "ru": { "stringUnit": { "state": "translated", "value": "Сменить размер с такта %lld" } }
+      }
+    },
+    "Change key from measure %lld": {
+      "localizations": {
+        "ru": { "stringUnit": { "state": "translated", "value": "Сменить тональность с такта %lld" } }
+      }
+    },
+    "Change tempo from measure %lld": {
+      "localizations": {
+        "ru": { "stringUnit": { "state": "translated", "value": "Сменить темп с такта %lld" } }
+      }
+    },
+    "Import SoundFont": {
+      "localizations": {
+        "ru": { "stringUnit": { "state": "translated", "value": "Импорт SoundFont" } }
+      }
+    },
+    "Delete": {
+      "localizations": {
+        "ru": { "stringUnit": { "state": "translated", "value": "Удалить" } }
       }
     }
   },

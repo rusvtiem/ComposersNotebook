@@ -27,7 +27,7 @@ struct PianoKeyboardView: View {
                 }
                 .disabled(currentOctave <= 1)
 
-                Text("Октава \(currentOctave)")
+                Text(String(localized: "Octave \(currentOctave)"))
                     .font(.caption)
                     .fontWeight(.medium)
                     .frame(width: 80)

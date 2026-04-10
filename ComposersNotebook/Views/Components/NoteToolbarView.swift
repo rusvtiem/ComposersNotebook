@@ -57,7 +57,7 @@ struct NoteToolbarView: View {
     private var editModeControls: some View {
         HStack(spacing: 4) {
             // Label
-            Text("Ред.")
+            Text(String(localized: "Edit"))
                 .font(.system(size: 10, weight: .bold))
                 .foregroundColor(.blue)
                 .frame(width: 32)
@@ -136,6 +136,61 @@ struct NoteToolbarView: View {
 
             Divider().frame(height: 30)
 
+            // Copy / Cut / Paste
+            NoteToolbarButton(
+                icon: "doc.on.doc",
+                label: "Коп.",
+                isActive: false,
+                tooltip: "Копировать выбранную ноту"
+            ) { viewModel.copySelectedEvent() }
+
+            NoteToolbarButton(
+                icon: "scissors",
+                label: "Выр.",
+                isActive: false,
+                tooltip: "Вырезать выбранную ноту"
+            ) { viewModel.cutSelectedEvent() }
+
+            NoteToolbarButton(
+                icon: "doc.on.clipboard",
+                label: "Вст.",
+                isActive: false,
+                tooltip: "Вставить из буфера"
+            ) { viewModel.paste() }
+
+            Divider().frame(height: 30)
+
+            // Transpose
+            NoteToolbarButton(
+                icon: "arrow.up",
+                label: "+1",
+                isActive: false,
+                tooltip: "Транспозиция вверх на полутон"
+            ) { viewModel.transposeSelectedEvent(semitones: 1) }
+
+            NoteToolbarButton(
+                icon: "arrow.down",
+                label: "-1",
+                isActive: false,
+                tooltip: "Транспозиция вниз на полутон"
+            ) { viewModel.transposeSelectedEvent(semitones: -1) }
+
+            NoteToolbarButton(
+                icon: "arrow.up.to.line",
+                label: "Окт↑",
+                isActive: false,
+                tooltip: "Транспозиция вверх на октаву"
+            ) { viewModel.transposeSelectedEvent(semitones: 12) }
+
+            NoteToolbarButton(
+                icon: "arrow.down.to.line",
+                label: "Окт↓",
+                isActive: false,
+                tooltip: "Транспозиция вниз на октаву"
+            ) { viewModel.transposeSelectedEvent(semitones: -12) }
+
+            Divider().frame(height: 30)
+
             // Delete selected note
             Button {
                 viewModel.deleteSelectedEvent()
@@ -171,19 +226,22 @@ struct NoteToolbarView: View {
             NoteToolbarButton(
                 icon: "hand.tap",
                 label: "Навиг.",
-                isActive: viewModel.inputMode == .navigate
+                isActive: viewModel.inputMode == .navigate,
+                tooltip: "Навигация — выбор тактов и нот"
             ) { viewModel.inputMode = .navigate }
 
             NoteToolbarButton(
                 icon: "pencil",
                 label: "Нота",
-                isActive: viewModel.inputMode == .note
+                isActive: viewModel.inputMode == .note,
+                tooltip: "Ввод нот — нажми на стан для размещения"
             ) { viewModel.inputMode = .note }
 
             NoteToolbarButton(
                 icon: "pause.fill",
                 label: "Пауза",
-                isActive: viewModel.inputMode == .rest
+                isActive: viewModel.inputMode == .rest,
+                tooltip: "Ввод пауз (rest) — нажми для вставки"
             ) { viewModel.inputMode = .rest }
         }
     }
@@ -211,28 +269,31 @@ struct NoteToolbarView: View {
                 icon: nil,
                 label: "•",
                 isActive: viewModel.isDotted,
-                fontSize: 20
+                fontSize: 20,
+                tooltip: "Точка (dotted) — увеличивает длительность в 1.5 раза"
             ) { viewModel.isDotted.toggle() }
 
             NoteToolbarButton(
                 icon: "link",
                 label: "Лига",
-                isActive: viewModel.tieNext
+                isActive: viewModel.tieNext,
+                tooltip: "Залиговка (tie) — связать с следующей нотой"
             ) { viewModel.tieNext.toggle() }
 
             NoteToolbarButton(
                 icon: nil,
                 label: "⁀",
                 isActive: viewModel.slurActive,
-                fontSize: 16
+                fontSize: 16,
+                tooltip: "Фразировочная лига (slur) — legato"
             ) { viewModel.slurActive.toggle() }
 
-            // Stem direction toggle
             NoteToolbarButton(
                 icon: nil,
                 label: stemDirectionLabel,
                 isActive: viewModel.stemDirection != .auto,
-                fontSize: 14
+                fontSize: 14,
+                tooltip: "Направление штиля: авто / вверх / вниз"
             ) {
                 switch viewModel.stemDirection {
                 case .auto: viewModel.stemDirection = .up
@@ -293,6 +354,15 @@ struct NoteToolbarView: View {
 
     private var actionButtons: some View {
         HStack(spacing: 4) {
+            // Paste (available in input mode without selection)
+            if viewModel.hasClipboardContent {
+                NoteToolbarButton(
+                    icon: "doc.on.clipboard",
+                    label: "Вст.",
+                    isActive: false
+                ) { viewModel.paste() }
+            }
+
             Button {
                 viewModel.deleteLastEvent()
             } label: {
@@ -324,6 +394,7 @@ struct NoteToolbarButton: View {
     let label: String
     let isActive: Bool
     var fontSize: CGFloat = 11
+    var tooltip: String? = nil
     let action: () -> Void
 
     var body: some View {
@@ -348,5 +419,6 @@ struct NoteToolbarButton: View {
             .foregroundColor(isActive ? .accentColor : .primary)
         }
         .buttonStyle(.plain)
+        .help(tooltip ?? label)
     }
 }

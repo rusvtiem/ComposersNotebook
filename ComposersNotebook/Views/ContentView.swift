@@ -214,29 +214,29 @@ struct NewScoreSheet: View {
     var body: some View {
         NavigationStack {
             Form {
-                Section("Основное") {
-                    TextField("Название", text: $title)
-                    TextField("Композитор", text: $composer)
+                Section(String(localized: "General")) {
+                    TextField(String(localized: "Title"), text: $title)
+                    TextField(String(localized: "Composer"), text: $composer)
                 }
 
                 // Templates section
-                templateSection("Соло", templates: ScoreTemplate.soloTemplates)
-                templateSection("Камерная музыка", templates: ScoreTemplate.chamberTemplates)
-                templateSection("Вокал", templates: ScoreTemplate.vocalTemplates)
-                templateSection("Оркестр", templates: ScoreTemplate.orchestralTemplates)
+                templateSection(String(localized: "Solo"), templates: ScoreTemplate.soloTemplates)
+                templateSection(String(localized: "Chamber Music"), templates: ScoreTemplate.chamberTemplates)
+                templateSection(String(localized: "Vocal"), templates: ScoreTemplate.vocalTemplates)
+                templateSection(String(localized: "Orchestra"), templates: ScoreTemplate.orchestralTemplates)
 
                 // Custom setup toggle
                 Section {
-                    DisclosureGroup("Свой состав", isExpanded: $showCustomSetup) {
+                    DisclosureGroup(String(localized: "Custom Setup"), isExpanded: $showCustomSetup) {
                         customSetupContent
                     }
                 }
             }
-            .navigationTitle("Новая партитура")
+            .navigationTitle(String(localized: "New Score"))
             .navigationBarTitleDisplayMode(.inline)
             .toolbar {
                 ToolbarItem(placement: .cancellationAction) {
-                    Button("Отмена") { dismiss() }
+                    Button(String(localized: "Cancel")) { dismiss() }
                 }
             }
         }
@@ -272,21 +272,21 @@ struct NewScoreSheet: View {
 
     @ViewBuilder
     private var customSetupContent: some View {
-        Picker("Размер такта", selection: $selectedTimeSignature) {
+        Picker(String(localized: "Time Signature"), selection: $selectedTimeSignature) {
             ForEach(timeSignatures, id: \.displayString) { ts in
                 Text(ts.displayString).tag(ts)
             }
         }
 
-        Picker("Знаки", selection: $selectedKeyFifths) {
+        Picker(String(localized: "Key"), selection: $selectedKeyFifths) {
             ForEach(-7...7, id: \.self) { fifths in
                 let ks = KeySignature(fifths: fifths, mode: selectedKeyMode)
                 Text(ks.displayName).tag(fifths)
             }
         }
-        Picker("Лад", selection: $selectedKeyMode) {
-            Text("Мажор").tag(KeySignatureType.major)
-            Text("Минор").tag(KeySignatureType.minor)
+        Picker(String(localized: "Mode"), selection: $selectedKeyMode) {
+            Text(String(localized: "Major")).tag(KeySignatureType.major)
+            Text(String(localized: "Minor")).tag(KeySignatureType.minor)
         }
         .pickerStyle(.segmented)
 
@@ -313,7 +313,7 @@ struct NewScoreSheet: View {
         instrumentPicker
 
         if !selectedInstruments.isEmpty {
-            Button("Создать") {
+            Button(String(localized: "Create")) {
                 createScore()
             }
             .frame(maxWidth: .infinity)
@@ -349,7 +349,7 @@ struct NewScoreSheet: View {
     }
 
     private var instrumentPicker: some View {
-        Menu("Добавить инструмент") {
+        Menu(String(localized: "Add Instrument")) {
             ForEach(InstrumentGroup.allCases, id: \.self) { group in
                 Menu(group.displayName) {
                     ForEach(Instrument.instruments(for: group), id: \.name) { instrument in
@@ -377,7 +377,7 @@ struct NewScoreSheet: View {
         let keySignature = KeySignature(fifths: selectedKeyFifths, mode: selectedKeyMode)
 
         var score = Score(
-            title: title.isEmpty ? "Без названия" : title,
+            title: title.isEmpty ? String(localized: "Untitled") : title,
             composer: composer,
             tempo: tempo,
             timeSignature: selectedTimeSignature,

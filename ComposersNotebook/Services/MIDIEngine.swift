@@ -60,6 +60,7 @@ class MIDIEngine: ObservableObject {
         }
 
         setupAudioSession()
+        loadActiveSoundFont()
     }
 
     private func setupAudioSession() {
@@ -88,6 +89,12 @@ class MIDIEngine: ObservableObject {
             print("SoundFont загрузка ошибка: \(error)")
             isSoundFontLoaded = false
         }
+    }
+
+    /// Load active SoundFont from SoundFontManager (called at startup and on change)
+    func loadActiveSoundFont() {
+        guard let sf = SoundFontManager.shared.activeSoundFont else { return }
+        loadSoundFont(at: sf.url)
     }
 
     // MARK: - Sound Settings

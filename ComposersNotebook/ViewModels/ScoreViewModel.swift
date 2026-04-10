@@ -39,6 +39,10 @@ class ScoreViewModel: ObservableObject {
     @Published var playbackPosition: Int = 0  // measure index
     let midiEngine = MIDIEngine.shared
 
+    // Clipboard
+    private var clipboard: [NoteEvent] = []
+    @Published var hasClipboardContent: Bool = false
+
     // Undo/Redo
     private var undoStack: [Score] = []
     private var redoStack: [Score] = []
@@ -351,6 +355,121 @@ class ScoreViewModel: ObservableObject {
         }
         score.parts[selectedPartIndex].measures[selectedMeasureIndex].events[idx] = event
         score.touch()
+    }
+
+    // MARK: - Copy / Cut / Paste
+
+    /// Copy the selected event to clipboard
+    func copySelectedEvent() {
+        guard let event = selectedEvent else { return }
+        clipboard = [event]
+        hasClipboardContent = true
+    }
+
+    /// Copy all events in the current measure to clipboard
+    func copyMeasure() {
+        guard let measure = currentMeasure else { return }
+        clipboard = measure.events
+        hasClipboardContent = true
+    }
+
+    /// Cut the selected event (copy + delete)
+    func cutSelectedEvent() {
+        copySelectedEvent()
+        deleteSelectedEvent()
+    }
+
+    /// Paste clipboard contents at cursor position
+    func paste() {
+        guard !clipboard.isEmpty else { return }
+        saveUndoState()
+        clearPlaceholderRest()
+
+        let ts = effectiveTimeSignature
+        for event in clipboard {
+            let measure = score.parts[selectedPartIndex].measures[selectedMeasureIndex]
+            let remaining = measure.remainingBeats(timeSignature: ts)
+
+            if event.duration.beats <= remaining + 0.001 {
+                score.parts[selectedPartIndex].measures[selectedMeasureIndex].events.append(event)
+                cursorPosition += event.duration.beats
+            } else {
+                advanceMeasure()
+                clearPlaceholderRest()
+                score.parts[selectedPartIndex].measures[selectedMeasureIndex].events.append(event)
+                cursorPosition = event.duration.beats
+            }
+        }
+        score.touch()
+    }
+
+    // MARK: - Transposition
+
+    /// Transpose the selected event by a number of semitones
+    func transposeSelectedEvent(semitones: Int) {
+        guard let idx = selectedEventIndex,
+              selectedPartIndex < score.parts.count,
+              selectedMeasureIndex < score.parts[selectedPartIndex].measures.count,
+              idx < score.parts[selectedPartIndex].measures[selectedMeasureIndex].events.count else { return }
+        saveUndoState()
+        var event = score.parts[selectedPartIndex].measures[selectedMeasureIndex].events[idx]
+        switch event.type {
+        case .note(let pitch):
+            let newMidi = pitch.midiNote + semitones
+            guard newMidi >= 0, newMidi <= 127 else { return }
+            event.type = .note(pitch: Pitch.fromMIDI(newMidi))
+        case .chord(let pitches):
+            let transposed = pitches.compactMap { p -> Pitch? in
+                let newMidi = p.midiNote + semitones
+                guard newMidi >= 0, newMidi <= 127 else { return nil }
+                return Pitch.fromMIDI(newMidi)
+            }
+            guard transposed.count == pitches.count else { return }
+            event.type = .chord(pitches: transposed)
+        case .rest:
+            return
+        }
+        score.parts[selectedPartIndex].measures[selectedMeasureIndex].events[idx] = event
+        score.touch()
+    }
+
+    /// Transpose all events in the current measure by semitones
+    func transposeMeasure(semitones: Int) {
+        guard selectedPartIndex < score.parts.count,
+              selectedMeasureIndex < score.parts[selectedPartIndex].measures.count else { return }
+        saveUndoState()
+        let events = score.parts[selectedPartIndex].measures[selectedMeasureIndex].events
+        for (i, event) in events.enumerated() {
+            switch event.type {
+            case .note(let pitch):
+                let newMidi = pitch.midiNote + semitones
+                guard newMidi >= 0, newMidi <= 127 else { continue }
+                score.parts[selectedPartIndex].measures[selectedMeasureIndex].events[i].type = .note(pitch: Pitch.fromMIDI(newMidi))
+            case .chord(let pitches):
+                let transposed = pitches.compactMap { p -> Pitch? in
+                    let newMidi = p.midiNote + semitones
+                    guard newMidi >= 0, newMidi <= 127 else { return nil }
+                    return Pitch.fromMIDI(newMidi)
+                }
+                if transposed.count == pitches.count {
+                    score.parts[selectedPartIndex].measures[selectedMeasureIndex].events[i].type = .chord(pitches: transposed)
+                }
+            case .rest:
+                continue
+            }
+        }
+        score.touch()
+    }
+
+    /// Transpose selected event by diatonic steps (positive = up, negative = down)
+    func transposeSelectedEventDiatonic(steps: Int) {
+        // Each diatonic step maps to different semitones depending on key
+        // Simplified: use fixed major scale intervals
+        let semitonesPerStep: [Int] = [0, 2, 4, 5, 7, 9, 11] // C major
+        let octaves = steps / 7
+        let remainder = ((steps % 7) + 7) % 7
+        let semitones = octaves * 12 + semitonesPerStep[remainder] - (steps < 0 && remainder != 0 ? 12 : 0)
+        transposeSelectedEvent(semitones: semitones)
     }
 
     // MARK: - Delete

@@ -319,7 +319,10 @@ struct MeasureView: View {
 
             // Draw clef symbol at start of first measure
             if measureIndex == 0 {
-                let clefText = Text(clef.symbol).font(.system(size: scaled(28)))
+                let musicFont = MusicFontManager.shared
+                let clefSymbol = musicFont.isBravuraAvailable ? MusicSymbol.clef(clef) : clef.symbol
+                let clefFont: Font = musicFont.isBravuraAvailable ? musicFont.musicFont(size: scaled(32)) : .system(size: scaled(28))
+                let clefText = Text(clefSymbol).font(clefFont)
                 context.draw(clefText, at: CGPoint(x: startX + scaled(10), y: staffTop + 2 * staffLineSpacing))
             }
 
@@ -637,8 +640,17 @@ struct MeasureView: View {
 
     private func drawAccidental(context: GraphicsContext, pitch: Pitch, x: CGFloat, y: CGFloat, showNatural: Bool = false) {
         if pitch.accidental == .natural && !showNatural { return }
-        let symbol = pitch.accidental.displaySymbol
-        let accText = Text(symbol).font(.system(size: scaled(16), weight: .bold))
+        let musicFont = MusicFontManager.shared
+        let symbol: String
+        let font: Font
+        if musicFont.isBravuraAvailable {
+            symbol = MusicSymbol.accidental(pitch.accidental)
+            font = musicFont.musicFont(size: scaled(20))
+        } else {
+            symbol = pitch.accidental.displaySymbol
+            font = .system(size: scaled(16), weight: .bold)
+        }
+        let accText = Text(symbol).font(font)
         let radius: CGFloat = staffLineSpacing / 2 - 1
         context.draw(accText, at: CGPoint(x: x - radius * 2 - scaled(8), y: y))
     }
@@ -837,19 +849,22 @@ struct MeasureView: View {
             flatPositions = [7, 4, 8, 5, 9, 6, 10]
         }
 
+        let musicFont = MusicFontManager.shared
         let symbol: String
+        let font: Font
         let positions: [CGFloat]
         let count: Int
 
         if fifths > 0 {
-            symbol = "♯"
+            symbol = musicFont.isBravuraAvailable ? MusicSymbol.accidentalSharp : "♯"
             positions = sharpPositions
             count = min(fifths, 7)
         } else {
-            symbol = "♭"
+            symbol = musicFont.isBravuraAvailable ? MusicSymbol.accidentalFlat : "♭"
             positions = flatPositions
             count = min(-fifths, 7)
         }
+        font = musicFont.isBravuraAvailable ? musicFont.musicFont(size: scaled(20)) : .system(size: scaled(16), weight: .bold)
 
         let spacing = scaled(8)
         var currentX = x
@@ -857,7 +872,7 @@ struct MeasureView: View {
         for i in 0..<count {
             let halfSpaces = positions[i]
             let y = staffTop + halfSpaces * (staffLineSpacing / 2)
-            let accText = Text(symbol).font(.system(size: scaled(16), weight: .bold))
+            let accText = Text(symbol).font(font)
             context.draw(accText, at: CGPoint(x: currentX, y: y))
             currentX += scaled(10)
         }
@@ -877,23 +892,52 @@ struct MeasureView: View {
         }
     }
 
-    /// Draw rest as a graphical shape instead of text (fixes "?" rendering)
+    /// Draw rest as a graphical shape or Bravura glyph
     private func drawRestShape(context: GraphicsContext, x: CGFloat, y: CGFloat, duration: DurationValue, staffTop: CGFloat) {
         let sp = staffLineSpacing
+        let musicFont = MusicFontManager.shared
 
+        // Use Bravura SMuFL glyphs when available
+        if musicFont.isBravuraAvailable {
+            let restSymbol = MusicSymbol.rest(for: duration)
+            let fontSize: CGFloat
+            let restY: CGFloat
+            switch duration {
+            case .whole:
+                fontSize = scaled(28)
+                restY = staffTop + sp * 1.5
+            case .half:
+                fontSize = scaled(28)
+                restY = staffTop + sp * 2.0
+            case .quarter:
+                fontSize = scaled(28)
+                restY = staffTop + sp * 2.0
+            case .eighth:
+                fontSize = scaled(24)
+                restY = staffTop + sp * 2.0
+            case .sixteenth:
+                fontSize = scaled(24)
+                restY = staffTop + sp * 2.0
+            case .thirtySecond:
+                fontSize = scaled(22)
+                restY = staffTop + sp * 2.0
+            }
+            let text = Text(restSymbol).font(musicFont.musicFont(size: fontSize)).foregroundColor(theme.noteHead)
+            context.draw(context.resolve(text), at: CGPoint(x: x, y: restY), anchor: .center)
+            return
+        }
+
+        // Fallback: Path-based drawing when Bravura not available
         switch duration {
         case .whole:
-            // Filled rectangle hanging below 2nd line (standard whole rest)
             let rect = CGRect(x: x - sp * 0.6, y: staffTop + sp - sp * 0.05, width: sp * 1.2, height: sp * 0.45)
             context.fill(Path(rect), with: .color(theme.noteHead))
 
         case .half:
-            // Filled rectangle sitting on 3rd line (standard half rest)
             let rect = CGRect(x: x - sp * 0.6, y: staffTop + 2 * sp - sp * 0.45, width: sp * 1.2, height: sp * 0.45)
             context.fill(Path(rect), with: .color(theme.noteHead))
 
         case .quarter:
-            // Zig-zag shape approximation for quarter rest
             var path = Path()
             let h = sp * 2.5
             let top = staffTop + sp * 0.75
@@ -906,7 +950,6 @@ struct MeasureView: View {
             context.stroke(path, with: .color(theme.noteHead), lineWidth: scaled(1.5))
 
         case .eighth:
-            // Dot with a tail going down
             let dotY = staffTop + sp * 1.5
             let dotR: CGFloat = sp * 0.2
             context.fill(Path(ellipseIn: CGRect(x: x - dotR, y: dotY - dotR, width: dotR * 2, height: dotR * 2)), with: .color(theme.noteHead))
@@ -916,7 +959,6 @@ struct MeasureView: View {
             context.stroke(tail, with: .color(theme.noteHead), lineWidth: scaled(1.2))
 
         case .sixteenth:
-            // Two dots with tail
             let dotR: CGFloat = sp * 0.18
             let dot1Y = staffTop + sp * 1.2
             let dot2Y = staffTop + sp * 2.0
@@ -928,7 +970,6 @@ struct MeasureView: View {
             context.stroke(tail, with: .color(theme.noteHead), lineWidth: scaled(1.2))
 
         case .thirtySecond:
-            // Three dots with tail
             let dotR: CGFloat = sp * 0.15
             let dot1Y = staffTop + sp * 1.0
             let dot2Y = staffTop + sp * 1.7
