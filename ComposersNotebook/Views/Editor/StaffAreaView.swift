@@ -45,99 +45,183 @@ struct StaffAreaView: View {
                 .font(.caption2)
                 .foregroundStyle(theme.textSecondary)
 
-            HStack(spacing: 0) {
-                ForEach(Array(part.measures.enumerated()), id: \.offset) { measureIndex, measure in
-                    let isCurrentMeasure = partIndex == viewModel.selectedPartIndex
-                        && measureIndex == viewModel.selectedMeasureIndex
-
-                    MeasureView(
-                        measure: measure,
-                        measureIndex: measureIndex,
-                        isSelected: isCurrentMeasure,
-                        selectedEventIndex: isCurrentMeasure ? viewModel.selectedEventIndex : nil,
-                        timeSignature: effectiveTimeSignature(partIndex: partIndex, measureIndex: measureIndex),
-                        keySignature: effectiveKeySignature(partIndex: partIndex, measureIndex: measureIndex),
-                        clef: effectiveClef(partIndex: partIndex, measureIndex: measureIndex),
-                        staffLineSpacing: staffLineSpacing,
-                        zoomScale: viewModel.zoomScale,
-                        theme: theme
-                    )
-                    .frame(width: measureWidth, height: staffHeight + 40 * viewModel.zoomScale)
-                    .contentShape(Rectangle())
-                    .gesture(
-                        SpatialTapGesture()
-                            .onEnded { value in
-                                let wasDifferentMeasure = viewModel.selectedMeasureIndex != measureIndex
-                                    || viewModel.selectedPartIndex != partIndex
-                                viewModel.selectPart(at: partIndex)
-                                viewModel.selectedMeasureIndex = measureIndex
-                                // Reset cursor when switching to a different measure
-                                if wasDifferentMeasure {
-                                    viewModel.cursorPosition = currentMeasureBeats(measure: measure, ts: effectiveTimeSignature(partIndex: partIndex, measureIndex: measureIndex))
-                                }
-
-                                let clef = effectiveClef(partIndex: partIndex, measureIndex: measureIndex)
-                                let ts = effectiveTimeSignature(partIndex: partIndex, measureIndex: measureIndex)
-                                let positions = computeNotePositions(
-                                    measure: measure, measureIndex: measureIndex,
-                                    clef: clef, timeSignature: ts
-                                )
-
-                                // Check if tap is on an existing note
-                                if let hitIndex = hitTestNote(at: value.location, positions: positions) {
-                                    if viewModel.selectedEventIndex == hitIndex {
-                                        viewModel.deselectEvent()
-                                    } else {
-                                        viewModel.selectEvent(at: hitIndex)
-                                    }
-                                    return
-                                }
-
-                                // No note hit
-                                viewModel.deselectEvent()
-
-                                switch viewModel.inputMode {
-                                case .note:
-                                    if let pitch = pitchFromTap(y: value.location.y, clef: clef) {
-                                        viewModel.addNote(pitch: pitch)
-                                    }
-                                case .rest:
-                                    viewModel.addRest()
-                                case .navigate:
-                                    // Just select the measure, no insertion
-                                    viewModel.cursorPosition = 0
-                                }
-                            }
-                    )
-                    .simultaneousGesture(
-                        LongPressGesture(minimumDuration: 0.3)
-                            .sequenced(before: DragGesture(minimumDistance: 0))
-                            .onChanged { value in
-                                switch value {
-                                case .second(true, let drag):
-                                    guard let drag = drag,
-                                          isCurrentMeasure,
-                                          viewModel.selectedEventIndex != nil else { return }
-                                    let clef = effectiveClef(partIndex: partIndex, measureIndex: measureIndex)
-                                    if let pitch = pitchFromTap(y: drag.location.y, clef: clef) {
-                                        viewModel.updateSelectedEventPitch(pitch)
-                                    }
-                                default: break
-                                }
-                            }
-                    )
-                    .overlay(
-                        RoundedRectangle(cornerRadius: 2)
-                            .stroke(
-                                isCurrentMeasure ? theme.accent : Color.clear,
-                                lineWidth: 2
-                            )
-                    )
-                }
+            if part.isGrandStaff {
+                grandStaffRow(part: part, partIndex: partIndex)
+            } else {
+                singleStaffRow(part: part, partIndex: partIndex, staffIndex: 0)
             }
 
             Spacer().frame(height: partSpacing - staffHeight)
         }
+    }
+
+    // MARK: - Single Staff Row
+
+    private func singleStaffRow(part: Part, partIndex: Int, staffIndex: Int) -> some View {
+        HStack(spacing: 0) {
+            ForEach(Array(part.staves[staffIndex].measures.enumerated()), id: \.offset) { measureIndex, measure in
+                let isCurrentMeasure = partIndex == viewModel.selectedPartIndex
+                    && staffIndex == viewModel.selectedStaffIndex
+                    && measureIndex == viewModel.selectedMeasureIndex
+
+                staffMeasureView(
+                    part: part, partIndex: partIndex, staffIndex: staffIndex,
+                    measure: measure, measureIndex: measureIndex,
+                    isCurrentMeasure: isCurrentMeasure
+                )
+            }
+        }
+    }
+
+    // MARK: - Grand Staff Row (2 staves with brace)
+
+    private var grandStaffSpacing: CGFloat { 10 * viewModel.zoomScale }
+
+    private func grandStaffRow(part: Part, partIndex: Int) -> some View {
+        let measureCount = part.staves[0].measures.count
+        return HStack(spacing: 0) {
+            ForEach(0..<measureCount, id: \.self) { measureIndex in
+                VStack(spacing: grandStaffSpacing) {
+                    // Top staff (treble)
+                    let topMeasure = part.staves[0].measures[measureIndex]
+                    let isTopCurrent = partIndex == viewModel.selectedPartIndex
+                        && viewModel.selectedStaffIndex == 0
+                        && measureIndex == viewModel.selectedMeasureIndex
+
+                    staffMeasureView(
+                        part: part, partIndex: partIndex, staffIndex: 0,
+                        measure: topMeasure, measureIndex: measureIndex,
+                        isCurrentMeasure: isTopCurrent
+                    )
+
+                    // Bottom staff (bass)
+                    let bottomMeasure = part.staves[1].measures[measureIndex]
+                    let isBottomCurrent = partIndex == viewModel.selectedPartIndex
+                        && viewModel.selectedStaffIndex == 1
+                        && measureIndex == viewModel.selectedMeasureIndex
+
+                    staffMeasureView(
+                        part: part, partIndex: partIndex, staffIndex: 1,
+                        measure: bottomMeasure, measureIndex: measureIndex,
+                        isCurrentMeasure: isBottomCurrent
+                    )
+                }
+                .overlay(alignment: .leading) {
+                    // Brace (curly bracket) on the first measure
+                    if measureIndex == 0 {
+                        braceView
+                    }
+                }
+                .overlay(alignment: .leading) {
+                    // Common barline connecting both staves
+                    let totalH = (staffHeight + 40 * viewModel.zoomScale) * 2 + grandStaffSpacing
+                    Rectangle()
+                        .fill(theme.staffLine)
+                        .frame(width: 1, height: totalH)
+                        .offset(x: -1)
+                }
+            }
+        }
+    }
+
+    private var braceView: some View {
+        let totalH = (staffHeight + 40 * viewModel.zoomScale) * 2 + grandStaffSpacing
+        return Text("{")
+            .font(.system(size: totalH * 0.8, weight: .ultraLight))
+            .foregroundStyle(theme.staffLine)
+            .frame(height: totalH)
+            .offset(x: -12 * viewModel.zoomScale)
+    }
+
+    // MARK: - Staff Measure View (shared between single/grand)
+
+    private func staffMeasureView(
+        part: Part, partIndex: Int, staffIndex: Int,
+        measure: Measure, measureIndex: Int,
+        isCurrentMeasure: Bool
+    ) -> some View {
+        let clef = effectiveClef(partIndex: partIndex, staffIndex: staffIndex, measureIndex: measureIndex)
+        let ts = effectiveTimeSignature(partIndex: partIndex, staffIndex: staffIndex, measureIndex: measureIndex)
+        let ks = effectiveKeySignature(partIndex: partIndex, staffIndex: staffIndex, measureIndex: measureIndex)
+
+        return MeasureView(
+            measure: measure,
+            measureIndex: measureIndex,
+            isSelected: isCurrentMeasure,
+            selectedEventIndex: isCurrentMeasure ? viewModel.selectedEventIndex : nil,
+            timeSignature: ts,
+            keySignature: ks,
+            clef: clef,
+            staffLineSpacing: staffLineSpacing,
+            zoomScale: viewModel.zoomScale,
+            theme: theme
+        )
+        .frame(width: measureWidth, height: staffHeight + 40 * viewModel.zoomScale)
+        .contentShape(Rectangle())
+        .gesture(
+            SpatialTapGesture()
+                .onEnded { value in
+                    let wasDifferent = viewModel.selectedMeasureIndex != measureIndex
+                        || viewModel.selectedPartIndex != partIndex
+                        || viewModel.selectedStaffIndex != staffIndex
+                    viewModel.selectPart(at: partIndex)
+                    viewModel.selectedStaffIndex = staffIndex
+                    viewModel.selectedMeasureIndex = measureIndex
+                    if wasDifferent {
+                        viewModel.cursorPosition = currentMeasureBeats(measure: measure, ts: ts)
+                    }
+
+                    let positions = computeNotePositions(
+                        measure: measure, measureIndex: measureIndex,
+                        clef: clef, timeSignature: ts
+                    )
+
+                    if let hitIndex = hitTestNote(at: value.location, positions: positions) {
+                        if viewModel.selectedEventIndex == hitIndex {
+                            viewModel.deselectEvent()
+                        } else {
+                            viewModel.selectEvent(at: hitIndex)
+                        }
+                        return
+                    }
+
+                    viewModel.deselectEvent()
+
+                    switch viewModel.inputMode {
+                    case .note:
+                        if let pitch = pitchFromTap(y: value.location.y, clef: clef) {
+                            viewModel.addNote(pitch: pitch)
+                        }
+                    case .rest:
+                        viewModel.addRest()
+                    case .navigate:
+                        viewModel.cursorPosition = 0
+                    }
+                }
+        )
+        .simultaneousGesture(
+            LongPressGesture(minimumDuration: 0.3)
+                .sequenced(before: DragGesture(minimumDistance: 0))
+                .onChanged { value in
+                    switch value {
+                    case .second(true, let drag):
+                        guard let drag = drag,
+                              isCurrentMeasure,
+                              viewModel.selectedEventIndex != nil else { return }
+                        if let pitch = pitchFromTap(y: drag.location.y, clef: clef) {
+                            viewModel.updateSelectedEventPitch(pitch)
+                        }
+                    default: break
+                    }
+                }
+        )
+        .overlay(
+            RoundedRectangle(cornerRadius: 2)
+                .stroke(
+                    isCurrentMeasure ? theme.accent : Color.clear,
+                    lineWidth: 2
+                )
+        )
     }
 
     // MARK: - Note Hit Testing
@@ -255,34 +339,38 @@ struct StaffAreaView: View {
         measure.usedBeats
     }
 
-    private func effectiveTimeSignature(partIndex: Int, measureIndex: Int) -> TimeSignature {
+    private func effectiveTimeSignature(partIndex: Int, staffIndex: Int = 0, measureIndex: Int) -> TimeSignature {
         let part = viewModel.score.parts[partIndex]
+        let sIdx = min(staffIndex, part.staves.count - 1)
         for i in stride(from: measureIndex, through: 0, by: -1) {
-            if let ts = part.measures[i].timeSignature {
+            if let ts = part.staves[sIdx].measures[i].timeSignature {
                 return ts
             }
         }
         return viewModel.score.timeSignature
     }
 
-    private func effectiveKeySignature(partIndex: Int, measureIndex: Int) -> KeySignature {
+    private func effectiveKeySignature(partIndex: Int, staffIndex: Int = 0, measureIndex: Int) -> KeySignature {
         let part = viewModel.score.parts[partIndex]
+        let sIdx = min(staffIndex, part.staves.count - 1)
         for i in stride(from: measureIndex, through: 0, by: -1) {
-            if let ks = part.measures[i].keySignature {
+            if let ks = part.staves[sIdx].measures[i].keySignature {
                 return ks
             }
         }
         return viewModel.score.keySignature
     }
 
-    private func effectiveClef(partIndex: Int, measureIndex: Int) -> Clef {
+    private func effectiveClef(partIndex: Int, staffIndex: Int = 0, measureIndex: Int) -> Clef {
         let part = viewModel.score.parts[partIndex]
+        let sIdx = min(staffIndex, part.staves.count - 1)
         for i in stride(from: measureIndex, through: 0, by: -1) {
-            if let clef = part.measures[i].clefChange {
+            if let clef = part.staves[sIdx].measures[i].clefChange {
                 return clef
             }
         }
-        return part.instrument.defaultClef
+        // Return the clef for this specific staff
+        return sIdx < part.instrument.clefs.count ? part.instrument.clefs[sIdx] : part.instrument.defaultClef
     }
 }
 

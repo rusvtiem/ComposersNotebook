@@ -42,6 +42,8 @@ struct Instrument: Codable, Equatable, Identifiable {
     var shortName: String       // "Фл.", "Скр.", etc.
     var group: InstrumentGroup
     var defaultClef: Clef
+    var staves: Int             // 1 = single staff, 2 = grand staff (piano, organ)
+    var clefs: [Clef]           // clef per staff: [treble] or [treble, bass]
     var midiProgram: Int        // General MIDI program number (0-127)
     var lowestNote: Pitch       // нижняя граница диапазона
     var highestNote: Pitch      // верхняя граница диапазона
@@ -55,13 +57,17 @@ struct Instrument: Codable, Equatable, Identifiable {
         midiProgram: Int,
         lowestNote: Pitch,
         highestNote: Pitch,
-        transposition: Int = 0
+        transposition: Int = 0,
+        staves: Int = 1,
+        clefs: [Clef]? = nil
     ) {
         self.id = UUID()
         self.name = name
         self.shortName = shortName
         self.group = group
         self.defaultClef = defaultClef
+        self.staves = staves
+        self.clefs = clefs ?? [defaultClef]
         self.midiProgram = midiProgram
         self.lowestNote = lowestNote
         self.highestNote = highestNote
@@ -260,14 +266,16 @@ extension Instrument {
         name: "Фортепиано", shortName: "Ф-но",
         group: .keyboards, defaultClef: .treble, midiProgram: 0,
         lowestNote: Pitch(name: .A, octave: 0),
-        highestNote: Pitch(name: .C, octave: 8)
+        highestNote: Pitch(name: .C, octave: 8),
+        staves: 2, clefs: [.treble, .bass]
     )
 
     static let organ = Instrument(
         name: "Орган", shortName: "Орг.",
         group: .keyboards, defaultClef: .treble, midiProgram: 19,
         lowestNote: Pitch(name: .C, octave: 2),
-        highestNote: Pitch(name: .C, octave: 7)
+        highestNote: Pitch(name: .C, octave: 7),
+        staves: 2, clefs: [.treble, .bass]
     )
 
     static let celesta = Instrument(

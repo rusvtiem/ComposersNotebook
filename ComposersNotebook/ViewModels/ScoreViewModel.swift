@@ -16,6 +16,7 @@ class ScoreViewModel: ObservableObject {
     // Score data
     @Published var score: Score
     @Published var selectedPartIndex: Int = 0
+    @Published var selectedStaffIndex: Int = 0  // 0 = treble (top), 1 = bass (bottom) for grand staff
     @Published var selectedMeasureIndex: Int = 0
     @Published var cursorPosition: Double = 0  // beat position within measure
 
@@ -70,17 +71,22 @@ class ScoreViewModel: ObservableObject {
         return score.parts[selectedPartIndex]
     }
 
-    var currentMeasure: Measure? {
+    var currentStaff: Staff? {
         guard let part = currentPart,
-              selectedMeasureIndex < part.measures.count else { return nil }
-        return part.measures[selectedMeasureIndex]
+              selectedStaffIndex < part.staves.count else { return nil }
+        return part.staves[selectedStaffIndex]
+    }
+
+    var currentMeasure: Measure? {
+        guard let staff = currentStaff,
+              selectedMeasureIndex < staff.measures.count else { return nil }
+        return staff.measures[selectedMeasureIndex]
     }
 
     var effectiveTimeSignature: TimeSignature {
-        guard let part = currentPart else { return score.timeSignature }
-        // Walk backwards to find the most recent time signature
+        guard let staff = currentStaff else { return score.timeSignature }
         for i in stride(from: selectedMeasureIndex, through: 0, by: -1) {
-            if let ts = part.measures[i].timeSignature {
+            if let ts = staff.measures[i].timeSignature {
                 return ts
             }
         }
@@ -88,9 +94,9 @@ class ScoreViewModel: ObservableObject {
     }
 
     var effectiveKeySignature: KeySignature {
-        guard let part = currentPart else { return score.keySignature }
+        guard let staff = currentStaff else { return score.keySignature }
         for i in stride(from: selectedMeasureIndex, through: 0, by: -1) {
-            if let ks = part.measures[i].keySignature {
+            if let ks = staff.measures[i].keySignature {
                 return ks
             }
         }
@@ -101,6 +107,12 @@ class ScoreViewModel: ObservableObject {
 
     func addNote(pitch: Pitch) {
         guard inputMode == .note else { return }
+
+        // Auto-select staff for grand staff instruments (split at middle C = C4)
+        if let part = currentPart, part.isGrandStaff {
+            let middleC = 60 // MIDI note for C4
+            selectedStaffIndex = pitch.midiNote >= middleC ? 0 : 1
+        }
 
         // If a note/chord is selected, add pitch to it (build chord)
         if selectedEventIndex != nil {
@@ -179,17 +191,17 @@ class ScoreViewModel: ObservableObject {
         clearPlaceholderRest()
 
         let ts = effectiveTimeSignature
-        let measure = score.parts[selectedPartIndex].measures[selectedMeasureIndex]
+        let measure = score.parts[selectedPartIndex].staves[selectedStaffIndex].measures[selectedMeasureIndex]
         let remaining = measure.remainingBeats(timeSignature: ts)
 
         if event.duration.beats <= remaining + 0.001 {
-            score.parts[selectedPartIndex].measures[selectedMeasureIndex].events.append(event)
+            score.parts[selectedPartIndex].staves[selectedStaffIndex].measures[selectedMeasureIndex].events.append(event)
             cursorPosition += event.duration.beats
         } else {
             // Auto-advance to next measure
             advanceMeasure()
             clearPlaceholderRest()
-            score.parts[selectedPartIndex].measures[selectedMeasureIndex].events.append(event)
+            score.parts[selectedPartIndex].staves[selectedStaffIndex].measures[selectedMeasureIndex].events.append(event)
             cursorPosition = event.duration.beats
         }
 
@@ -198,12 +210,12 @@ class ScoreViewModel: ObservableObject {
 
     /// Remove the default whole rest placeholder if that's the only event in the measure
     private func clearPlaceholderRest() {
-        let measure = score.parts[selectedPartIndex].measures[selectedMeasureIndex]
+        let measure = score.parts[selectedPartIndex].staves[selectedStaffIndex].measures[selectedMeasureIndex]
         if measure.events.count == 1,
            measure.events[0].isRest,
            measure.events[0].duration.value == .whole,
            !measure.events[0].duration.dotted {
-            score.parts[selectedPartIndex].measures[selectedMeasureIndex].events.removeAll()
+            score.parts[selectedPartIndex].staves[selectedStaffIndex].measures[selectedMeasureIndex].events.removeAll()
             cursorPosition = 0
         }
     }
@@ -236,9 +248,9 @@ class ScoreViewModel: ObservableObject {
         guard let idx = selectedEventIndex,
               selectedPartIndex < score.parts.count,
               selectedMeasureIndex < score.parts[selectedPartIndex].measures.count,
-              idx < score.parts[selectedPartIndex].measures[selectedMeasureIndex].events.count else { return }
+              idx < score.parts[selectedPartIndex].staves[selectedStaffIndex].measures[selectedMeasureIndex].events.count else { return }
         saveUndoState()
-        var event = score.parts[selectedPartIndex].measures[selectedMeasureIndex].events[idx]
+        var event = score.parts[selectedPartIndex].staves[selectedStaffIndex].measures[selectedMeasureIndex].events[idx]
         switch event.type {
         case .chord(var pitches):
             guard pitchIndex < pitches.count, pitches.count > 1 else { return }
@@ -248,7 +260,7 @@ class ScoreViewModel: ObservableObject {
             } else {
                 event.type = .chord(pitches: pitches)
             }
-            score.parts[selectedPartIndex].measures[selectedMeasureIndex].events[idx] = event
+            score.parts[selectedPartIndex].staves[selectedStaffIndex].measures[selectedMeasureIndex].events[idx] = event
             selectedPitchIndex = nil
             score.touch()
         default:
@@ -261,20 +273,20 @@ class ScoreViewModel: ObservableObject {
         guard let idx = selectedEventIndex,
               selectedPartIndex < score.parts.count,
               selectedMeasureIndex < score.parts[selectedPartIndex].measures.count,
-              idx < score.parts[selectedPartIndex].measures[selectedMeasureIndex].events.count else { return }
+              idx < score.parts[selectedPartIndex].staves[selectedStaffIndex].measures[selectedMeasureIndex].events.count else { return }
         saveUndoState()
-        var event = score.parts[selectedPartIndex].measures[selectedMeasureIndex].events[idx]
+        var event = score.parts[selectedPartIndex].staves[selectedStaffIndex].measures[selectedMeasureIndex].events[idx]
         switch event.type {
         case .chord(var pitches):
             guard pitchIndex < pitches.count else { return }
             pitches[pitchIndex] = newPitch
             pitches.sort { $0.staffPosition > $1.staffPosition }
             event.type = .chord(pitches: pitches)
-            score.parts[selectedPartIndex].measures[selectedMeasureIndex].events[idx] = event
+            score.parts[selectedPartIndex].staves[selectedStaffIndex].measures[selectedMeasureIndex].events[idx] = event
             score.touch()
         case .note:
             event.type = .note(pitch: newPitch)
-            score.parts[selectedPartIndex].measures[selectedMeasureIndex].events[idx] = event
+            score.parts[selectedPartIndex].staves[selectedStaffIndex].measures[selectedMeasureIndex].events[idx] = event
             score.touch()
         default:
             break
@@ -285,9 +297,9 @@ class ScoreViewModel: ObservableObject {
         guard let idx = selectedEventIndex,
               selectedPartIndex < score.parts.count,
               selectedMeasureIndex < score.parts[selectedPartIndex].measures.count,
-              idx < score.parts[selectedPartIndex].measures[selectedMeasureIndex].events.count else { return }
+              idx < score.parts[selectedPartIndex].staves[selectedStaffIndex].measures[selectedMeasureIndex].events.count else { return }
         saveUndoState()
-        score.parts[selectedPartIndex].measures[selectedMeasureIndex].events[idx].type = .note(pitch: pitch)
+        score.parts[selectedPartIndex].staves[selectedStaffIndex].measures[selectedMeasureIndex].events[idx].type = .note(pitch: pitch)
         score.touch()
     }
 
@@ -295,9 +307,9 @@ class ScoreViewModel: ObservableObject {
         guard let idx = selectedEventIndex,
               selectedPartIndex < score.parts.count,
               selectedMeasureIndex < score.parts[selectedPartIndex].measures.count,
-              idx < score.parts[selectedPartIndex].measures[selectedMeasureIndex].events.count else { return }
+              idx < score.parts[selectedPartIndex].staves[selectedStaffIndex].measures[selectedMeasureIndex].events.count else { return }
         saveUndoState()
-        score.parts[selectedPartIndex].measures[selectedMeasureIndex].events[idx].duration.value = duration
+        score.parts[selectedPartIndex].staves[selectedStaffIndex].measures[selectedMeasureIndex].events[idx].duration.value = duration
         score.touch()
     }
 
@@ -305,9 +317,9 @@ class ScoreViewModel: ObservableObject {
         guard let idx = selectedEventIndex,
               selectedPartIndex < score.parts.count,
               selectedMeasureIndex < score.parts[selectedPartIndex].measures.count,
-              idx < score.parts[selectedPartIndex].measures[selectedMeasureIndex].events.count else { return }
+              idx < score.parts[selectedPartIndex].staves[selectedStaffIndex].measures[selectedMeasureIndex].events.count else { return }
         saveUndoState()
-        var event = score.parts[selectedPartIndex].measures[selectedMeasureIndex].events[idx]
+        var event = score.parts[selectedPartIndex].staves[selectedStaffIndex].measures[selectedMeasureIndex].events[idx]
         event.showNatural = (accidental == .natural)
         switch event.type {
         case .note(var pitch):
@@ -318,7 +330,7 @@ class ScoreViewModel: ObservableObject {
             event.type = .chord(pitches: pitches)
         case .rest: break
         }
-        score.parts[selectedPartIndex].measures[selectedMeasureIndex].events[idx] = event
+        score.parts[selectedPartIndex].staves[selectedStaffIndex].measures[selectedMeasureIndex].events[idx] = event
         score.touch()
     }
 
@@ -326,16 +338,16 @@ class ScoreViewModel: ObservableObject {
         guard let idx = selectedEventIndex,
               selectedPartIndex < score.parts.count,
               selectedMeasureIndex < score.parts[selectedPartIndex].measures.count,
-              idx < score.parts[selectedPartIndex].measures[selectedMeasureIndex].events.count else { return }
+              idx < score.parts[selectedPartIndex].staves[selectedStaffIndex].measures[selectedMeasureIndex].events.count else { return }
         saveUndoState()
         if let art = articulation {
-            if score.parts[selectedPartIndex].measures[selectedMeasureIndex].events[idx].articulations.contains(art) {
-                score.parts[selectedPartIndex].measures[selectedMeasureIndex].events[idx].articulations.removeAll { $0 == art }
+            if score.parts[selectedPartIndex].staves[selectedStaffIndex].measures[selectedMeasureIndex].events[idx].articulations.contains(art) {
+                score.parts[selectedPartIndex].staves[selectedStaffIndex].measures[selectedMeasureIndex].events[idx].articulations.removeAll { $0 == art }
             } else {
-                score.parts[selectedPartIndex].measures[selectedMeasureIndex].events[idx].articulations.append(art)
+                score.parts[selectedPartIndex].staves[selectedStaffIndex].measures[selectedMeasureIndex].events[idx].articulations.append(art)
             }
         } else {
-            score.parts[selectedPartIndex].measures[selectedMeasureIndex].events[idx].articulations.removeAll()
+            score.parts[selectedPartIndex].staves[selectedStaffIndex].measures[selectedMeasureIndex].events[idx].articulations.removeAll()
         }
         score.touch()
     }
@@ -344,9 +356,9 @@ class ScoreViewModel: ObservableObject {
         guard let idx = selectedEventIndex,
               selectedPartIndex < score.parts.count,
               selectedMeasureIndex < score.parts[selectedPartIndex].measures.count,
-              idx < score.parts[selectedPartIndex].measures[selectedMeasureIndex].events.count else { return }
+              idx < score.parts[selectedPartIndex].staves[selectedStaffIndex].measures[selectedMeasureIndex].events.count else { return }
         saveUndoState()
-        score.parts[selectedPartIndex].measures[selectedMeasureIndex].events[idx].tiedToNext.toggle()
+        score.parts[selectedPartIndex].staves[selectedStaffIndex].measures[selectedMeasureIndex].events[idx].tiedToNext.toggle()
         score.touch()
     }
 
@@ -354,9 +366,9 @@ class ScoreViewModel: ObservableObject {
         guard let idx = selectedEventIndex,
               selectedPartIndex < score.parts.count,
               selectedMeasureIndex < score.parts[selectedPartIndex].measures.count,
-              idx < score.parts[selectedPartIndex].measures[selectedMeasureIndex].events.count else { return }
+              idx < score.parts[selectedPartIndex].staves[selectedStaffIndex].measures[selectedMeasureIndex].events.count else { return }
         saveUndoState()
-        score.parts[selectedPartIndex].measures[selectedMeasureIndex].events[idx].slurStart.toggle()
+        score.parts[selectedPartIndex].staves[selectedStaffIndex].measures[selectedMeasureIndex].events[idx].slurStart.toggle()
         score.touch()
     }
 
@@ -364,9 +376,9 @@ class ScoreViewModel: ObservableObject {
         guard let idx = selectedEventIndex,
               selectedPartIndex < score.parts.count,
               selectedMeasureIndex < score.parts[selectedPartIndex].measures.count,
-              idx < score.parts[selectedPartIndex].measures[selectedMeasureIndex].events.count else { return }
+              idx < score.parts[selectedPartIndex].staves[selectedStaffIndex].measures[selectedMeasureIndex].events.count else { return }
         saveUndoState()
-        score.parts[selectedPartIndex].measures[selectedMeasureIndex].events[idx].stemDirection = direction
+        score.parts[selectedPartIndex].staves[selectedStaffIndex].measures[selectedMeasureIndex].events[idx].stemDirection = direction
         score.touch()
     }
 
@@ -374,14 +386,14 @@ class ScoreViewModel: ObservableObject {
         guard let idx = selectedEventIndex,
               selectedPartIndex < score.parts.count,
               selectedMeasureIndex < score.parts[selectedPartIndex].measures.count,
-              idx < score.parts[selectedPartIndex].measures[selectedMeasureIndex].events.count else { return }
+              idx < score.parts[selectedPartIndex].staves[selectedStaffIndex].measures[selectedMeasureIndex].events.count else { return }
         saveUndoState()
         // Replace note/chord with rest of same duration (don't shift other notes)
-        let event = score.parts[selectedPartIndex].measures[selectedMeasureIndex].events[idx]
+        let event = score.parts[selectedPartIndex].staves[selectedStaffIndex].measures[selectedMeasureIndex].events[idx]
         var restEvent = NoteEvent(type: .rest, duration: event.duration)
         restEvent.duration.dotted = event.duration.dotted
         restEvent.duration.doubleDotted = event.duration.doubleDotted
-        score.parts[selectedPartIndex].measures[selectedMeasureIndex].events[idx] = restEvent
+        score.parts[selectedPartIndex].staves[selectedStaffIndex].measures[selectedMeasureIndex].events[idx] = restEvent
         selectedEventIndex = nil
         score.touch()
     }
@@ -395,9 +407,9 @@ class ScoreViewModel: ObservableObject {
         guard let idx = selectedEventIndex,
               selectedPartIndex < score.parts.count,
               selectedMeasureIndex < score.parts[selectedPartIndex].measures.count,
-              idx < score.parts[selectedPartIndex].measures[selectedMeasureIndex].events.count else { return }
+              idx < score.parts[selectedPartIndex].staves[selectedStaffIndex].measures[selectedMeasureIndex].events.count else { return }
         saveUndoState()
-        var event = score.parts[selectedPartIndex].measures[selectedMeasureIndex].events[idx]
+        var event = score.parts[selectedPartIndex].staves[selectedStaffIndex].measures[selectedMeasureIndex].events[idx]
         switch event.type {
         case .note(let existing):
             // Convert note to chord
@@ -414,7 +426,7 @@ class ScoreViewModel: ObservableObject {
         case .rest:
             break
         }
-        score.parts[selectedPartIndex].measures[selectedMeasureIndex].events[idx] = event
+        score.parts[selectedPartIndex].staves[selectedStaffIndex].measures[selectedMeasureIndex].events[idx] = event
         score.touch()
     }
 
@@ -448,16 +460,16 @@ class ScoreViewModel: ObservableObject {
 
         let ts = effectiveTimeSignature
         for event in clipboard {
-            let measure = score.parts[selectedPartIndex].measures[selectedMeasureIndex]
+            let measure = score.parts[selectedPartIndex].staves[selectedStaffIndex].measures[selectedMeasureIndex]
             let remaining = measure.remainingBeats(timeSignature: ts)
 
             if event.duration.beats <= remaining + 0.001 {
-                score.parts[selectedPartIndex].measures[selectedMeasureIndex].events.append(event)
+                score.parts[selectedPartIndex].staves[selectedStaffIndex].measures[selectedMeasureIndex].events.append(event)
                 cursorPosition += event.duration.beats
             } else {
                 advanceMeasure()
                 clearPlaceholderRest()
-                score.parts[selectedPartIndex].measures[selectedMeasureIndex].events.append(event)
+                score.parts[selectedPartIndex].staves[selectedStaffIndex].measures[selectedMeasureIndex].events.append(event)
                 cursorPosition = event.duration.beats
             }
         }
@@ -471,9 +483,9 @@ class ScoreViewModel: ObservableObject {
         guard let idx = selectedEventIndex,
               selectedPartIndex < score.parts.count,
               selectedMeasureIndex < score.parts[selectedPartIndex].measures.count,
-              idx < score.parts[selectedPartIndex].measures[selectedMeasureIndex].events.count else { return }
+              idx < score.parts[selectedPartIndex].staves[selectedStaffIndex].measures[selectedMeasureIndex].events.count else { return }
         saveUndoState()
-        var event = score.parts[selectedPartIndex].measures[selectedMeasureIndex].events[idx]
+        var event = score.parts[selectedPartIndex].staves[selectedStaffIndex].measures[selectedMeasureIndex].events[idx]
         switch event.type {
         case .note(let pitch):
             let newMidi = pitch.midiNote + semitones
@@ -490,7 +502,7 @@ class ScoreViewModel: ObservableObject {
         case .rest:
             return
         }
-        score.parts[selectedPartIndex].measures[selectedMeasureIndex].events[idx] = event
+        score.parts[selectedPartIndex].staves[selectedStaffIndex].measures[selectedMeasureIndex].events[idx] = event
         score.touch()
     }
 
@@ -499,13 +511,13 @@ class ScoreViewModel: ObservableObject {
         guard selectedPartIndex < score.parts.count,
               selectedMeasureIndex < score.parts[selectedPartIndex].measures.count else { return }
         saveUndoState()
-        let events = score.parts[selectedPartIndex].measures[selectedMeasureIndex].events
+        let events = score.parts[selectedPartIndex].staves[selectedStaffIndex].measures[selectedMeasureIndex].events
         for (i, event) in events.enumerated() {
             switch event.type {
             case .note(let pitch):
                 let newMidi = pitch.midiNote + semitones
                 guard newMidi >= 0, newMidi <= 127 else { continue }
-                score.parts[selectedPartIndex].measures[selectedMeasureIndex].events[i].type = .note(pitch: Pitch.fromMIDI(newMidi))
+                score.parts[selectedPartIndex].staves[selectedStaffIndex].measures[selectedMeasureIndex].events[i].type = .note(pitch: Pitch.fromMIDI(newMidi))
             case .chord(let pitches):
                 let transposed = pitches.compactMap { p -> Pitch? in
                     let newMidi = p.midiNote + semitones
@@ -513,7 +525,7 @@ class ScoreViewModel: ObservableObject {
                     return Pitch.fromMIDI(newMidi)
                 }
                 if transposed.count == pitches.count {
-                    score.parts[selectedPartIndex].measures[selectedMeasureIndex].events[i].type = .chord(pitches: transposed)
+                    score.parts[selectedPartIndex].staves[selectedStaffIndex].measures[selectedMeasureIndex].events[i].type = .chord(pitches: transposed)
                 }
             case .rest:
                 continue
@@ -539,11 +551,11 @@ class ScoreViewModel: ObservableObject {
         guard selectedPartIndex < score.parts.count,
               selectedMeasureIndex < score.parts[selectedPartIndex].measures.count else { return }
 
-        let events = score.parts[selectedPartIndex].measures[selectedMeasureIndex].events
+        let events = score.parts[selectedPartIndex].staves[selectedStaffIndex].measures[selectedMeasureIndex].events
         guard !events.isEmpty else { return }
 
         saveUndoState()
-        let removed = score.parts[selectedPartIndex].measures[selectedMeasureIndex].events.removeLast()
+        let removed = score.parts[selectedPartIndex].staves[selectedStaffIndex].measures[selectedMeasureIndex].events.removeLast()
         cursorPosition = max(0, cursorPosition - removed.duration.beats)
         score.touch()
     }
@@ -572,6 +584,7 @@ class ScoreViewModel: ObservableObject {
     func selectPart(at index: Int) {
         guard index < score.parts.count else { return }
         selectedPartIndex = index
+        selectedStaffIndex = 0
     }
 
     func addPart(instrument: Instrument) {
@@ -621,14 +634,18 @@ class ScoreViewModel: ObservableObject {
     func setTimeSignatureAtCurrentMeasure(_ ts: TimeSignature) {
         saveUndoState()
         for partIndex in score.parts.indices {
-            score.parts[partIndex].measures[selectedMeasureIndex].timeSignature = ts
+            for staffIndex in score.parts[partIndex].staves.indices {
+                score.parts[partIndex].staves[staffIndex].measures[selectedMeasureIndex].timeSignature = ts
+            }
         }
     }
 
     func setKeySignatureAtCurrentMeasure(_ ks: KeySignature) {
         saveUndoState()
         for partIndex in score.parts.indices {
-            score.parts[partIndex].measures[selectedMeasureIndex].keySignature = ks
+            for staffIndex in score.parts[partIndex].staves.indices {
+                score.parts[partIndex].staves[staffIndex].measures[selectedMeasureIndex].keySignature = ks
+            }
         }
     }
 
@@ -688,37 +705,37 @@ class ScoreViewModel: ObservableObject {
 
     func setTimeSignature(_ ts: TimeSignature) {
         saveUndoState()
-        score.parts[selectedPartIndex].measures[selectedMeasureIndex].timeSignature = ts
+        score.parts[selectedPartIndex].staves[selectedStaffIndex].measures[selectedMeasureIndex].timeSignature = ts
         score.touch()
     }
 
     func setKeySignature(_ ks: KeySignature) {
         saveUndoState()
-        score.parts[selectedPartIndex].measures[selectedMeasureIndex].keySignature = ks
+        score.parts[selectedPartIndex].staves[selectedStaffIndex].measures[selectedMeasureIndex].keySignature = ks
         score.touch()
     }
 
     func setClef(_ clef: Clef) {
         saveUndoState()
-        score.parts[selectedPartIndex].measures[selectedMeasureIndex].clefChange = clef
+        score.parts[selectedPartIndex].staves[selectedStaffIndex].measures[selectedMeasureIndex].clefChange = clef
         score.touch()
     }
 
     func setTempo(_ tempo: TempoMarking) {
         saveUndoState()
-        score.parts[selectedPartIndex].measures[selectedMeasureIndex].tempoMarking = tempo
+        score.parts[selectedPartIndex].staves[selectedStaffIndex].measures[selectedMeasureIndex].tempoMarking = tempo
         score.touch()
     }
 
     func setBarline(_ barline: BarlineType) {
         saveUndoState()
-        score.parts[selectedPartIndex].measures[selectedMeasureIndex].barlineEnd = barline
+        score.parts[selectedPartIndex].staves[selectedStaffIndex].measures[selectedMeasureIndex].barlineEnd = barline
         score.touch()
     }
 
     func setNavigationMark(_ mark: NavigationMark?) {
         saveUndoState()
-        score.parts[selectedPartIndex].measures[selectedMeasureIndex].navigationMark = mark
+        score.parts[selectedPartIndex].staves[selectedStaffIndex].measures[selectedMeasureIndex].navigationMark = mark
         score.touch()
     }
 }

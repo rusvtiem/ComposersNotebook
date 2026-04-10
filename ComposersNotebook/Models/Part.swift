@@ -1,37 +1,96 @@
 import Foundation
 
-// MARK: - Part (Партия одного инструмента)
+// MARK: - Staff (один нотный стан)
 
-struct Part: Codable, Equatable, Identifiable {
+struct Staff: Codable, Equatable, Identifiable {
     let id: UUID
-    var instrument: Instrument
+    var clef: Clef
     var measures: [Measure]
-    var clef: Clef              // текущий ключ (может меняться в мерах)
 
-    init(instrument: Instrument, measures: [Measure] = []) {
+    init(clef: Clef, measures: [Measure] = []) {
         self.id = UUID()
-        self.instrument = instrument
+        self.clef = clef
         self.measures = measures.isEmpty ? [.wholeRest()] : measures
-        self.clef = instrument.defaultClef
     }
 
-    /// Add an empty measure at the end
     mutating func appendEmptyMeasure() {
         measures.append(.wholeRest())
     }
 
-    /// Insert a measure at a specific index
     mutating func insertMeasure(_ measure: Measure, at index: Int) {
         let safeIndex = min(index, measures.count)
         measures.insert(measure, at: safeIndex)
     }
 
-    /// Remove a measure at a specific index
     mutating func removeMeasure(at index: Int) {
         guard measures.count > 1, index < measures.count else { return }
         measures.remove(at: index)
     }
+}
 
-    /// Total number of measures
-    var measureCount: Int { measures.count }
+// MARK: - Part (Партия одного инструмента)
+
+struct Part: Codable, Equatable, Identifiable {
+    let id: UUID
+    var instrument: Instrument
+    var staves: [Staff]
+
+    init(instrument: Instrument, measures: [Measure] = []) {
+        self.id = UUID()
+        self.instrument = instrument
+
+        // Create staves based on instrument (1 or 2)
+        var staffList: [Staff] = []
+        for i in 0..<instrument.staves {
+            let clef = i < instrument.clefs.count ? instrument.clefs[i] : instrument.defaultClef
+            staffList.append(Staff(clef: clef, measures: measures.isEmpty ? [.wholeRest()] : measures))
+        }
+        self.staves = staffList
+    }
+
+    // MARK: - Convenience accessors (backwards compatible, operate on first staff)
+
+    /// Primary staff measures (treble for grand staff)
+    var measures: [Measure] {
+        get { staves.first?.measures ?? [] }
+        set {
+            guard !staves.isEmpty else { return }
+            staves[0].measures = newValue
+        }
+    }
+
+    /// Current clef of primary staff
+    var clef: Clef {
+        get { staves.first?.clef ?? instrument.defaultClef }
+        set {
+            guard !staves.isEmpty else { return }
+            staves[0].clef = newValue
+        }
+    }
+
+    /// Whether this part has a grand staff (2 staves)
+    var isGrandStaff: Bool { staves.count >= 2 }
+
+    /// Total number of measures (same across all staves)
+    var measureCount: Int { staves.first?.measures.count ?? 0 }
+
+    // MARK: - Operations (apply to ALL staves)
+
+    mutating func appendEmptyMeasure() {
+        for i in staves.indices {
+            staves[i].appendEmptyMeasure()
+        }
+    }
+
+    mutating func insertMeasure(_ measure: Measure, at index: Int) {
+        for i in staves.indices {
+            staves[i].insertMeasure(measure, at: index)
+        }
+    }
+
+    mutating func removeMeasure(at index: Int) {
+        for i in staves.indices {
+            staves[i].removeMeasure(at: index)
+        }
+    }
 }
