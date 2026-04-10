@@ -275,7 +275,7 @@ extension Instrument {
         group: .keyboards, defaultClef: .treble, midiProgram: 19,
         lowestNote: Pitch(name: .C, octave: 2),
         highestNote: Pitch(name: .C, octave: 7),
-        staves: 2, clefs: [.treble, .bass]
+        staves: 3, clefs: [.treble, .bass, .bass]
     )
 
     static let celesta = Instrument(

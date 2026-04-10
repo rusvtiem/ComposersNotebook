@@ -73,48 +73,38 @@ struct StaffAreaView: View {
         }
     }
 
-    // MARK: - Grand Staff Row (2 staves with brace)
+    // MARK: - Multi-Staff Row (grand staff: 2+ staves with brace)
 
     private var grandStaffSpacing: CGFloat { 10 * viewModel.zoomScale }
 
     private func grandStaffRow(part: Part, partIndex: Int) -> some View {
         let measureCount = part.staves[0].measures.count
+        let stavesCount = part.staves.count
         return HStack(spacing: 0) {
             ForEach(0..<measureCount, id: \.self) { measureIndex in
                 VStack(spacing: grandStaffSpacing) {
-                    // Top staff (treble)
-                    let topMeasure = part.staves[0].measures[measureIndex]
-                    let isTopCurrent = partIndex == viewModel.selectedPartIndex
-                        && viewModel.selectedStaffIndex == 0
-                        && measureIndex == viewModel.selectedMeasureIndex
+                    ForEach(0..<stavesCount, id: \.self) { staffIndex in
+                        let measure = part.staves[staffIndex].measures[measureIndex]
+                        let isCurrent = partIndex == viewModel.selectedPartIndex
+                            && viewModel.selectedStaffIndex == staffIndex
+                            && measureIndex == viewModel.selectedMeasureIndex
 
-                    staffMeasureView(
-                        part: part, partIndex: partIndex, staffIndex: 0,
-                        measure: topMeasure, measureIndex: measureIndex,
-                        isCurrentMeasure: isTopCurrent
-                    )
-
-                    // Bottom staff (bass)
-                    let bottomMeasure = part.staves[1].measures[measureIndex]
-                    let isBottomCurrent = partIndex == viewModel.selectedPartIndex
-                        && viewModel.selectedStaffIndex == 1
-                        && measureIndex == viewModel.selectedMeasureIndex
-
-                    staffMeasureView(
-                        part: part, partIndex: partIndex, staffIndex: 1,
-                        measure: bottomMeasure, measureIndex: measureIndex,
-                        isCurrentMeasure: isBottomCurrent
-                    )
-                }
-                .overlay(alignment: .leading) {
-                    // Brace (curly bracket) on the first measure
-                    if measureIndex == 0 {
-                        braceView
+                        staffMeasureView(
+                            part: part, partIndex: partIndex, staffIndex: staffIndex,
+                            measure: measure, measureIndex: measureIndex,
+                            isCurrentMeasure: isCurrent
+                        )
                     }
                 }
                 .overlay(alignment: .leading) {
-                    // Common barline connecting both staves
-                    let totalH = (staffHeight + 40 * viewModel.zoomScale) * 2 + grandStaffSpacing
+                    if measureIndex == 0 {
+                        braceView(stavesCount: stavesCount)
+                    }
+                }
+                .overlay(alignment: .leading) {
+                    // Common barline connecting all staves
+                    let singleStaffH = staffHeight + 40 * viewModel.zoomScale
+                    let totalH = singleStaffH * CGFloat(stavesCount) + grandStaffSpacing * CGFloat(stavesCount - 1)
                     Rectangle()
                         .fill(theme.staffLine)
                         .frame(width: 1, height: totalH)
@@ -124,8 +114,9 @@ struct StaffAreaView: View {
         }
     }
 
-    private var braceView: some View {
-        let totalH = (staffHeight + 40 * viewModel.zoomScale) * 2 + grandStaffSpacing
+    private func braceView(stavesCount: Int) -> some View {
+        let singleStaffH = staffHeight + 40 * viewModel.zoomScale
+        let totalH = singleStaffH * CGFloat(stavesCount) + grandStaffSpacing * CGFloat(stavesCount - 1)
         return Text("{")
             .font(.system(size: totalH * 0.8, weight: .ultraLight))
             .foregroundStyle(theme.staffLine)
