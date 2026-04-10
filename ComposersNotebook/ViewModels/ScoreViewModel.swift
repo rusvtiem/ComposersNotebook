@@ -21,12 +21,14 @@ class ScoreViewModel: ObservableObject {
 
     // Selection state
     @Published var selectedEventIndex: Int? = nil  // index of selected note in current measure
+    @Published var selectedPitchIndex: Int? = nil   // index of selected pitch within chord
 
     // Input state
     @Published var inputMode: InputMode = .navigate
     @Published var selectedDuration: DurationValue = .quarter
     @Published var selectedAccidental: Accidental? = nil  // nil = без альтерации, .natural = явный бекар
     @Published var isDotted: Bool = false
+    @Published var isDoubleDotted: Bool = false
     @Published var selectedArticulation: Articulation?
     @Published var selectedDynamic: DynamicMarking?
     @Published var tieNext: Bool = false
@@ -166,7 +168,7 @@ class ScoreViewModel: ObservableObject {
     }
 
     private func makeDuration() -> Duration {
-        Duration(value: selectedDuration, dotted: isDotted)
+        Duration(value: selectedDuration, dotted: isDotted, doubleDotted: isDoubleDotted)
     }
 
     private func insertEvent(_ event: NoteEvent) {
@@ -222,6 +224,61 @@ class ScoreViewModel: ObservableObject {
 
     func deselectEvent() {
         selectedEventIndex = nil
+        selectedPitchIndex = nil
+    }
+
+    func selectPitchInChord(at pitchIndex: Int) {
+        selectedPitchIndex = pitchIndex
+    }
+
+    /// Remove a specific pitch from a chord; if only one remains, convert back to single note
+    func removePitchFromChord(at pitchIndex: Int) {
+        guard let idx = selectedEventIndex,
+              selectedPartIndex < score.parts.count,
+              selectedMeasureIndex < score.parts[selectedPartIndex].measures.count,
+              idx < score.parts[selectedPartIndex].measures[selectedMeasureIndex].events.count else { return }
+        saveUndoState()
+        var event = score.parts[selectedPartIndex].measures[selectedMeasureIndex].events[idx]
+        switch event.type {
+        case .chord(var pitches):
+            guard pitchIndex < pitches.count, pitches.count > 1 else { return }
+            pitches.remove(at: pitchIndex)
+            if pitches.count == 1 {
+                event.type = .note(pitch: pitches[0])
+            } else {
+                event.type = .chord(pitches: pitches)
+            }
+            score.parts[selectedPartIndex].measures[selectedMeasureIndex].events[idx] = event
+            selectedPitchIndex = nil
+            score.touch()
+        default:
+            break
+        }
+    }
+
+    /// Replace a specific pitch within a chord
+    func replacePitchInChord(at pitchIndex: Int, with newPitch: Pitch) {
+        guard let idx = selectedEventIndex,
+              selectedPartIndex < score.parts.count,
+              selectedMeasureIndex < score.parts[selectedPartIndex].measures.count,
+              idx < score.parts[selectedPartIndex].measures[selectedMeasureIndex].events.count else { return }
+        saveUndoState()
+        var event = score.parts[selectedPartIndex].measures[selectedMeasureIndex].events[idx]
+        switch event.type {
+        case .chord(var pitches):
+            guard pitchIndex < pitches.count else { return }
+            pitches[pitchIndex] = newPitch
+            pitches.sort { $0.staffPosition > $1.staffPosition }
+            event.type = .chord(pitches: pitches)
+            score.parts[selectedPartIndex].measures[selectedMeasureIndex].events[idx] = event
+            score.touch()
+        case .note:
+            event.type = .note(pitch: newPitch)
+            score.parts[selectedPartIndex].measures[selectedMeasureIndex].events[idx] = event
+            score.touch()
+        default:
+            break
+        }
     }
 
     func updateSelectedEventPitch(_ pitch: Pitch) {
@@ -319,8 +376,12 @@ class ScoreViewModel: ObservableObject {
               selectedMeasureIndex < score.parts[selectedPartIndex].measures.count,
               idx < score.parts[selectedPartIndex].measures[selectedMeasureIndex].events.count else { return }
         saveUndoState()
-        let removed = score.parts[selectedPartIndex].measures[selectedMeasureIndex].events.remove(at: idx)
-        cursorPosition = max(0, cursorPosition - removed.duration.beats)
+        // Replace note/chord with rest of same duration (don't shift other notes)
+        let event = score.parts[selectedPartIndex].measures[selectedMeasureIndex].events[idx]
+        var restEvent = NoteEvent(type: .rest, duration: event.duration)
+        restEvent.duration.dotted = event.duration.dotted
+        restEvent.duration.doubleDotted = event.duration.doubleDotted
+        score.parts[selectedPartIndex].measures[selectedMeasureIndex].events[idx] = restEvent
         selectedEventIndex = nil
         score.touch()
     }
@@ -511,6 +572,26 @@ class ScoreViewModel: ObservableObject {
     func selectPart(at index: Int) {
         guard index < score.parts.count else { return }
         selectedPartIndex = index
+    }
+
+    func addPart(instrument: Instrument) {
+        saveUndoState()
+        let measureCount = score.parts.first?.measureCount ?? 1
+        let measures = (0..<measureCount).map { _ in Measure.wholeRest() }
+        let newPart = Part(instrument: instrument, measures: measures)
+        score.parts.append(newPart)
+        selectedPartIndex = score.parts.count - 1
+        score.touch()
+    }
+
+    func removePart(at index: Int) {
+        guard score.parts.count > 1, index < score.parts.count else { return }
+        saveUndoState()
+        score.parts.remove(at: index)
+        if selectedPartIndex >= score.parts.count {
+            selectedPartIndex = score.parts.count - 1
+        }
+        score.touch()
     }
 
     // MARK: - Measure Operations

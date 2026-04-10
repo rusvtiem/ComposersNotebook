@@ -30,6 +30,7 @@ struct ScoreEditorView: View {
     @State private var showExportSheet = false
     @State private var showShareSheet = false
     @State private var showThemeSettings = false
+    @State private var showAddInstrument = false
     @State private var shareURL: URL?
     @State private var alertMessage: String?
     @State private var showAlert = false
@@ -149,6 +150,22 @@ struct ScoreEditorView: View {
                     Button { showThemeSettings = true } label: {
                         Label(String(localized: "Theme"), systemImage: "paintpalette")
                     }
+
+                    Divider()
+
+                    // Add instrument
+                    Button { showAddInstrument = true } label: {
+                        Label(String(localized: "Add Instrument"), systemImage: "plus.circle")
+                    }
+
+                    // Remove current part
+                    if viewModel.score.parts.count > 1 {
+                        Button(role: .destructive) {
+                            viewModel.removePart(at: viewModel.selectedPartIndex)
+                        } label: {
+                            Label(String(localized: "Remove Current Part"), systemImage: "minus.circle")
+                        }
+                    }
                 } label: {
                     Image(systemName: "ellipsis.circle")
                 }
@@ -186,6 +203,12 @@ struct ScoreEditorView: View {
         .sheet(isPresented: $showThemeSettings) {
             ThemeSettingsView()
                 .presentationDetents([.large])
+        }
+        .sheet(isPresented: $showAddInstrument) {
+            InstrumentPickerSheet { instrument in
+                viewModel.addPart(instrument: instrument)
+            }
+            .presentationDetents([.large])
         }
     }
 

@@ -24,7 +24,7 @@ struct StaffAreaView: View {
     // Computed sizes based on zoom
     private var staffLineSpacing: CGFloat { baseStaffLineSpacing * viewModel.zoomScale }
     private var measureWidth: CGFloat { baseMeasureWidth * viewModel.zoomScale }
-    private var staffHeight: CGFloat { staffLineSpacing * 4 + 20 }
+    private var staffHeight: CGFloat { staffLineSpacing * 4 + 60 * viewModel.zoomScale }
     private var partSpacing: CGFloat { basePartSpacing * viewModel.zoomScale }
     private var noteHitRadius: CGFloat { 14 * viewModel.zoomScale }
 
@@ -151,11 +151,30 @@ struct StaffAreaView: View {
         let totalBeats = measure.usedBeats
         guard totalBeats > 0 else { return [] }
 
+        // Mirror the spacing algorithm from MeasureView
+        let minNoteWidth: CGFloat = 18 * z
+        let hasAcc = measure.events.contains { event in
+            switch event.type {
+            case .note(let p): return p.accidental != .natural
+            case .chord(let ps): return ps.contains { $0.accidental != .natural }
+            case .rest: return false
+            }
+        }
+        let accPad: CGFloat = hasAcc ? 10 * z : 0
+        let refBeats = max(totalBeats, timeSignature.totalBeats)
+        var idealWidths: [CGFloat] = []
+        for event in measure.events {
+            let proportional = availableWidth * CGFloat(event.duration.beats / refBeats)
+            idealWidths.append(max(proportional, minNoteWidth + accPad))
+        }
+        let totalIdeal = idealWidths.reduce(0, +)
+        let sf = totalIdeal > availableWidth ? availableWidth / totalIdeal : 1.0
+
         var positions: [NoteHitInfo] = []
         var currentX = noteStartX
 
         for (eventIndex, event) in measure.events.enumerated() {
-            let eventWidth = availableWidth * CGFloat(event.duration.beats / max(totalBeats, timeSignature.totalBeats))
+            let eventWidth = idealWidths[eventIndex] * sf
             let noteX = currentX + eventWidth / 2
 
             switch event.type {
@@ -345,9 +364,31 @@ struct MeasureView: View {
 
             // Draw notes
             let noteStartX: CGFloat = headerEndX + scaled(8)
-            let availableWidth = size.width - noteStartX - 10
+            let availableWidth = size.width - noteStartX - scaled(10)
             let totalBeats = measure.usedBeats
             guard totalBeats > 0 else { return }
+
+            // Calculate minimum widths per note based on engraving standards
+            // Shorter notes need proportionally more space than pure beat ratio
+            let minNoteWidth = scaled(18) // minimum space for any note
+            let hasAccidentals = measure.events.contains { event in
+                switch event.type {
+                case .note(let p): return p.accidental != .natural
+                case .chord(let ps): return ps.contains { $0.accidental != .natural }
+                case .rest: return false
+                }
+            }
+            let accidentalPadding: CGFloat = hasAccidentals ? scaled(10) : 0
+
+            // Two-pass spacing: first compute ideal widths, then normalize
+            var idealWidths: [CGFloat] = []
+            let refBeats = max(totalBeats, timeSignature.totalBeats)
+            for event in measure.events {
+                let proportional = availableWidth * CGFloat(event.duration.beats / refBeats)
+                idealWidths.append(max(proportional, minNoteWidth + accidentalPadding))
+            }
+            let totalIdeal = idealWidths.reduce(0, +)
+            let scaleFactor = totalIdeal > availableWidth ? availableWidth / totalIdeal : 1.0
 
             // First pass: collect note positions and draw notes
             struct NotePosition {
@@ -361,7 +402,7 @@ struct MeasureView: View {
             var cumulativeBeats: Double = 0
 
             for (eventIndex, event) in measure.events.enumerated() {
-                let eventWidth = availableWidth * CGFloat(event.duration.beats / max(totalBeats, timeSignature.totalBeats))
+                let eventWidth = idealWidths[eventIndex] * scaleFactor
 
                 switch event.type {
                 case .note(let pitch):
@@ -374,6 +415,7 @@ struct MeasureView: View {
                     }
                     let isBeamable = event.duration.value == .eighth || event.duration.value == .sixteenth || event.duration.value == .thirtySecond
                     drawNoteHead(context: context, x: noteX, y: y, duration: event.duration.value, stemUp: stemUp, selected: isEventSelected, skipFlags: isBeamable, staffTop: staffTop)
+                    drawAugmentationDots(context: context, x: noteX, y: y, dotted: event.duration.dotted, doubleDotted: event.duration.doubleDotted)
                     drawLedgerLines(context: context, pitch: pitch, x: noteX, staffTop: staffTop)
                     drawAccidental(context: context, pitch: pitch, x: noteX, y: y, showNatural: event.showNatural)
                     notePositions.append(NotePosition(x: noteX, y: y, eventIndex: eventIndex))
@@ -397,6 +439,7 @@ struct MeasureView: View {
                             drawSelectionHighlight(context: context, x: noteX, y: y)
                         }
                         drawNoteHead(context: context, x: noteX, y: y, duration: event.duration.value, stemUp: stemUp, selected: isEventSelected, skipFlags: isBeamable, staffTop: staffTop)
+                        drawAugmentationDots(context: context, x: noteX, y: y, dotted: event.duration.dotted, doubleDotted: event.duration.doubleDotted)
                         drawLedgerLines(context: context, pitch: pitch, x: noteX, staffTop: staffTop)
                         drawAccidental(context: context, pitch: pitch, x: noteX, y: y, showNatural: event.showNatural)
                     }
@@ -434,7 +477,7 @@ struct MeasureView: View {
             // Draw ghost rests for remaining beats in the measure
             let remainingBeats = timeSignature.totalBeats - measure.usedBeats
             if remainingBeats > 0.01 && !measure.events.isEmpty {
-                let remainingWidth = availableWidth * CGFloat(remainingBeats / max(totalBeats, timeSignature.totalBeats))
+                let remainingWidth = max(size.width - currentX - scaled(10), scaled(20))
                 let ghostX = currentX + remainingWidth / 2
                 let ghostDuration = restSymbolForBeats(remainingBeats)
                 // Draw ghost rest with reduced opacity
@@ -645,14 +688,32 @@ struct MeasureView: View {
         let font: Font
         if musicFont.isBravuraAvailable {
             symbol = MusicSymbol.accidental(pitch.accidental)
-            font = musicFont.musicFont(size: scaled(20))
+            font = musicFont.musicFont(size: scaled(18))
         } else {
             symbol = pitch.accidental.displaySymbol
-            font = .system(size: scaled(16), weight: .bold)
+            font = .system(size: scaled(14), weight: .bold)
         }
-        let accText = Text(symbol).font(font)
+        let accText = Text(symbol).font(font).foregroundColor(theme.noteHead)
+        // Standard engraving: accidental placed ~1 staff space left of notehead
+        let accOffset = staffLineSpacing * 1.2
+        context.draw(accText, at: CGPoint(x: x - accOffset, y: y))
+    }
+
+    /// Draw augmentation dot(s) for dotted/double-dotted notes
+    private func drawAugmentationDots(context: GraphicsContext, x: CGFloat, y: CGFloat, dotted: Bool, doubleDotted: Bool) {
+        guard dotted || doubleDotted else { return }
         let radius: CGFloat = staffLineSpacing / 2 - 1
-        context.draw(accText, at: CGPoint(x: x - radius * 2 - scaled(8), y: y))
+        let dotRadius: CGFloat = scaled(1.8)
+        let dotX = x + radius + scaled(4)
+        // If note is on a line, shift dot up by half a space
+        let dotY = y
+        let dot1 = Path(ellipseIn: CGRect(x: dotX - dotRadius, y: dotY - dotRadius, width: dotRadius * 2, height: dotRadius * 2))
+        context.fill(dot1, with: .color(theme.noteHead))
+        if doubleDotted {
+            let dot2X = dotX + scaled(4)
+            let dot2 = Path(ellipseIn: CGRect(x: dot2X - dotRadius, y: dotY - dotRadius, width: dotRadius * 2, height: dotRadius * 2))
+            context.fill(dot2, with: .color(theme.noteHead))
+        }
     }
 
     private func drawArticulation(context: GraphicsContext, symbol: String, x: CGFloat, y: CGFloat, stemUp: Bool, duration: DurationValue, stackIndex: Int = 0) {
@@ -807,7 +868,8 @@ struct MeasureView: View {
             }
             if curSixteenthGroup.count >= 2 { sixteenthGroups.append(curSixteenthGroup) }
 
-            let secondBeamOffset: CGFloat = stemUp ? beamThickness + scaled(2) : -(beamThickness + scaled(2))
+            let beamGap: CGFloat = beamThickness + scaled(2)
+            let secondBeamOffset: CGFloat = stemUp ? beamGap : -beamGap
             for subGroup in sixteenthGroups {
                 guard let firstIdx = subGroup.first, let lastIdx = subGroup.last else { continue }
                 let p1 = stemEndPoints[firstIdx]
@@ -816,6 +878,30 @@ struct MeasureView: View {
                 beam2.move(to: CGPoint(x: p1.x, y: p1.y + secondBeamOffset))
                 beam2.addLine(to: CGPoint(x: p2.x, y: p2.y + secondBeamOffset))
                 context.stroke(beam2, with: .color(theme.noteHead), lineWidth: beamThickness)
+            }
+
+            // Tertiary beam for 32nd notes
+            var thirtySecondGroups: [[Int]] = []
+            var cur32ndGroup: [Int] = []
+            for (i, c) in group.enumerated() {
+                if c.duration == .thirtySecond {
+                    cur32ndGroup.append(i)
+                } else {
+                    if cur32ndGroup.count >= 2 { thirtySecondGroups.append(cur32ndGroup) }
+                    cur32ndGroup = []
+                }
+            }
+            if cur32ndGroup.count >= 2 { thirtySecondGroups.append(cur32ndGroup) }
+
+            let thirdBeamOffset: CGFloat = stemUp ? beamGap * 2 : -beamGap * 2
+            for subGroup in thirtySecondGroups {
+                guard let firstIdx = subGroup.first, let lastIdx = subGroup.last else { continue }
+                let p1 = stemEndPoints[firstIdx]
+                let p2 = stemEndPoints[lastIdx]
+                var beam3 = Path()
+                beam3.move(to: CGPoint(x: p1.x, y: p1.y + thirdBeamOffset))
+                beam3.addLine(to: CGPoint(x: p2.x, y: p2.y + thirdBeamOffset))
+                context.stroke(beam3, with: .color(theme.noteHead), lineWidth: beamThickness)
             }
         }
     }

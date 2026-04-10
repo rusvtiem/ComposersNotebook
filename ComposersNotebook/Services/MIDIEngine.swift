@@ -91,10 +91,16 @@ class MIDIEngine: ObservableObject {
         }
     }
 
-    /// Load active SoundFont from SoundFontManager (called at startup and on change)
+    /// Load active SoundFont from SoundFontManager, or fallback to bundled TimGM6mb.sf2
     func loadActiveSoundFont() {
-        guard let sf = SoundFontManager.shared.activeSoundFont else { return }
-        loadSoundFont(at: sf.url)
+        if let sf = SoundFontManager.shared.activeSoundFont {
+            loadSoundFont(at: sf.url)
+            return
+        }
+        // Fallback: load bundled GM SoundFont
+        if let bundledURL = Bundle.main.url(forResource: "TimGM6mb", withExtension: "sf2") {
+            loadSoundFont(at: bundledURL)
+        }
     }
 
     // MARK: - Sound Settings

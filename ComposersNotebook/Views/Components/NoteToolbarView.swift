@@ -10,6 +10,11 @@ struct NoteToolbarView: View {
         viewModel.selectedEventIndex != nil
     }
 
+    private var isChordSelected: Bool {
+        if case .chord = viewModel.selectedEvent?.type { return true }
+        return false
+    }
+
     var body: some View {
         ScrollView(.horizontal, showsIndicators: false) {
             HStack(spacing: 6) {
@@ -191,6 +196,20 @@ struct NoteToolbarView: View {
 
             Divider().frame(height: 30)
 
+            // Chord editing: remove single pitch
+            if isChordSelected {
+                NoteToolbarButton(
+                    icon: "minus.circle",
+                    label: "Удл.н.",
+                    isActive: false,
+                    tooltip: "Удалить выбранную ноту из аккорда"
+                ) {
+                    if let pitchIdx = viewModel.selectedPitchIndex {
+                        viewModel.removePitchFromChord(at: pitchIdx)
+                    }
+                }
+            }
+
             // Delete selected note
             Button {
                 viewModel.deleteSelectedEvent()
@@ -271,7 +290,21 @@ struct NoteToolbarView: View {
                 isActive: viewModel.isDotted,
                 fontSize: 20,
                 tooltip: "Точка (dotted) — увеличивает длительность в 1.5 раза"
-            ) { viewModel.isDotted.toggle() }
+            ) {
+                viewModel.isDotted.toggle()
+                if viewModel.isDotted { viewModel.isDoubleDotted = false }
+            }
+
+            NoteToolbarButton(
+                icon: nil,
+                label: "••",
+                isActive: viewModel.isDoubleDotted,
+                fontSize: 16,
+                tooltip: "Двойная точка (double dotted) — увеличивает в 1.75 раза"
+            ) {
+                viewModel.isDoubleDotted.toggle()
+                if viewModel.isDoubleDotted { viewModel.isDotted = false }
+            }
 
             NoteToolbarButton(
                 icon: "link",
