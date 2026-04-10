@@ -743,7 +743,6 @@ struct MeasureView: View {
 
         let radius: CGFloat = staffLineSpacing / 2 - 1
         let minStemLength = staffLineSpacing * 2.5
-        let defaultStemLength = staffLineSpacing * 3.5
         let beamThickness: CGFloat = scaled(2.5)
         let midStaff = staffTop + staffLineSpacing * 2
 
@@ -866,7 +865,6 @@ struct MeasureView: View {
         }
         font = musicFont.isBravuraAvailable ? musicFont.musicFont(size: scaled(20)) : .system(size: scaled(16), weight: .bold)
 
-        let spacing = scaled(8)
         var currentX = x
 
         for i in 0..<count {
