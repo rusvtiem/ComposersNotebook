@@ -100,7 +100,7 @@ class ABCNotationImporter {
 
         // Parse tempo
         if let bpm = parseTempo(header.tempo) {
-            score.tempo = TempoMarking(bpm: bpm, name: tempoName(for: bpm))
+            score.tempo = TempoMarking(bpm: Double(bpm), name: tempoName(for: bpm))
         }
 
         // Default note length
@@ -131,7 +131,7 @@ class ABCNotationImporter {
                 i = music.index(after: i)
                 let (dur, newIdx) = parseDurationModifier(music, from: i, defaultFraction: defaultDuration)
                 i = newIdx
-                var event = NoteEvent.rest(duration: dur)
+                let event = NoteEvent.rest(duration: dur)
                 events.append(event)
                 continue
             }
@@ -161,7 +161,7 @@ class ABCNotationImporter {
         // Distribute events into measures
         if !events.isEmpty, score.parts.count > 0 {
             let beatsPerMeasure = Double(score.timeSignature.beats)
-            let beatValue = Double(score.timeSignature.noteValue)
+            let beatValue = Double(score.timeSignature.beatValue)
             let measureCapacity = beatsPerMeasure / beatValue * 4.0 // in quarter note units
 
             var currentMeasureEvents: [NoteEvent] = []
@@ -169,7 +169,7 @@ class ABCNotationImporter {
             var measureIndex = 0
 
             for event in events {
-                let eventBeats = event.duration.totalBeats
+                let eventBeats = event.duration.beats
                 currentMeasureEvents.append(event)
                 currentBeats += eventBeats
 
@@ -261,8 +261,7 @@ class ABCNotationImporter {
         let pitch = Pitch(name: pitchName, octave: octave, accidental: accidental ?? .natural)
 
         let event = NoteEvent(
-            type: .note,
-            pitches: [pitch],
+            type: .note(pitch: pitch),
             duration: duration
         )
 
@@ -292,11 +291,12 @@ class ABCNotationImporter {
 
         guard !pitches.isEmpty else { return (nil, newIdx) }
 
-        let event = NoteEvent(
-            type: pitches.count > 1 ? .chord : .note,
-            pitches: pitches,
-            duration: duration
-        )
+        let event: NoteEvent
+        if pitches.count > 1 {
+            event = NoteEvent(type: .chord(pitches: pitches), duration: duration)
+        } else {
+            event = NoteEvent(type: .note(pitch: pitches[0]), duration: duration)
+        }
 
         return (event, newIdx)
     }
@@ -369,7 +369,7 @@ class ABCNotationImporter {
             value = .thirtySecond; isDotted = false
         }
 
-        return Duration(value: value, isDotted: isDotted)
+        return Duration(value: value, dotted: isDotted)
     }
 
     // MARK: - Helpers
@@ -389,34 +389,41 @@ class ABCNotationImporter {
 
     private static func parseKeySignature(_ key: String) -> KeySignature {
         let trimmed = key.trimmingCharacters(in: .whitespaces)
-        // Simple mapping: C, G, D, A, E, B, F#, Cb, etc.
-        // Also handles minor keys: Am, Em, etc.
-        switch trimmed {
-        case "C", "Am": return .cMajor
-        case "G", "Em": return .gMajor
-        case "D", "Bm": return .dMajor
-        case "A", "F#m": return .aMajor
-        case "E", "C#m": return .eMajor
-        case "B", "G#m": return .bMajor
-        case "F#", "D#m": return .fSharpMajor
-        case "F", "Dm": return .fMajor
-        case "Bb", "Gm": return .bFlatMajor
-        case "Eb", "Cm": return .eFlatMajor
-        case "Ab", "Fm": return .aFlatMajor
-        case "Db", "Bbm": return .dFlatMajor
-        case "Gb", "Ebm": return .gFlatMajor
-        default: return .cMajor
+        let isMinor = trimmed.hasSuffix("m") && trimmed.count > 1
+        let mode: KeySignatureType = isMinor ? .minor : .major
+        let root = isMinor ? String(trimmed.dropLast()) : trimmed
+
+        let fifths: Int
+        switch root {
+        case "C": fifths = isMinor ? -3 : 0
+        case "G": fifths = isMinor ? -6 : 1
+        case "D": fifths = isMinor ? -1 : 2
+        case "A": fifths = isMinor ? -4 : 3
+        case "E": fifths = isMinor ? 4 : 4
+        case "B": fifths = isMinor ? -2 : 5
+        case "F#": fifths = isMinor ? 3 : 6
+        case "F": fifths = isMinor ? -4 : -1
+        case "Bb": fifths = isMinor ? -5 : -2
+        case "Eb": fifths = isMinor ? -6 : -3
+        case "Ab": fifths = isMinor ? -7 : -4
+        case "Db": fifths = isMinor ? -4 : -5
+        case "Gb": fifths = isMinor ? -3 : -6
+        case "C#": fifths = isMinor ? 4 : 7
+        case "G#": fifths = isMinor ? 5 : 8
+        case "D#": fifths = isMinor ? 6 : 9
+        default: fifths = 0
         }
+        return KeySignature(fifths: fifths, mode: mode)
     }
 
     private static func parseTimeSignature(_ meter: String) -> TimeSignature? {
         if meter == "C" { return .fourFour }
-        if meter == "C|" { return TimeSignature(beats: 2, noteValue: 2) }
+        if meter == "C|" { return TimeSignature(beats: 2, beatValue: 2) }
         let parts = meter.split(separator: "/")
         guard parts.count == 2,
               let beats = Int(parts[0]),
-              let noteValue = Int(parts[1]) else { return nil }
-        return TimeSignature(beats: beats, noteValue: noteValue)
+              let beatValue = Int(parts[1]) else { return nil }
+        return TimeSignature(beats: beats, beatValue: beatValue)
     }
 
     private static func parseTempo(_ tempo: String) -> Int? {

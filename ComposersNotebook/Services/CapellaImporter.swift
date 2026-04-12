@@ -146,8 +146,8 @@ private class CapellaXMLParser: NSObject, XMLParserDelegate {
         var score = Score(
             title: title.isEmpty ? filename : title,
             composer: composer,
-            tempo: TempoMarking(bpm: 120, name: "Allegro"),
-            timeSignature: TimeSignature(beats: timeBeats, noteValue: timeUnit),
+            tempo: TempoMarking(bpm: 120.0, name: "Allegro"),
+            timeSignature: TimeSignature(beats: timeBeats, beatValue: timeUnit),
             keySignature: keyFromFifths(keySig)
         )
 
@@ -269,23 +269,8 @@ private class CapellaXMLParser: NSObject, XMLParserDelegate {
     }
 
     private func keyFromFifths(_ fifths: Int) -> KeySignature {
-        switch fifths {
-        case -7: return .gFlatMajor
-        case -6: return .dFlatMajor
-        case -5: return .aFlatMajor
-        case -4: return .eFlatMajor
-        case -3: return .bFlatMajor
-        case -2: return .bFlatMajor
-        case -1: return .fMajor
-        case 0: return .cMajor
-        case 1: return .gMajor
-        case 2: return .dMajor
-        case 3: return .aMajor
-        case 4: return .eMajor
-        case 5: return .bMajor
-        case 6: return .fSharpMajor
-        default: return .cMajor
-        }
+        let clamped = max(-7, min(7, fifths))
+        return KeySignature(fifths: clamped, mode: .major)
     }
 
     // MARK: - XMLParserDelegate

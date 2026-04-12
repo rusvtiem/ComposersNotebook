@@ -115,7 +115,7 @@ private class MEIParser: NSObject, XMLParserDelegate {
 
         // Time signature from first staffDef
         if let firstDef = staffDefs.first {
-            score.timeSignature = TimeSignature(beats: firstDef.meterCount, noteValue: firstDef.meterUnit)
+            score.timeSignature = TimeSignature(beats: firstDef.meterCount, beatValue: firstDef.meterUnit)
         }
 
         // Create parts from staff definitions
