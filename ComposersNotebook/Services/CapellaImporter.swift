@@ -176,7 +176,7 @@ private class CapellaXMLParser: NSObject, XMLParserDelegate {
 
             for noteObj in voice.noteObjects {
                 let event = convertNoteObj(noteObj)
-                let eventBeats = event.duration.totalBeats
+                let eventBeats = event.duration.beats
                 measureEvents.append(event)
                 currentBeat += eventBeats
 
@@ -220,11 +220,12 @@ private class CapellaXMLParser: NSObject, XMLParserDelegate {
             return NoteEvent.rest(duration: duration)
         }
 
-        var event = NoteEvent(
-            type: pitches.count > 1 ? .chord : .note,
-            pitches: pitches,
-            duration: duration
-        )
+        var event: NoteEvent
+        if pitches.count > 1 {
+            event = NoteEvent(type: .chord(pitches: pitches), duration: duration)
+        } else {
+            event = NoteEvent(type: .note(pitch: pitches[0]), duration: duration)
+        }
         event.tiedToNext = obj.tie
         return event
     }
@@ -240,7 +241,7 @@ private class CapellaXMLParser: NSObject, XMLParserDelegate {
         case 32: durValue = .thirtySecond
         default: durValue = .quarter
         }
-        return Duration(value: durValue, isDotted: dots >= 1, isDoubleDotted: dots >= 2)
+        return Duration(value: durValue, dotted: dots >= 1, doubleDotted: dots >= 2)
     }
 
     private func stepToPitchName(_ step: Int) -> PitchName {

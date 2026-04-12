@@ -210,7 +210,7 @@ class MusicOMREngine {
             let octave = 4 + (noteIdx / 7)
 
             let pitch = Pitch(name: pitchNames[pitchIdx], octave: octave)
-            let event = NoteEvent(type: .note, pitches: [pitch], duration: defaultDuration)
+            let event = NoteEvent(type: .note(pitch: pitch), duration: defaultDuration)
             events.append(event)
         }
 
@@ -269,7 +269,7 @@ class MusicOMREngine {
             let pitchStr = String(parts[1])
             let durStr = String(parts[2])
             if let pitch = parsePitchString(pitchStr) {
-                return NoteEvent(type: .note, pitches: [pitch], duration: parseDurationName(durStr))
+                return NoteEvent(type: .note(pitch: pitch), duration: parseDurationName(durStr))
             }
         }
 
@@ -333,7 +333,7 @@ class MusicOMREngine {
         var measureIdx = 0
 
         for event in allEvents {
-            let beats = event.duration.totalBeats
+            let beats = event.duration.beats
             measureEvents.append(event)
             currentBeats += beats
 

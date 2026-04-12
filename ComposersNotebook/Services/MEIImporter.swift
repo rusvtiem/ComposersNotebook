@@ -164,7 +164,7 @@ private class MEIParser: NSObject, XMLParserDelegate {
         case .note(let data):
             let pitch = convertPitch(data)
             let duration = convertDuration(dur: data.dur, dots: data.dots)
-            var noteEvent = NoteEvent(type: .note, pitches: [pitch], duration: duration)
+            var noteEvent = NoteEvent(type: .note(pitch: pitch), duration: duration)
             if data.tie == "i" || data.tie == "m" { noteEvent.tiedToNext = true }
             if !data.artic.isEmpty { noteEvent.articulations = convertArticulations(data.artic) }
             return noteEvent
@@ -175,7 +175,7 @@ private class MEIParser: NSObject, XMLParserDelegate {
             let pitches = notes.map { convertPitch($0) }
             let dots = notes.first?.dots ?? 0
             let duration = convertDuration(dur: dur, dots: dots)
-            return NoteEvent(type: .chord, pitches: pitches, duration: duration)
+            return NoteEvent(type: .chord(pitches: pitches), duration: duration)
         }
     }
 
@@ -216,7 +216,7 @@ private class MEIParser: NSObject, XMLParserDelegate {
         case "32": value = .thirtySecond
         default: value = .quarter
         }
-        return Duration(value: value, isDotted: dots >= 1, isDoubleDotted: dots >= 2)
+        return Duration(value: value, dotted: dots == 1, doubleDotted: dots >= 2)
     }
 
     private func convertArticulations(_ artic: String) -> [Articulation] {
