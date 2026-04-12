@@ -43,6 +43,41 @@ targets:
             LSHandlerRank: Alternate
             LSItemContentTypes:
               - public.midi-audio
+          - CFBundleTypeName: Guitar Pro
+            CFBundleTypeRole: Viewer
+            LSHandlerRank: Alternate
+            LSItemContentTypes:
+              - public.data
+            CFBundleTypeExtensions:
+              - gp
+              - gp5
+              - gpx
+          - CFBundleTypeName: ABC Notation
+            CFBundleTypeRole: Viewer
+            LSHandlerRank: Alternate
+            LSItemContentTypes:
+              - public.plain-text
+            CFBundleTypeExtensions:
+              - abc
+          - CFBundleTypeName: MEI
+            CFBundleTypeRole: Viewer
+            LSHandlerRank: Alternate
+            LSItemContentTypes:
+              - public.xml
+            CFBundleTypeExtensions:
+              - mei
+          - CFBundleTypeName: Capella
+            CFBundleTypeRole: Viewer
+            LSHandlerRank: Alternate
+            LSItemContentTypes:
+              - public.data
+            CFBundleTypeExtensions:
+              - capx
+          - CFBundleTypeName: PDF Score
+            CFBundleTypeRole: Viewer
+            LSHandlerRank: Alternate
+            LSItemContentTypes:
+              - com.adobe.pdf
         UTExportedTypeDeclarations:
           - UTTypeConformsTo:
               - public.data

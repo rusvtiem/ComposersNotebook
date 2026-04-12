@@ -52,4 +52,10 @@ extension UTType {
     static let musicXML = UTType(filenameExtension: "musicxml") ?? .xml
     static let mxl = UTType(filenameExtension: "mxl") ?? .data
     static let midiFile = UTType(filenameExtension: "mid") ?? .midi
+    static let guitarPro = UTType(filenameExtension: "gp") ?? .data
+    static let guitarPro5 = UTType(filenameExtension: "gp5") ?? .data
+    static let guitarProX = UTType(filenameExtension: "gpx") ?? .data
+    static let abcNotation = UTType(filenameExtension: "abc") ?? .plainText
+    static let mei = UTType(filenameExtension: "mei") ?? .xml
+    static let capella = UTType(filenameExtension: "capx") ?? .data
 }

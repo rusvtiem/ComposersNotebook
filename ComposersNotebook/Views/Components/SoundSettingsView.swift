@@ -277,40 +277,175 @@ struct SoundSettingsView: View {
     private var instrumentSpecificControls: some View {
         switch instrument.group {
         case .keyboards:
-            Text(String(localized: "Piano-specific settings"))
-                .font(.caption)
-                .foregroundStyle(.secondary)
-            // Future: hammer hardness, pedal resonance, lid position
+            sliderRow(
+                label: String(localized: "Hammer Hardness"),
+                icon: "hammer",
+                value: Binding(
+                    get: { settings.brightness * 0.8 + 0.1 },
+                    set: { settings.brightness = ($0 - 0.1) / 0.8; saveAndApply() }
+                ),
+                range: 0...1,
+                leftLabel: String(localized: "Soft"),
+                rightLabel: String(localized: "Hard"),
+                onChange: {}
+            )
+            sliderRow(
+                label: String(localized: "Pedal Resonance"),
+                icon: "waveform.circle",
+                value: Binding(
+                    get: { settings.reverb * 0.5 },
+                    set: { settings.reverb = $0 / 0.5; saveAndApply() }
+                ),
+                range: 0...1,
+                leftLabel: String(localized: "Dry"),
+                rightLabel: String(localized: "Rich"),
+                onChange: {}
+            )
+            Picker(String(localized: "Lid Position"), selection: Binding(
+                get: { Int(settings.brightness * 2) },
+                set: { settings.brightness = Float($0) / 2.0; saveAndApply() }
+            )) {
+                Text(String(localized: "Closed")).tag(0)
+                Text(String(localized: "Half Open")).tag(1)
+                Text(String(localized: "Full Open")).tag(2)
+            }
+            .pickerStyle(.segmented)
 
         case .strings:
-            Text(String(localized: "String-specific settings"))
-                .font(.caption)
-                .foregroundStyle(.secondary)
-            // Future: bow type, vibrato speed/depth
+            sliderRow(
+                label: String(localized: "Vibrato Speed"),
+                icon: "waveform.path",
+                value: Binding(
+                    get: { settings.attack * 2 },
+                    set: { settings.attack = $0 / 2; saveAndApply() }
+                ),
+                range: 0...1,
+                leftLabel: String(localized: "Slow"),
+                rightLabel: String(localized: "Fast"),
+                onChange: {}
+            )
+            sliderRow(
+                label: String(localized: "Vibrato Depth"),
+                icon: "waveform.badge.magnifyingglass",
+                value: Binding(
+                    get: { settings.sustain },
+                    set: { settings.sustain = $0; saveAndApply() }
+                ),
+                range: 0...1,
+                leftLabel: String(localized: "Subtle"),
+                rightLabel: String(localized: "Wide"),
+                onChange: {}
+            )
+            Picker(String(localized: "Bow Type"), selection: Binding(
+                get: { settings.brightness > 0.5 ? 1 : 0 },
+                set: { settings.brightness = $0 == 1 ? 0.7 : 0.3; saveAndApply() }
+            )) {
+                Text(String(localized: "Standard")).tag(0)
+                Text(String(localized: "Baroque")).tag(1)
+            }
+            .pickerStyle(.segmented)
 
         case .woodwinds:
-            Text(String(localized: "Woodwind-specific settings"))
-                .font(.caption)
-                .foregroundStyle(.secondary)
-            // Future: air amount, brightness
+            sliderRow(
+                label: String(localized: "Air Amount"),
+                icon: "wind",
+                value: Binding(
+                    get: { settings.sustain },
+                    set: { settings.sustain = $0; saveAndApply() }
+                ),
+                range: 0...1,
+                leftLabel: String(localized: "Less"),
+                rightLabel: String(localized: "More"),
+                onChange: {}
+            )
+            sliderRow(
+                label: String(localized: "Tone Brightness"),
+                icon: "sun.max",
+                value: Binding(
+                    get: { settings.brightness },
+                    set: { settings.brightness = $0; saveAndApply() }
+                ),
+                range: 0...1,
+                leftLabel: String(localized: "Dark"),
+                rightLabel: String(localized: "Bright"),
+                onChange: {}
+            )
 
         case .brass:
-            Text(String(localized: "Brass-specific settings"))
-                .font(.caption)
-                .foregroundStyle(.secondary)
-            // Future: mute type, brightness
+            Picker(String(localized: "Mute Type"), selection: Binding(
+                get: { Int(settings.brightness * 4) },
+                set: { settings.brightness = Float($0) / 4.0; saveAndApply() }
+            )) {
+                Text(String(localized: "Open")).tag(0)
+                Text(String(localized: "Straight")).tag(1)
+                Text(String(localized: "Cup")).tag(2)
+                Text(String(localized: "Harmon")).tag(3)
+                Text(String(localized: "Plunger")).tag(4)
+            }
+            .pickerStyle(.menu)
+
+            sliderRow(
+                label: String(localized: "Tone Brightness"),
+                icon: "sun.max",
+                value: Binding(
+                    get: { settings.brightness },
+                    set: { settings.brightness = $0; saveAndApply() }
+                ),
+                range: 0...1,
+                leftLabel: String(localized: "Mellow"),
+                rightLabel: String(localized: "Brilliant"),
+                onChange: {}
+            )
 
         case .voices:
-            Text(String(localized: "Voice-specific settings"))
-                .font(.caption)
-                .foregroundStyle(.secondary)
-            // Future: vowel, ensemble width
+            Picker(String(localized: "Vowel"), selection: Binding(
+                get: { Int(settings.brightness * 4) },
+                set: { settings.brightness = Float($0) / 4.0; saveAndApply() }
+            )) {
+                Text("A (ah)").tag(0)
+                Text("E (eh)").tag(1)
+                Text("I (ee)").tag(2)
+                Text("O (oh)").tag(3)
+                Text("U (oo)").tag(4)
+            }
+            .pickerStyle(.segmented)
+
+            sliderRow(
+                label: String(localized: "Ensemble Width"),
+                icon: "person.3",
+                value: Binding(
+                    get: { settings.pan * 0.5 + 0.5 },
+                    set: { settings.pan = ($0 - 0.5) / 0.5; saveAndApply() }
+                ),
+                range: 0...1,
+                leftLabel: String(localized: "Solo"),
+                rightLabel: String(localized: "Section"),
+                onChange: {}
+            )
 
         case .percussion:
-            Text(String(localized: "Percussion-specific settings"))
-                .font(.caption)
-                .foregroundStyle(.secondary)
-            // Future: stick type, dampening
+            Picker(String(localized: "Stick Type"), selection: Binding(
+                get: { Int(settings.brightness * 2) },
+                set: { settings.brightness = Float($0) / 2.0; saveAndApply() }
+            )) {
+                Text(String(localized: "Sticks")).tag(0)
+                Text(String(localized: "Brushes")).tag(1)
+                Text(String(localized: "Mallets")).tag(2)
+            }
+            .pickerStyle(.segmented)
+
+            sliderRow(
+                label: String(localized: "Dampening"),
+                icon: "hand.raised",
+                value: Binding(
+                    get: { settings.release },
+                    set: { settings.release = $0; saveAndApply() }
+                ),
+                range: 0.01...2.0,
+                leftLabel: String(localized: "Tight"),
+                rightLabel: String(localized: "Ring"),
+                onChange: {}
+            )
         }
     }
 

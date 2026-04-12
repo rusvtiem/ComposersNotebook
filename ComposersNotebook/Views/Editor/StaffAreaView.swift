@@ -415,6 +415,12 @@ struct MeasureView: View {
             barline.addLine(to: CGPoint(x: barlineX, y: staffTop + 4 * staffLineSpacing))
             context.stroke(barline, with: .color(theme.barline.opacity(0.6)), lineWidth: 1)
 
+            // Draw measure number above staff
+            let measureNum = Text("\(measureIndex + 1)")
+                .font(.system(size: scaled(8), weight: .medium))
+            context.draw(measureNum, at: CGPoint(x: startX + scaled(4), y: staffTop - scaled(6)),
+                        anchor: .leading)
+
             // Draw clef symbol at start of first measure
             if measureIndex == 0 {
                 let musicFont = MusicFontManager.shared
@@ -547,6 +553,21 @@ struct MeasureView: View {
                         .font(.system(size: scaled(9), design: .serif))
                         .italic()
                     context.draw(dynText, at: CGPoint(x: currentX + eventWidth / 2, y: staffTop + 5 * staffLineSpacing + scaled(5)))
+                }
+
+                // Lyrics (подтекстовка) below staff
+                if let lyric = event.lyric, !lyric.isEmpty {
+                    let lyricText = Text(lyric)
+                        .font(.system(size: scaled(9)))
+                    context.draw(lyricText, at: CGPoint(x: currentX + eventWidth / 2, y: staffTop + 5 * staffLineSpacing + scaled(14)))
+                }
+
+                // Playback technique marking
+                if let technique = event.technique {
+                    let techText = Text(technique.italianName)
+                        .font(.system(size: scaled(8), design: .serif))
+                        .italic()
+                    context.draw(techText, at: CGPoint(x: currentX + eventWidth / 2, y: staffTop - scaled(4)))
                 }
 
                 cumulativeBeats += event.duration.beats

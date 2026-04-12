@@ -105,7 +105,7 @@ class MIDIEngine: ObservableObject {
 
     // MARK: - Sound Settings
 
-    /// Apply instrument settings (volume, pan, reverb, EQ)
+    /// Apply instrument settings (volume, pan, reverb, EQ, ADSR via MIDI CC)
     func applySettings(_ settings: SoundFontManager.InstrumentSettings) {
         sampler.volume = settings.volume
         sampler.pan = settings.pan
@@ -116,6 +116,44 @@ class MIDIEngine: ObservableObject {
             let brightnessGain = (settings.brightness - 0.5) * 12 // -6dB to +6dB
             eqNode.bands[2].gain = brightnessGain
         }
+
+        // ADSR via MIDI CC (standard controllers)
+        // CC 73 = Attack Time, CC 75 = Decay Time, CC 70 = Sound Variation (sustain level), CC 72 = Release Time
+        let attackCC = UInt8(clamping: Int(settings.attack * 127 / 2.0))  // 0..2s -> 0..127
+        let decayCC = UInt8(clamping: Int(settings.decay * 127 / 2.0))
+        let sustainCC = UInt8(clamping: Int(settings.sustain * 127))
+        let releaseCC = UInt8(clamping: Int(settings.release * 127 / 2.0))
+
+        sampler.sendController(73, withValue: attackCC, onChannel: 0)   // Attack
+        sampler.sendController(75, withValue: decayCC, onChannel: 0)    // Decay
+        sampler.sendController(70, withValue: sustainCC, onChannel: 0)  // Sound Variation / Sustain level
+        sampler.sendController(72, withValue: releaseCC, onChannel: 0)  // Release
+
+        // CC 74 = Brightness (Filter Cutoff) — more direct than EQ
+        let brightnessCC = UInt8(clamping: Int(settings.brightness * 127))
+        sampler.sendController(74, withValue: brightnessCC, onChannel: 0)
+
+        // CC 91 = Reverb Send Level
+        let reverbCC = UInt8(clamping: Int(settings.reverb * 127))
+        sampler.sendController(91, withValue: reverbCC, onChannel: 0)
+
+        // CC 10 = Pan
+        let panCC = UInt8(clamping: Int((settings.pan + 1.0) / 2.0 * 127))
+        sampler.sendController(10, withValue: panCC, onChannel: 0)
+
+        // CC 7 = Volume
+        let volumeCC = UInt8(clamping: Int(settings.volume * 127))
+        sampler.sendController(7, withValue: volumeCC, onChannel: 0)
+
+        // CC 1 = Modulation (vibrato) — reuse attack field for strings
+        let modCC = UInt8(clamping: Int(settings.attack * 127 / 2.0))
+        sampler.sendController(1, withValue: modCC, onChannel: 0)
+    }
+
+    /// Apply settings for a specific instrument during playback
+    func applySettingsForInstrument(_ instrument: Instrument) {
+        let settings = SoundFontManager.shared.settings(for: instrument.id.uuidString)
+        applySettings(settings)
     }
 
     /// Preview sound with current settings (plays a short note)
@@ -180,6 +218,7 @@ class MIDIEngine: ObservableObject {
 
                     Task {
                         setInstrument(midiProgram: part.instrument.midiProgram)
+                        applySettingsForInstrument(part.instrument)
 
                         for event in measure.events {
                             guard isPlaying else { return }
@@ -233,6 +272,7 @@ class MIDIEngine: ObservableObject {
 
         playbackTask = Task { @MainActor in
             setInstrument(midiProgram: part.instrument.midiProgram)
+            applySettingsForInstrument(part.instrument)
             let bpm = score.tempo.bpm
 
             for measureIndex in fromMeasure..<part.measures.count {

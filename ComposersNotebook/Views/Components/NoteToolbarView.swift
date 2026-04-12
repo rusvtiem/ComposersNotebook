@@ -46,6 +46,11 @@ struct NoteToolbarView: View {
 
                     Divider().frame(height: 30)
 
+                    // Dynamics
+                    dynamicButtons
+
+                    Divider().frame(height: 30)
+
                     // Actions
                     actionButtons
                 }
@@ -96,7 +101,7 @@ struct NoteToolbarView: View {
             Divider().frame(height: 30)
 
             // Articulations
-            ForEach([Articulation.staccato, .accent, .tenuto, .fermata], id: \.self) { art in
+            ForEach([Articulation.staccato, .legato, .accent, .tenuto, .marcato, .fermata], id: \.self) { art in
                 let isActive = viewModel.selectedEvent?.articulations.contains(art) == true
                 NoteToolbarButton(
                     icon: nil,
@@ -104,6 +109,19 @@ struct NoteToolbarView: View {
                     isActive: isActive,
                     fontSize: 14
                 ) { viewModel.updateSelectedEventArticulation(art) }
+            }
+
+            Divider().frame(height: 30)
+
+            // Dynamics
+            ForEach([DynamicMarking.pp, .p, .mp, .mf, .f, .ff], id: \.self) { dyn in
+                let isActive = viewModel.selectedEvent?.dynamic == dyn
+                NoteToolbarButton(
+                    icon: nil,
+                    label: dyn.displayName,
+                    isActive: isActive,
+                    fontSize: 14
+                ) { viewModel.updateSelectedEventDynamic(dyn) }
             }
 
             Divider().frame(height: 30)
@@ -274,9 +292,21 @@ struct NoteToolbarView: View {
                     icon: nil,
                     label: dur.symbol,
                     isActive: viewModel.selectedDuration == dur,
-                    fontSize: 18
+                    fontSize: 18,
+                    tooltip: durationTooltip(dur)
                 ) { viewModel.selectedDuration = dur }
             }
+        }
+    }
+
+    private func durationTooltip(_ dur: DurationValue) -> String {
+        switch dur {
+        case .whole: return "Целая (semibreve) — 4 доли"
+        case .half: return "Половинная (minim) — 2 доли"
+        case .quarter: return "Четвертная (crotchet/semiminima) — 1 доля"
+        case .eighth: return "Восьмая (quaver/croma) — ½ доли"
+        case .sixteenth: return "Шестнадцатая (semiquaver/semicroma) — ¼ доли"
+        case .thirtySecond: return "Тридцать вторая (demisemiquaver/biscroma) — ⅛ доли"
         }
     }
 
@@ -354,10 +384,11 @@ struct NoteToolbarView: View {
                     icon: nil,
                     label: acc.displaySymbol,
                     isActive: viewModel.selectedAccidental == acc,
-                    fontSize: 16
+                    fontSize: 16,
+                    tooltip: accidentalTooltip(acc)
                 ) {
                     if viewModel.selectedAccidental == acc {
-                        viewModel.selectedAccidental = nil  // deselect = no accidental
+                        viewModel.selectedAccidental = nil
                     } else {
                         viewModel.selectedAccidental = acc
                     }
@@ -366,16 +397,27 @@ struct NoteToolbarView: View {
         }
     }
 
+    private func accidentalTooltip(_ acc: Accidental) -> String {
+        switch acc {
+        case .doubleFlat: return "Дубль-бемоль (doppio bemolle) — понижение на 2 полутона"
+        case .flat: return "Бемоль (bemolle) — понижение на полутон"
+        case .natural: return "Бекар (bequadro) — отмена знака альтерации"
+        case .sharp: return "Диез (diesis) — повышение на полутон"
+        case .doubleSharp: return "Дубль-диез (doppio diesis) — повышение на 2 полутона"
+        }
+    }
+
     // MARK: - Articulations
 
     private var articulationButtons: some View {
         HStack(spacing: 2) {
-            ForEach([Articulation.staccato, .accent, .tenuto, .fermata], id: \.self) { art in
+            ForEach([Articulation.staccato, .legato, .accent, .tenuto, .marcato, .fermata], id: \.self) { art in
                 NoteToolbarButton(
                     icon: nil,
                     label: art.displaySymbol,
                     isActive: viewModel.selectedArticulation == art,
-                    fontSize: 14
+                    fontSize: 14,
+                    tooltip: articulationTooltip(art)
                 ) {
                     viewModel.selectedArticulation = viewModel.selectedArticulation == art ? nil : art
                 }
@@ -383,16 +425,85 @@ struct NoteToolbarView: View {
         }
     }
 
+    private func articulationTooltip(_ art: Articulation) -> String {
+        switch art {
+        case .staccato: return "Стаккато (staccato) — коротко, отрывисто"
+        case .legato: return "Легато (legato) — связно, плавно"
+        case .accent: return "Акцент (accento) — подчёркнутый удар"
+        case .tenuto: return "Тенуто (tenuto) — выдержанно, полная длительность"
+        case .marcato: return "Маркато (marcato) — подчёркнуто, сильнее акцента"
+        case .fermata: return "Фермата (fermata) — задержка, свободная длительность"
+        }
+    }
+
+    // MARK: - Dynamics
+
+    private var dynamicButtons: some View {
+        HStack(spacing: 2) {
+            ForEach([DynamicMarking.pp, .p, .mp, .mf, .f, .ff], id: \.self) { dyn in
+                NoteToolbarButton(
+                    icon: nil,
+                    label: dyn.displayName,
+                    isActive: viewModel.selectedDynamic == dyn,
+                    fontSize: 14,
+                    tooltip: dynamicTooltip(dyn)
+                ) {
+                    viewModel.selectedDynamic = viewModel.selectedDynamic == dyn ? nil : dyn
+                }
+            }
+        }
+    }
+
+    private func dynamicTooltip(_ dyn: DynamicMarking) -> String {
+        switch dyn {
+        case .ppp: return "Pianississimo — предельно тихо"
+        case .pp: return "Pianissimo (пианиссимо) — очень тихо"
+        case .p: return "Piano (пиано) — тихо"
+        case .mp: return "Mezzo piano (меццо-пиано) — умеренно тихо"
+        case .mf: return "Mezzo forte (меццо-форте) — умеренно громко"
+        case .f: return "Forte (форте) — громко"
+        case .ff: return "Fortissimo (фортиссимо) — очень громко"
+        case .fff: return "Fortississimo — предельно громко"
+        case .sfz: return "Sforzando (сфорцандо) — внезапный акцент"
+        case .sfp: return "Sforzando piano — акцент с переходом в тихо"
+        case .fp: return "Forte piano — громко, затем сразу тихо"
+        }
+    }
+
     // MARK: - Actions
 
     private var actionButtons: some View {
         HStack(spacing: 4) {
+            // Voice selector
+            Divider().frame(height: 30)
+
+            ForEach(VoiceLayer.allCases, id: \.self) { voice in
+                NoteToolbarButton(
+                    icon: nil,
+                    label: "\(voice.rawValue)",
+                    isActive: viewModel.selectedVoice == voice,
+                    fontSize: 14,
+                    tooltip: "\(voice.displayName) — независимый голос на одном нотоносце"
+                ) { viewModel.selectVoice(voice) }
+            }
+
+            Divider().frame(height: 30)
+
+            // Lyric button
+            NoteToolbarButton(
+                icon: "text.below.photo",
+                label: "Текст",
+                isActive: viewModel.isEditingLyric,
+                tooltip: "Подтекстовка (lyrics) — текст под нотами"
+            ) { viewModel.startLyricEditing() }
+
             // Paste (available in input mode without selection)
             if viewModel.hasClipboardContent {
                 NoteToolbarButton(
                     icon: "doc.on.clipboard",
                     label: "Вст.",
-                    isActive: false
+                    isActive: false,
+                    tooltip: "Вставить из буфера (paste)"
                 ) { viewModel.paste() }
             }
 
@@ -401,6 +512,7 @@ struct NoteToolbarView: View {
             } label: {
                 Image(systemName: "delete.backward")
                     .frame(width: 32, height: 32)
+                    .help("Удалить последнюю ноту")
             }
 
             Button {
@@ -408,6 +520,7 @@ struct NoteToolbarView: View {
             } label: {
                 Image(systemName: "forward.fill")
                     .frame(width: 32, height: 32)
+                    .help("Следующий такт")
             }
 
             Button {
@@ -415,6 +528,7 @@ struct NoteToolbarView: View {
             } label: {
                 Image(systemName: "backward.fill")
                     .frame(width: 32, height: 32)
+                    .help("Предыдущий такт")
             }
         }
     }

@@ -141,7 +141,11 @@ struct HomeView: View {
         }
         .sheet(isPresented: $showImportPicker) {
             DocumentPickerView(
-                contentTypes: [.cnb, .musicXML, .midiFile, .xml, .midi],
+                contentTypes: [
+                    .cnb, .musicXML, .midiFile, .xml, .midi,
+                    .guitarPro, .guitarPro5, .guitarProX,
+                    .abcNotation, .mei, .capella, .pdf
+                ],
                 onPick: { url in importFile(url) }
             )
         }
@@ -173,6 +177,16 @@ struct HomeView: View {
                 appState.currentScore = try MusicXMLImporter.importFile(at: url)
             case "mid", "midi":
                 appState.currentScore = try MIDIImporter.importFile(at: url)
+            case "gp", "gp5", "gpx":
+                appState.currentScore = try GuitarProImporter.importFile(at: url)
+            case "abc":
+                appState.currentScore = try ABCNotationImporter.importFile(at: url)
+            case "mei":
+                appState.currentScore = try MEIImporter.importFile(at: url)
+            case "capx":
+                appState.currentScore = try CapellaImporter.importFile(at: url)
+            case "pdf":
+                appState.currentScore = try MusicOMREngine.importFile(at: url)
             default:
                 print("Unsupported format: \(ext)")
             }

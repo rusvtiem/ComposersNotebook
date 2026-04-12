@@ -37,6 +37,17 @@ class ScoreViewModel: ObservableObject {
     @Published var stemDirection: StemDirection = .auto
     @Published var zoomScale: CGFloat = 1.0  // pinch-to-zoom
 
+    // Voice layers
+    @Published var selectedVoice: VoiceLayer = .voice1
+    @Published var showAllVoices: Bool = true  // false = show only selectedVoice
+
+    // Playback technique
+    @Published var selectedTechnique: PlaybackTechnique? = nil
+
+    // Lyrics
+    @Published var isEditingLyric: Bool = false
+    @Published var currentLyricText: String = ""
+
     // Playback
     @Published var isPlaying: Bool = false
     @Published var playbackPosition: Int = 0  // measure index
@@ -127,6 +138,8 @@ class ScoreViewModel: ObservableObject {
         let duration = makeDuration()
         var event = NoteEvent.note(pitch, duration: duration)
         event.stemDirection = stemDirection
+        event.voice = selectedVoice
+        event.technique = selectedTechnique
         if pitch.accidental == .natural && selectedAccidental == .natural {
             event.showNatural = true
         }
@@ -349,6 +362,17 @@ class ScoreViewModel: ObservableObject {
         } else {
             score.parts[selectedPartIndex].staves[selectedStaffIndex].measures[selectedMeasureIndex].events[idx].articulations.removeAll()
         }
+        score.touch()
+    }
+
+    func updateSelectedEventDynamic(_ dynamic: DynamicMarking) {
+        guard let idx = selectedEventIndex,
+              selectedPartIndex < score.parts.count,
+              selectedMeasureIndex < score.parts[selectedPartIndex].measures.count,
+              idx < score.parts[selectedPartIndex].staves[selectedStaffIndex].measures[selectedMeasureIndex].events.count else { return }
+        saveUndoState()
+        let current = score.parts[selectedPartIndex].staves[selectedStaffIndex].measures[selectedMeasureIndex].events[idx].dynamic
+        score.parts[selectedPartIndex].staves[selectedStaffIndex].measures[selectedMeasureIndex].events[idx].dynamic = (current == dynamic) ? nil : dynamic
         score.touch()
     }
 
@@ -736,6 +760,75 @@ class ScoreViewModel: ObservableObject {
     func setNavigationMark(_ mark: NavigationMark?) {
         saveUndoState()
         score.parts[selectedPartIndex].staves[selectedStaffIndex].measures[selectedMeasureIndex].navigationMark = mark
+        score.touch()
+    }
+
+    // MARK: - Voice Layers
+
+    /// Events in current measure filtered by selected voice (or all if showAllVoices)
+    var currentMeasureEventsForVoice: [NoteEvent] {
+        guard let measure = currentMeasure else { return [] }
+        if showAllVoices { return measure.events }
+        return measure.events.filter { $0.voice == selectedVoice }
+    }
+
+    func selectVoice(_ voice: VoiceLayer) {
+        selectedVoice = voice
+    }
+
+    func updateSelectedEventVoice(_ voice: VoiceLayer) {
+        guard let idx = selectedEventIndex,
+              selectedPartIndex < score.parts.count,
+              selectedMeasureIndex < score.parts[selectedPartIndex].measures.count,
+              idx < score.parts[selectedPartIndex].staves[selectedStaffIndex].measures[selectedMeasureIndex].events.count else { return }
+        saveUndoState()
+        score.parts[selectedPartIndex].staves[selectedStaffIndex].measures[selectedMeasureIndex].events[idx].voice = voice
+        score.touch()
+    }
+
+    // MARK: - Lyrics
+
+    func setLyricForSelectedEvent(_ text: String) {
+        guard let idx = selectedEventIndex,
+              selectedPartIndex < score.parts.count,
+              selectedMeasureIndex < score.parts[selectedPartIndex].measures.count,
+              idx < score.parts[selectedPartIndex].staves[selectedStaffIndex].measures[selectedMeasureIndex].events.count else { return }
+        saveUndoState()
+        score.parts[selectedPartIndex].staves[selectedStaffIndex].measures[selectedMeasureIndex].events[idx].lyric = text.isEmpty ? nil : text
+        score.touch()
+    }
+
+    func startLyricEditing() {
+        guard let event = selectedEvent else { return }
+        currentLyricText = event.lyric ?? ""
+        isEditingLyric = true
+    }
+
+    func commitLyric() {
+        setLyricForSelectedEvent(currentLyricText)
+        isEditingLyric = false
+        currentLyricText = ""
+    }
+
+    // MARK: - Playback Techniques
+
+    func updateSelectedEventTechnique(_ technique: PlaybackTechnique?) {
+        guard let idx = selectedEventIndex,
+              selectedPartIndex < score.parts.count,
+              selectedMeasureIndex < score.parts[selectedPartIndex].measures.count,
+              idx < score.parts[selectedPartIndex].staves[selectedStaffIndex].measures[selectedMeasureIndex].events.count else { return }
+        saveUndoState()
+        score.parts[selectedPartIndex].staves[selectedStaffIndex].measures[selectedMeasureIndex].events[idx].technique = technique
+        score.touch()
+    }
+
+    func setStrumPattern(_ pattern: StrumPattern) {
+        guard let idx = selectedEventIndex,
+              selectedPartIndex < score.parts.count,
+              selectedMeasureIndex < score.parts[selectedPartIndex].measures.count,
+              idx < score.parts[selectedPartIndex].staves[selectedStaffIndex].measures[selectedMeasureIndex].events.count else { return }
+        saveUndoState()
+        score.parts[selectedPartIndex].staves[selectedStaffIndex].measures[selectedMeasureIndex].events[idx].strumPattern = pattern
         score.touch()
     }
 }

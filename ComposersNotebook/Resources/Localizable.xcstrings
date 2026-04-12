@@ -475,6 +475,241 @@
       "localizations": {
         "ru": { "stringUnit": { "state": "translated", "value": "Удалить" } }
       }
+    },
+    "Hammer Hardness": {
+      "localizations": {
+        "ru": { "stringUnit": { "state": "translated", "value": "Жёсткость молоточка" } }
+      }
+    },
+    "Hard": {
+      "localizations": {
+        "ru": { "stringUnit": { "state": "translated", "value": "Жёстко" } }
+      }
+    },
+    "Pedal Resonance": {
+      "localizations": {
+        "ru": { "stringUnit": { "state": "translated", "value": "Резонанс педали" } }
+      }
+    },
+    "Rich": {
+      "localizations": {
+        "ru": { "stringUnit": { "state": "translated", "value": "Насыщенно" } }
+      }
+    },
+    "Lid Position": {
+      "localizations": {
+        "ru": { "stringUnit": { "state": "translated", "value": "Положение крышки" } }
+      }
+    },
+    "Closed": {
+      "localizations": {
+        "ru": { "stringUnit": { "state": "translated", "value": "Закрыта" } }
+      }
+    },
+    "Half Open": {
+      "localizations": {
+        "ru": { "stringUnit": { "state": "translated", "value": "Полуоткрыта" } }
+      }
+    },
+    "Full Open": {
+      "localizations": {
+        "ru": { "stringUnit": { "state": "translated", "value": "Полностью открыта" } }
+      }
+    },
+    "Vibrato Speed": {
+      "localizations": {
+        "ru": { "stringUnit": { "state": "translated", "value": "Скорость вибрато" } }
+      }
+    },
+    "Vibrato Depth": {
+      "localizations": {
+        "ru": { "stringUnit": { "state": "translated", "value": "Глубина вибрато" } }
+      }
+    },
+    "Subtle": {
+      "localizations": {
+        "ru": { "stringUnit": { "state": "translated", "value": "Тонко" } }
+      }
+    },
+    "Wide": {
+      "localizations": {
+        "ru": { "stringUnit": { "state": "translated", "value": "Широко" } }
+      }
+    },
+    "Bow Type": {
+      "localizations": {
+        "ru": { "stringUnit": { "state": "translated", "value": "Тип смычка" } }
+      }
+    },
+    "Standard": {
+      "localizations": {
+        "ru": { "stringUnit": { "state": "translated", "value": "Стандартный" } }
+      }
+    },
+    "Baroque": {
+      "localizations": {
+        "ru": { "stringUnit": { "state": "translated", "value": "Барочный" } }
+      }
+    },
+    "Air Amount": {
+      "localizations": {
+        "ru": { "stringUnit": { "state": "translated", "value": "Количество воздуха" } }
+      }
+    },
+    "Less": {
+      "localizations": {
+        "ru": { "stringUnit": { "state": "translated", "value": "Меньше" } }
+      }
+    },
+    "More": {
+      "localizations": {
+        "ru": { "stringUnit": { "state": "translated", "value": "Больше" } }
+      }
+    },
+    "Tone Brightness": {
+      "localizations": {
+        "ru": { "stringUnit": { "state": "translated", "value": "Яркость тона" } }
+      }
+    },
+    "Dark": {
+      "localizations": {
+        "ru": { "stringUnit": { "state": "translated", "value": "Тёмный" } }
+      }
+    },
+    "Mute Type": {
+      "localizations": {
+        "ru": { "stringUnit": { "state": "translated", "value": "Тип сурдины" } }
+      }
+    },
+    "Open": {
+      "localizations": {
+        "ru": { "stringUnit": { "state": "translated", "value": "Открыто" } }
+      }
+    },
+    "Straight": {
+      "localizations": {
+        "ru": { "stringUnit": { "state": "translated", "value": "Прямая" } }
+      }
+    },
+    "Cup": {
+      "localizations": {
+        "ru": { "stringUnit": { "state": "translated", "value": "Чашка" } }
+      }
+    },
+    "Harmon": {
+      "localizations": {
+        "ru": { "stringUnit": { "state": "translated", "value": "Хармон" } }
+      }
+    },
+    "Plunger": {
+      "localizations": {
+        "ru": { "stringUnit": { "state": "translated", "value": "Плунжер" } }
+      }
+    },
+    "Mellow": {
+      "localizations": {
+        "ru": { "stringUnit": { "state": "translated", "value": "Мягко" } }
+      }
+    },
+    "Brilliant": {
+      "localizations": {
+        "ru": { "stringUnit": { "state": "translated", "value": "Блестяще" } }
+      }
+    },
+    "Vowel": {
+      "localizations": {
+        "ru": { "stringUnit": { "state": "translated", "value": "Гласная" } }
+      }
+    },
+    "Ensemble Width": {
+      "localizations": {
+        "ru": { "stringUnit": { "state": "translated", "value": "Ширина ансамбля" } }
+      }
+    },
+    "Section": {
+      "localizations": {
+        "ru": { "stringUnit": { "state": "translated", "value": "Секция" } }
+      }
+    },
+    "Stick Type": {
+      "localizations": {
+        "ru": { "stringUnit": { "state": "translated", "value": "Тип палочек" } }
+      }
+    },
+    "Sticks": {
+      "localizations": {
+        "ru": { "stringUnit": { "state": "translated", "value": "Палочки" } }
+      }
+    },
+    "Brushes": {
+      "localizations": {
+        "ru": { "stringUnit": { "state": "translated", "value": "Щётки" } }
+      }
+    },
+    "Mallets": {
+      "localizations": {
+        "ru": { "stringUnit": { "state": "translated", "value": "Маллеты" } }
+      }
+    },
+    "Dampening": {
+      "localizations": {
+        "ru": { "stringUnit": { "state": "translated", "value": "Демпфирование" } }
+      }
+    },
+    "Tight": {
+      "localizations": {
+        "ru": { "stringUnit": { "state": "translated", "value": "Сухо" } }
+      }
+    },
+    "Ring": {
+      "localizations": {
+        "ru": { "stringUnit": { "state": "translated", "value": "Звон" } }
+      }
+    },
+    "Remove Current Part": {
+      "localizations": {
+        "ru": { "stringUnit": { "state": "translated", "value": "Удалить текущую партию" } }
+      }
+    },
+    "Встроенные темы": {
+      "localizations": {
+        "en": { "stringUnit": { "state": "translated", "value": "Built-in Themes" } }
+      }
+    },
+    "Пользовательские": {
+      "localizations": {
+        "en": { "stringUnit": { "state": "translated", "value": "Custom" } }
+      }
+    },
+    "Светлая": {
+      "localizations": {
+        "en": { "stringUnit": { "state": "translated", "value": "Light" } }
+      }
+    },
+    "Тёмная": {
+      "localizations": {
+        "en": { "stringUnit": { "state": "translated", "value": "Dark" } }
+      }
+    },
+    "Сепия": {
+      "localizations": {
+        "en": { "stringUnit": { "state": "translated", "value": "Sepia" } }
+      }
+    },
+    "Полночь": {
+      "localizations": {
+        "en": { "stringUnit": { "state": "translated", "value": "Midnight" } }
+      }
+    },
+    "Пергамент": {
+      "localizations": {
+        "en": { "stringUnit": { "state": "translated", "value": "Parchment" } }
+      }
+    },
+    "Системная": {
+      "localizations": {
+        "en": { "stringUnit": { "state": "translated", "value": "System" } }
+      }
     }
   },
   "version": "1.0"
