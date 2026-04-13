@@ -34,10 +34,28 @@ struct Part: Codable, Equatable, Identifiable {
     let id: UUID
     var instrument: Instrument
     var staves: [Staff]
+    var voiceType: VoiceType
 
-    init(instrument: Instrument, measures: [Measure] = []) {
+    var effectiveMidiProgram: Int {
+        instrument.effectiveMidiProgram(for: voiceType)
+    }
+
+    enum CodingKeys: String, CodingKey {
+        case id, instrument, staves, voiceType
+    }
+
+    init(from decoder: Decoder) throws {
+        let c = try decoder.container(keyedBy: CodingKeys.self)
+        id = try c.decode(UUID.self, forKey: .id)
+        instrument = try c.decode(Instrument.self, forKey: .instrument)
+        staves = try c.decode([Staff].self, forKey: .staves)
+        voiceType = try c.decodeIfPresent(VoiceType.self, forKey: .voiceType) ?? .section
+    }
+
+    init(instrument: Instrument, measures: [Measure] = [], voiceType: VoiceType = .section) {
         self.id = UUID()
         self.instrument = instrument
+        self.voiceType = voiceType
 
         // Create staves based on instrument (1 or 2)
         var staffList: [Staff] = []

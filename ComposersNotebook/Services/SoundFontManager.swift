@@ -46,6 +46,9 @@ class SoundFontManager: ObservableObject {
         var decay: Float = 0.1
         var sustain: Float = 0.7     // level 0...1
         var release: Float = 0.3     // seconds
+        var eqLow: Float = 0.0      // -12...+12 dB (low shelf 200Hz)
+        var eqMid: Float = 0.0      // -12...+12 dB (parametric 1kHz)
+        var eqHigh: Float = 0.0     // -12...+12 dB (high shelf 5kHz)
         var presetName: String?      // User-saved preset name
 
         static let `default` = InstrumentSettings()
@@ -253,4 +256,79 @@ class SoundFontManager: ObservableObject {
     static let builtInPresets: [InstrumentSettings] = [
         .warm, .bright, .classical, .soft
     ]
+
+    // MARK: - On-Demand Resources (ODR)
+
+    struct ODRPack: Identifiable {
+        let id: String
+        let name: String
+        let tag: String
+        let description: String
+        let estimatedSize: String
+    }
+
+    static let availableODRPacks: [ODRPack] = [
+        ODRPack(id: "piano_hq", name: "Piano HQ", tag: "soundfont.piano.hq", description: "Steinway Grand Piano (24-bit)", estimatedSize: "25 MB"),
+        ODRPack(id: "strings_hq", name: "Strings HQ", tag: "soundfont.strings.hq", description: "Orchestral Strings Section", estimatedSize: "18 MB"),
+        ODRPack(id: "choir_hq", name: "Choir HQ", tag: "soundfont.choir.hq", description: "SATB Choir Voices", estimatedSize: "15 MB"),
+        ODRPack(id: "woodwinds_hq", name: "Woodwinds HQ", tag: "soundfont.woodwinds.hq", description: "Flute, Oboe, Clarinet, Bassoon", estimatedSize: "12 MB"),
+        ODRPack(id: "brass_hq", name: "Brass HQ", tag: "soundfont.brass.hq", description: "Horn, Trumpet, Trombone, Tuba", estimatedSize: "14 MB"),
+        ODRPack(id: "guitar_hq", name: "Guitar HQ", tag: "soundfont.guitar.hq", description: "Acoustic & Classical Guitar", estimatedSize: "10 MB"),
+    ]
+
+    @Published var odrDownloadProgress: [String: Double] = [:]
+    @Published var odrDownloadedPacks: Set<String> = []
+    private var activeRequests: [String: NSBundleResourceRequest] = [:]
+
+    func downloadODRPack(_ pack: ODRPack) {
+        let request = NSBundleResourceRequest(tags: [pack.tag])
+        activeRequests[pack.id] = request
+        odrDownloadProgress[pack.id] = 0.0
+
+        request.conditionallyBeginAccessingResources { [weak self] available in
+            Task { @MainActor in
+                guard let self else { return }
+                if available {
+                    self.odrDownloadedPacks.insert(pack.id)
+                    self.odrDownloadProgress.removeValue(forKey: pack.id)
+                    self.scanAvailableSoundFonts()
+                    return
+                }
+
+                request.beginAccessingResources { error in
+                    Task { @MainActor in
+                        if let error {
+                            print("ODR download error: \(error)")
+                            self.odrDownloadProgress.removeValue(forKey: pack.id)
+                        } else {
+                            self.odrDownloadedPacks.insert(pack.id)
+                            self.odrDownloadProgress.removeValue(forKey: pack.id)
+                            self.scanAvailableSoundFonts()
+                        }
+                        self.activeRequests.removeValue(forKey: pack.id)
+                    }
+                }
+
+                let progress = request.progress
+                Task {
+                    while !progress.isFinished && !progress.isCancelled {
+                        try? await Task.sleep(for: .milliseconds(200))
+                        await MainActor.run {
+                            self.odrDownloadProgress[pack.id] = progress.fractionCompleted
+                        }
+                    }
+                }
+            }
+        }
+    }
+
+    func cancelODRDownload(_ pack: ODRPack) {
+        activeRequests[pack.id]?.progress.cancel()
+        activeRequests.removeValue(forKey: pack.id)
+        odrDownloadProgress.removeValue(forKey: pack.id)
+    }
+
+    func isODRPackDownloaded(_ pack: ODRPack) -> Bool {
+        odrDownloadedPacks.contains(pack.id)
+    }
 }

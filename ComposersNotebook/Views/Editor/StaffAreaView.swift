@@ -28,46 +28,71 @@ struct StaffAreaView: View {
     private var partSpacing: CGFloat { basePartSpacing * viewModel.zoomScale }
     private var noteHitRadius: CGFloat { 14 * viewModel.zoomScale }
 
+    private var systemAvailableWidth: CGFloat {
+        max(UIScreen.main.bounds.width - 40, 300) * viewModel.zoomScale
+    }
+
     var body: some View {
-        VStack(alignment: .leading, spacing: 0) {
-            ForEach(Array(viewModel.score.parts.enumerated()), id: \.offset) { partIndex, part in
-                partRow(part: part, partIndex: partIndex)
+        GeometryReader { geo in
+            let availW = geo.size.width
+            ScrollView([.horizontal, .vertical]) {
+                VStack(alignment: .leading, spacing: 0) {
+                    ForEach(Array(viewModel.score.parts.enumerated()), id: \.offset) { partIndex, part in
+                        partRow(part: part, partIndex: partIndex, availableWidth: availW)
+                    }
+                }
             }
         }
     }
 
     // MARK: - Part Row
 
-    private func partRow(part: Part, partIndex: Int) -> some View {
-        VStack(alignment: .leading, spacing: 4) {
-            // Instrument name
+    private func partRow(part: Part, partIndex: Int, availableWidth: CGFloat) -> some View {
+        let staff = part.staves[0]
+        let ts = viewModel.score.timeSignature
+        let layout = EngravingEngine.computeLayout(
+            measures: staff.measures,
+            availableWidth: availableWidth,
+            baseSpacing: baseStaffLineSpacing,
+            zoomScale: viewModel.zoomScale,
+            timeSignature: ts
+        )
+
+        return VStack(alignment: .leading, spacing: 4) {
             Text(part.instrument.shortName)
                 .font(.caption2)
                 .foregroundStyle(theme.textSecondary)
 
             if part.isGrandStaff {
-                grandStaffRow(part: part, partIndex: partIndex)
+                ForEach(Array(layout.measureRanges.enumerated()), id: \.offset) { _, range in
+                    grandStaffSystem(part: part, partIndex: partIndex, measureRange: range, measureWidths: layout.measureWidths)
+                }
             } else {
-                singleStaffRow(part: part, partIndex: partIndex, staffIndex: 0)
+                ForEach(Array(layout.measureRanges.enumerated()), id: \.offset) { _, range in
+                    singleStaffSystem(part: part, partIndex: partIndex, staffIndex: 0, measureRange: range, measureWidths: layout.measureWidths)
+                }
             }
 
             Spacer().frame(height: partSpacing - staffHeight)
         }
     }
 
-    // MARK: - Single Staff Row
+    // MARK: - Single Staff System (one line of measures)
 
-    private func singleStaffRow(part: Part, partIndex: Int, staffIndex: Int) -> some View {
+    private func singleStaffSystem(part: Part, partIndex: Int, staffIndex: Int, measureRange: Range<Int>, measureWidths: [CGFloat]) -> some View {
         HStack(spacing: 0) {
-            ForEach(Array(part.staves[staffIndex].measures.enumerated()), id: \.offset) { measureIndex, measure in
+            ForEach(measureRange, id: \.self) { measureIndex in
+                let measure = part.staves[staffIndex].measures[measureIndex]
                 let isCurrentMeasure = partIndex == viewModel.selectedPartIndex
                     && staffIndex == viewModel.selectedStaffIndex
                     && measureIndex == viewModel.selectedMeasureIndex
+                let w = measureWidths[measureIndex]
 
                 staffMeasureView(
                     part: part, partIndex: partIndex, staffIndex: staffIndex,
                     measure: measure, measureIndex: measureIndex,
-                    isCurrentMeasure: isCurrentMeasure
+                    isCurrentMeasure: isCurrentMeasure,
+                    overrideWidth: w
                 )
             }
         }
@@ -77,11 +102,11 @@ struct StaffAreaView: View {
 
     private var grandStaffSpacing: CGFloat { 10 * viewModel.zoomScale }
 
-    private func grandStaffRow(part: Part, partIndex: Int) -> some View {
-        let measureCount = part.staves[0].measures.count
+    private func grandStaffSystem(part: Part, partIndex: Int, measureRange: Range<Int>, measureWidths: [CGFloat]) -> some View {
         let stavesCount = part.staves.count
         return HStack(spacing: 0) {
-            ForEach(0..<measureCount, id: \.self) { measureIndex in
+            ForEach(measureRange, id: \.self) { measureIndex in
+                let w = measureWidths[measureIndex]
                 VStack(spacing: grandStaffSpacing) {
                     ForEach(0..<stavesCount, id: \.self) { staffIndex in
                         let measure = part.staves[staffIndex].measures[measureIndex]
@@ -92,17 +117,17 @@ struct StaffAreaView: View {
                         staffMeasureView(
                             part: part, partIndex: partIndex, staffIndex: staffIndex,
                             measure: measure, measureIndex: measureIndex,
-                            isCurrentMeasure: isCurrent
+                            isCurrentMeasure: isCurrent,
+                            overrideWidth: w
                         )
                     }
                 }
                 .overlay(alignment: .leading) {
-                    if measureIndex == 0 {
+                    if measureIndex == measureRange.lowerBound {
                         braceView(stavesCount: stavesCount)
                     }
                 }
                 .overlay(alignment: .leading) {
-                    // Common barline connecting all staves
                     let singleStaffH = staffHeight + 40 * viewModel.zoomScale
                     let totalH = singleStaffH * CGFloat(stavesCount) + grandStaffSpacing * CGFloat(stavesCount - 1)
                     Rectangle()
@@ -129,7 +154,8 @@ struct StaffAreaView: View {
     private func staffMeasureView(
         part: Part, partIndex: Int, staffIndex: Int,
         measure: Measure, measureIndex: Int,
-        isCurrentMeasure: Bool
+        isCurrentMeasure: Bool,
+        overrideWidth: CGFloat? = nil
     ) -> some View {
         let clef = effectiveClef(partIndex: partIndex, staffIndex: staffIndex, measureIndex: measureIndex)
         let ts = effectiveTimeSignature(partIndex: partIndex, staffIndex: staffIndex, measureIndex: measureIndex)
@@ -147,7 +173,7 @@ struct StaffAreaView: View {
             zoomScale: viewModel.zoomScale,
             theme: theme
         )
-        .frame(width: measureWidth, height: staffHeight + 40 * viewModel.zoomScale)
+        .frame(width: overrideWidth ?? measureWidth, height: staffHeight + 40 * viewModel.zoomScale)
         .contentShape(Rectangle())
         .gesture(
             SpatialTapGesture()
@@ -164,7 +190,7 @@ struct StaffAreaView: View {
 
                     let positions = computeNotePositions(
                         measure: measure, measureIndex: measureIndex,
-                        clef: clef, timeSignature: ts
+                        clef: clef, timeSignature: ts, width: overrideWidth
                     )
 
                     if let hitIndex = hitTestNote(at: value.location, positions: positions) {
@@ -217,12 +243,13 @@ struct StaffAreaView: View {
 
     // MARK: - Note Hit Testing
 
-    private func computeNotePositions(measure: Measure, measureIndex: Int, clef: Clef, timeSignature: TimeSignature) -> [NoteHitInfo] {
+    private func computeNotePositions(measure: Measure, measureIndex: Int, clef: Clef, timeSignature: TimeSignature, width: CGFloat? = nil) -> [NoteHitInfo] {
         let z = viewModel.zoomScale
         let startX: CGFloat = 8 * z
         let staffTop: CGFloat = 20 * z
         let noteStartX: CGFloat = measureIndex == 0 ? startX + 45 * z : startX + 15 * z
-        let availableWidth = measureWidth - noteStartX - 10 * z
+        let effectiveWidth = width ?? measureWidth
+        let availableWidth = effectiveWidth - noteStartX - 10 * z
         let totalBeats = measure.usedBeats
         guard totalBeats > 0 else { return [] }
 
@@ -508,7 +535,7 @@ struct MeasureView: View {
                         beamCandidates.append(BeamCandidate(x: noteX, y: y, stemUp: stemUp, duration: event.duration.value, eventIndex: eventIndex, beatPosition: cumulativeBeats))
                     }
                     for (artIdx, articulation) in event.articulations.enumerated() {
-                        drawArticulation(context: context, symbol: articulation.displaySymbol, x: noteX, y: y, stemUp: stemUp, duration: event.duration.value, stackIndex: artIdx)
+                        drawArticulation(context: context, symbol: articulation.displaySymbol, x: noteX, y: y, stemUp: stemUp, duration: event.duration.value, stackIndex: artIdx, articulation: articulation)
                     }
 
                 case .chord(let pitches):
@@ -549,10 +576,19 @@ struct MeasureView: View {
 
                 // Dynamic marking
                 if let dynamic = event.dynamic {
-                    let dynText = Text(dynamic.displayName)
-                        .font(.system(size: scaled(9), design: .serif))
-                        .italic()
-                    context.draw(dynText, at: CGPoint(x: currentX + eventWidth / 2, y: staffTop + 5 * staffLineSpacing + scaled(5)))
+                    let musicFont = MusicFontManager.shared
+                    if musicFont.isBravuraAvailable {
+                        let dynSymbol = bravuraDynamic(dynamic)
+                        let dynText = Text(dynSymbol)
+                            .font(musicFont.musicFont(size: scaled(16)))
+                            .foregroundColor(theme.noteHead)
+                        context.draw(dynText, at: CGPoint(x: currentX + eventWidth / 2, y: staffTop + 5 * staffLineSpacing + scaled(5)))
+                    } else {
+                        let dynText = Text(dynamic.displayName)
+                            .font(.system(size: scaled(9), design: .serif))
+                            .italic()
+                        context.draw(dynText, at: CGPoint(x: currentX + eventWidth / 2, y: staffTop + 5 * staffLineSpacing + scaled(5)))
+                    }
                 }
 
                 // Lyrics (подтекстовка) below staff
@@ -665,21 +701,43 @@ struct MeasureView: View {
 
     private func drawNoteHead(context: GraphicsContext, x: CGFloat, y: CGFloat, duration: DurationValue, stemUp: Bool = true, selected: Bool = false, skipFlags: Bool = false, staffTop: CGFloat = 0) {
         let radius: CGFloat = staffLineSpacing / 2 - 1
-        let rect = CGRect(x: x - radius, y: y - radius * 0.75, width: radius * 2, height: radius * 1.5)
-        let ellipse = Path(ellipseIn: rect)
         let noteColor: Color = selected ? theme.selectedNote : theme.noteHead
+        let musicFont = MusicFontManager.shared
 
-        switch duration {
-        case .whole:
-            context.stroke(ellipse, with: .color(noteColor), lineWidth: 1.5)
-        case .half:
-            context.stroke(ellipse, with: .color(noteColor), lineWidth: 1.5)
-            drawStem(context: context, x: x, y: y, radius: radius, stemUp: stemUp, color: noteColor, staffTop: staffTop)
-        default:
-            context.fill(ellipse, with: .color(noteColor))
-            if !skipFlags {
+        if musicFont.isBravuraAvailable {
+            let symbol: String
+            switch duration {
+            case .whole: symbol = MusicSymbol.noteheadWhole
+            case .half: symbol = MusicSymbol.noteheadHalf
+            default: symbol = MusicSymbol.noteheadBlack
+            }
+            let noteText = Text(symbol)
+                .font(musicFont.musicFont(size: scaled(24)))
+                .foregroundColor(noteColor)
+            context.draw(noteText, at: CGPoint(x: x, y: y))
+
+            if duration == .half || (duration != .whole && !skipFlags) {
                 drawStem(context: context, x: x, y: y, radius: radius, stemUp: stemUp, color: noteColor, staffTop: staffTop)
+            }
+            if duration != .whole && duration != .half && !skipFlags {
                 drawFlags(context: context, x: x, y: y, radius: radius, stemUp: stemUp, duration: duration, staffTop: staffTop)
+            }
+        } else {
+            let rect = CGRect(x: x - radius, y: y - radius * 0.75, width: radius * 2, height: radius * 1.5)
+            let ellipse = Path(ellipseIn: rect)
+
+            switch duration {
+            case .whole:
+                context.stroke(ellipse, with: .color(noteColor), lineWidth: 1.5)
+            case .half:
+                context.stroke(ellipse, with: .color(noteColor), lineWidth: 1.5)
+                drawStem(context: context, x: x, y: y, radius: radius, stemUp: stemUp, color: noteColor, staffTop: staffTop)
+            default:
+                context.fill(ellipse, with: .color(noteColor))
+                if !skipFlags {
+                    drawStem(context: context, x: x, y: y, radius: radius, stemUp: stemUp, color: noteColor, staffTop: staffTop)
+                    drawFlags(context: context, x: x, y: y, radius: radius, stemUp: stemUp, duration: duration, staffTop: staffTop)
+                }
             }
         }
     }
@@ -816,7 +874,7 @@ struct MeasureView: View {
         }
     }
 
-    private func drawArticulation(context: GraphicsContext, symbol: String, x: CGFloat, y: CGFloat, stemUp: Bool, duration: DurationValue, stackIndex: Int = 0) {
+    private func drawArticulation(context: GraphicsContext, symbol: String, x: CGFloat, y: CGFloat, stemUp: Bool, duration: DurationValue, stackIndex: Int = 0, articulation: Articulation? = nil) {
         let artOffset: CGFloat = staffLineSpacing * 0.8
         let stackSpacing: CGFloat = staffLineSpacing * 0.6
         let baseY: CGFloat
@@ -827,11 +885,47 @@ struct MeasureView: View {
         } else {
             baseY = y - artOffset
         }
-        // Stack multiple articulations away from note head
         let direction: CGFloat = (duration == .whole || !stemUp) ? -1 : 1
         let artY = baseY + direction * CGFloat(stackIndex) * stackSpacing
-        let artText = Text(symbol).font(.system(size: scaled(10)))
-        context.draw(artText, at: CGPoint(x: x, y: artY))
+
+        let musicFont = MusicFontManager.shared
+        if musicFont.isBravuraAvailable, let art = articulation {
+            let bravuraSymbol = bravuraArticulation(art)
+            let artText = Text(bravuraSymbol)
+                .font(musicFont.musicFont(size: scaled(16)))
+                .foregroundColor(theme.noteHead)
+            context.draw(artText, at: CGPoint(x: x, y: artY))
+        } else {
+            let artText = Text(symbol).font(.system(size: scaled(10)))
+            context.draw(artText, at: CGPoint(x: x, y: artY))
+        }
+    }
+
+    private func bravuraDynamic(_ dynamic: DynamicMarking) -> String {
+        switch dynamic {
+        case .ppp: return MusicSymbol.dynamicPiano + MusicSymbol.dynamicPiano + MusicSymbol.dynamicPiano
+        case .pp: return MusicSymbol.dynamicPiano + MusicSymbol.dynamicPiano
+        case .p: return MusicSymbol.dynamicPiano
+        case .mp: return MusicSymbol.dynamicMezzo + MusicSymbol.dynamicPiano
+        case .mf: return MusicSymbol.dynamicMezzo + MusicSymbol.dynamicForte
+        case .f: return MusicSymbol.dynamicForte
+        case .ff: return MusicSymbol.dynamicForte + MusicSymbol.dynamicForte
+        case .fff: return MusicSymbol.dynamicForte + MusicSymbol.dynamicForte + MusicSymbol.dynamicForte
+        case .sfz: return MusicSymbol.dynamicSforzando + MusicSymbol.dynamicForte + MusicSymbol.dynamicZ
+        case .sfp: return MusicSymbol.dynamicSforzando + MusicSymbol.dynamicForte + MusicSymbol.dynamicPiano
+        case .fp: return MusicSymbol.dynamicForte + MusicSymbol.dynamicPiano
+        }
+    }
+
+    private func bravuraArticulation(_ art: Articulation) -> String {
+        switch art {
+        case .staccato: return MusicSymbol.articStaccatoAbove
+        case .accent: return MusicSymbol.articAccentAbove
+        case .tenuto: return MusicSymbol.articTenutoAbove
+        case .marcato: return MusicSymbol.articMarcatoAbove
+        case .fermata: return MusicSymbol.articFermataAbove
+        case .legato: return "\u{E4A4}"
+        }
     }
 
     // MARK: - Beam Drawing

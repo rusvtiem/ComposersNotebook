@@ -180,7 +180,7 @@ struct ScoreEditorView: View {
                     soundFontManager: soundFontManager,
                     instrument: part.instrument,
                     onPreview: {
-                        MIDIEngine.shared.previewSound(midiProgram: part.instrument.midiProgram)
+                        MIDIEngine.shared.previewSound(midiProgram: part.effectiveMidiProgram)
                     }
                 )
                 .presentationDetents([.large])

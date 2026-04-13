@@ -111,10 +111,12 @@ class MIDIEngine: ObservableObject {
         sampler.pan = settings.pan
         reverbNode.wetDryMix = settings.reverb * 100
 
-        // Brightness via high shelf EQ
+        // 3-band EQ
         if eqNode.bands.count >= 3 {
-            let brightnessGain = (settings.brightness - 0.5) * 12 // -6dB to +6dB
-            eqNode.bands[2].gain = brightnessGain
+            eqNode.bands[0].gain = settings.eqLow
+            eqNode.bands[1].gain = settings.eqMid
+            let brightnessGain = (settings.brightness - 0.5) * 12
+            eqNode.bands[2].gain = settings.eqHigh + brightnessGain
         }
 
         // ADSR via MIDI CC (standard controllers)
@@ -217,7 +219,7 @@ class MIDIEngine: ObservableObject {
                     let measure = part.measures[measureIndex]
 
                     Task {
-                        setInstrument(midiProgram: part.instrument.midiProgram)
+                        setInstrument(midiProgram: part.effectiveMidiProgram)
                         applySettingsForInstrument(part.instrument)
 
                         for event in measure.events {
@@ -271,7 +273,7 @@ class MIDIEngine: ObservableObject {
         isPlaying = true
 
         playbackTask = Task { @MainActor in
-            setInstrument(midiProgram: part.instrument.midiProgram)
+            setInstrument(midiProgram: part.effectiveMidiProgram)
             applySettingsForInstrument(part.instrument)
             let bpm = score.tempo.bpm
 

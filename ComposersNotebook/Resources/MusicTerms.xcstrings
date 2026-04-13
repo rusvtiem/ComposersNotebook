@@ -1,0 +1,346 @@
+{
+  "sourceLanguage": "en",
+  "strings": {
+    "Whole note": {
+      "localizations": {
+        "ru": { "stringUnit": { "state": "translated", "value": "Целая нота" } }
+      }
+    },
+    "Half note": {
+      "localizations": {
+        "ru": { "stringUnit": { "state": "translated", "value": "Половинная нота" } }
+      }
+    },
+    "Quarter note": {
+      "localizations": {
+        "ru": { "stringUnit": { "state": "translated", "value": "Четвертная нота" } }
+      }
+    },
+    "Eighth note": {
+      "localizations": {
+        "ru": { "stringUnit": { "state": "translated", "value": "Восьмая нота" } }
+      }
+    },
+    "Sixteenth note": {
+      "localizations": {
+        "ru": { "stringUnit": { "state": "translated", "value": "Шестнадцатая нота" } }
+      }
+    },
+    "Thirty-second note": {
+      "localizations": {
+        "ru": { "stringUnit": { "state": "translated", "value": "Тридцать вторая нота" } }
+      }
+    },
+    "semibreve": {
+      "localizations": {
+        "ru": { "stringUnit": { "state": "translated", "value": "семибреве" } }
+      }
+    },
+    "minim": {
+      "localizations": {
+        "ru": { "stringUnit": { "state": "translated", "value": "минима" } }
+      }
+    },
+    "crotchet": {
+      "localizations": {
+        "ru": { "stringUnit": { "state": "translated", "value": "семиминима" } }
+      }
+    },
+    "quaver": {
+      "localizations": {
+        "ru": { "stringUnit": { "state": "translated", "value": "крома" } }
+      }
+    },
+    "semiquaver": {
+      "localizations": {
+        "ru": { "stringUnit": { "state": "translated", "value": "семикрома" } }
+      }
+    },
+    "demisemiquaver": {
+      "localizations": {
+        "ru": { "stringUnit": { "state": "translated", "value": "бискрома" } }
+      }
+    },
+    "Staccato": {
+      "localizations": {
+        "ru": { "stringUnit": { "state": "translated", "value": "Стаккато" } }
+      }
+    },
+    "Legato": {
+      "localizations": {
+        "ru": { "stringUnit": { "state": "translated", "value": "Легато" } }
+      }
+    },
+    "Accent": {
+      "localizations": {
+        "ru": { "stringUnit": { "state": "translated", "value": "Акцент" } }
+      }
+    },
+    "Tenuto": {
+      "localizations": {
+        "ru": { "stringUnit": { "state": "translated", "value": "Тенуто" } }
+      }
+    },
+    "Marcato": {
+      "localizations": {
+        "ru": { "stringUnit": { "state": "translated", "value": "Маркато" } }
+      }
+    },
+    "Fermata": {
+      "localizations": {
+        "ru": { "stringUnit": { "state": "translated", "value": "Фермата" } }
+      }
+    },
+    "Sharp": {
+      "localizations": {
+        "ru": { "stringUnit": { "state": "translated", "value": "Диез" } }
+      }
+    },
+    "Flat": {
+      "localizations": {
+        "ru": { "stringUnit": { "state": "translated", "value": "Бемоль" } }
+      }
+    },
+    "Natural": {
+      "localizations": {
+        "ru": { "stringUnit": { "state": "translated", "value": "Бекар" } }
+      }
+    },
+    "Double sharp": {
+      "localizations": {
+        "ru": { "stringUnit": { "state": "translated", "value": "Дубль-диез" } }
+      }
+    },
+    "Double flat": {
+      "localizations": {
+        "ru": { "stringUnit": { "state": "translated", "value": "Дубль-бемоль" } }
+      }
+    },
+    "Pianissimo": {
+      "localizations": {
+        "ru": { "stringUnit": { "state": "translated", "value": "Пианиссимо — очень тихо" } }
+      }
+    },
+    "Piano": {
+      "localizations": {
+        "ru": { "stringUnit": { "state": "translated", "value": "Пиано — тихо" } }
+      }
+    },
+    "Mezzo piano": {
+      "localizations": {
+        "ru": { "stringUnit": { "state": "translated", "value": "Меццо-пиано — умеренно тихо" } }
+      }
+    },
+    "Mezzo forte": {
+      "localizations": {
+        "ru": { "stringUnit": { "state": "translated", "value": "Меццо-форте — умеренно громко" } }
+      }
+    },
+    "Forte": {
+      "localizations": {
+        "ru": { "stringUnit": { "state": "translated", "value": "Форте — громко" } }
+      }
+    },
+    "Fortissimo": {
+      "localizations": {
+        "ru": { "stringUnit": { "state": "translated", "value": "Фортиссимо — очень громко" } }
+      }
+    },
+    "Sforzando": {
+      "localizations": {
+        "ru": { "stringUnit": { "state": "translated", "value": "Сфорцандо — внезапный акцент" } }
+      }
+    },
+    "Arco": {
+      "localizations": {
+        "ru": { "stringUnit": { "state": "translated", "value": "Арко — смычком" } }
+      }
+    },
+    "Pizzicato": {
+      "localizations": {
+        "ru": { "stringUnit": { "state": "translated", "value": "Пиццикато — щипком" } }
+      }
+    },
+    "Col legno": {
+      "localizations": {
+        "ru": { "stringUnit": { "state": "translated", "value": "Коль леньо — древком смычка" } }
+      }
+    },
+    "Sul ponticello": {
+      "localizations": {
+        "ru": { "stringUnit": { "state": "translated", "value": "Суль понтичелло — у подставки" } }
+      }
+    },
+    "Sul tasto": {
+      "localizations": {
+        "ru": { "stringUnit": { "state": "translated", "value": "Суль тасто — у грифа" } }
+      }
+    },
+    "Tremolo": {
+      "localizations": {
+        "ru": { "stringUnit": { "state": "translated", "value": "Тремоло — быстрое повторение" } }
+      }
+    },
+    "Finger style": {
+      "localizations": {
+        "ru": { "stringUnit": { "state": "translated", "value": "Пальцами (fingerstyle)" } }
+      }
+    },
+    "Pick style": {
+      "localizations": {
+        "ru": { "stringUnit": { "state": "translated", "value": "Медиатором (pick)" } }
+      }
+    },
+    "Strum down": {
+      "localizations": {
+        "ru": { "stringUnit": { "state": "translated", "value": "Бой вниз" } }
+      }
+    },
+    "Strum up": {
+      "localizations": {
+        "ru": { "stringUnit": { "state": "translated", "value": "Бой вверх" } }
+      }
+    },
+    "Sticks": {
+      "localizations": {
+        "ru": { "stringUnit": { "state": "translated", "value": "Палочки" } }
+      }
+    },
+    "Brushes": {
+      "localizations": {
+        "ru": { "stringUnit": { "state": "translated", "value": "Щётки" } }
+      }
+    },
+    "Mallets": {
+      "localizations": {
+        "ru": { "stringUnit": { "state": "translated", "value": "Молоточки (маллеты)" } }
+      }
+    },
+    "Treble clef": {
+      "localizations": {
+        "ru": { "stringUnit": { "state": "translated", "value": "Скрипичный ключ" } }
+      }
+    },
+    "Bass clef": {
+      "localizations": {
+        "ru": { "stringUnit": { "state": "translated", "value": "Басовый ключ" } }
+      }
+    },
+    "Alto clef": {
+      "localizations": {
+        "ru": { "stringUnit": { "state": "translated", "value": "Альтовый ключ" } }
+      }
+    },
+    "Tenor clef": {
+      "localizations": {
+        "ru": { "stringUnit": { "state": "translated", "value": "Теноровый ключ" } }
+      }
+    },
+    "Grave": {
+      "localizations": {
+        "ru": { "stringUnit": { "state": "translated", "value": "Граве — очень медленно (40)" } }
+      }
+    },
+    "Largo": {
+      "localizations": {
+        "ru": { "stringUnit": { "state": "translated", "value": "Ларго — широко (46)" } }
+      }
+    },
+    "Lento": {
+      "localizations": {
+        "ru": { "stringUnit": { "state": "translated", "value": "Ленто — медленно (52)" } }
+      }
+    },
+    "Adagio": {
+      "localizations": {
+        "ru": { "stringUnit": { "state": "translated", "value": "Адажио — спокойно (60)" } }
+      }
+    },
+    "Andante": {
+      "localizations": {
+        "ru": { "stringUnit": { "state": "translated", "value": "Анданте — шагом (76)" } }
+      }
+    },
+    "Moderato": {
+      "localizations": {
+        "ru": { "stringUnit": { "state": "translated", "value": "Модерато — умеренно (92)" } }
+      }
+    },
+    "Allegretto": {
+      "localizations": {
+        "ru": { "stringUnit": { "state": "translated", "value": "Аллегретто — оживлённо (108)" } }
+      }
+    },
+    "Allegro": {
+      "localizations": {
+        "ru": { "stringUnit": { "state": "translated", "value": "Аллегро — быстро (120)" } }
+      }
+    },
+    "Vivace": {
+      "localizations": {
+        "ru": { "stringUnit": { "state": "translated", "value": "Виваче — живо (140)" } }
+      }
+    },
+    "Presto": {
+      "localizations": {
+        "ru": { "stringUnit": { "state": "translated", "value": "Престо — быстро (168)" } }
+      }
+    },
+    "Prestissimo": {
+      "localizations": {
+        "ru": { "stringUnit": { "state": "translated", "value": "Престиссимо — предельно быстро (200)" } }
+      }
+    },
+    "Crescendo": {
+      "localizations": {
+        "ru": { "stringUnit": { "state": "translated", "value": "Крещендо — постепенно громче" } }
+      }
+    },
+    "Diminuendo": {
+      "localizations": {
+        "ru": { "stringUnit": { "state": "translated", "value": "Диминуэндо — постепенно тише" } }
+      }
+    },
+    "Tie": {
+      "localizations": {
+        "ru": { "stringUnit": { "state": "translated", "value": "Залиговка — связывание одинаковых нот" } }
+      }
+    },
+    "Slur": {
+      "localizations": {
+        "ru": { "stringUnit": { "state": "translated", "value": "Лига — легато, плавное соединение" } }
+      }
+    },
+    "Dotted": {
+      "localizations": {
+        "ru": { "stringUnit": { "state": "translated", "value": "С точкой — увеличивает длительность в 1.5 раза" } }
+      }
+    },
+    "Double dotted": {
+      "localizations": {
+        "ru": { "stringUnit": { "state": "translated", "value": "С двойной точкой — увеличивает в 1.75 раза" } }
+      }
+    },
+    "Segno": {
+      "localizations": {
+        "ru": { "stringUnit": { "state": "translated", "value": "Сеньо — знак навигации" } }
+      }
+    },
+    "Coda": {
+      "localizations": {
+        "ru": { "stringUnit": { "state": "translated", "value": "Кода — знак окончания" } }
+      }
+    },
+    "D.C. al Fine": {
+      "localizations": {
+        "ru": { "stringUnit": { "state": "translated", "value": "С начала до Fine" } }
+      }
+    },
+    "D.S. al Coda": {
+      "localizations": {
+        "ru": { "stringUnit": { "state": "translated", "value": "С сеньо до коды" } }
+      }
+    }
+  },
+  "version": "1.0"
+}

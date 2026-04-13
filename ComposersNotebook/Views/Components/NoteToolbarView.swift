@@ -470,13 +470,90 @@ struct NoteToolbarView: View {
         }
     }
 
+    // MARK: - Playback Technique
+
+    private var techniqueButtons: some View {
+        HStack(spacing: 2) {
+            let techniques = techniquesForCurrentInstrument
+            if !techniques.isEmpty {
+                Menu {
+                    Button {
+                        viewModel.selectedTechnique = nil
+                    } label: {
+                        HStack {
+                            Text(String(localized: "Default"))
+                            if viewModel.selectedTechnique == nil {
+                                Image(systemName: "checkmark")
+                            }
+                        }
+                    }
+                    ForEach(techniques, id: \.self) { tech in
+                        Button {
+                            viewModel.selectedTechnique = tech
+                        } label: {
+                            HStack {
+                                Text(tech.displayName)
+                                if viewModel.selectedTechnique == tech {
+                                    Image(systemName: "checkmark")
+                                }
+                            }
+                        }
+                    }
+                } label: {
+                    NoteToolbarButton(
+                        icon: "hand.wave",
+                        label: viewModel.selectedTechnique?.italianName ?? "Техн.",
+                        isActive: viewModel.selectedTechnique != nil,
+                        fontSize: 10,
+                        tooltip: "Исполнительская техника (playback technique)"
+                    ) {}
+                }
+            }
+        }
+    }
+
+    private var techniquesForCurrentInstrument: [PlaybackTechnique] {
+        guard let part = viewModel.currentPart else { return [] }
+        return PlaybackTechnique.allCases.filter { $0.applicableGroups.contains(part.instrument.group) }
+    }
+
+    // MARK: - Strum Pattern
+
+    @State private var showStrumEditor = false
+
+    private var strumButton: some View {
+        Group {
+            if let part = viewModel.currentPart,
+               part.instrument.group == .strings,
+               [24, 25].contains(part.instrument.midiProgram) {
+                NoteToolbarButton(
+                    icon: "guitars",
+                    label: "Бой",
+                    isActive: false,
+                    fontSize: 10,
+                    tooltip: "Гитарный бой (strumming pattern)"
+                ) { showStrumEditor = true }
+                .sheet(isPresented: $showStrumEditor) {
+                    StrumPatternEditorSheet(viewModel: viewModel)
+                        .presentationDetents([.medium])
+                }
+            }
+        }
+    }
+
     // MARK: - Actions
 
     private var actionButtons: some View {
         HStack(spacing: 4) {
-            // Voice selector
+            // Playback Technique
+            techniqueButtons
+
+            // Strum Pattern (guitar only)
+            strumButton
+
             Divider().frame(height: 30)
 
+            // Voice selector
             ForEach(VoiceLayer.allCases, id: \.self) { voice in
                 NoteToolbarButton(
                     icon: nil,

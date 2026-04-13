@@ -1,8 +1,134 @@
 import SwiftUI
 import UniformTypeIdentifiers
 
+// MARK: - ADSR Curve View
+
+struct ADSRCurveView: View {
+    let attack: Float
+    let decay: Float
+    let sustain: Float
+    let release: Float
+
+    var body: some View {
+        GeometryReader { geo in
+            let w = geo.size.width
+            let h = geo.size.height
+            let totalTime = max(attack + decay + 0.3 + release, 0.5)
+            let aX = CGFloat(attack / totalTime) * w
+            let dX = aX + CGFloat(decay / totalTime) * w
+            let sX = dX + CGFloat(0.3 / totalTime) * w
+            let rX = w
+            let sustainY = h * CGFloat(1.0 - sustain)
+
+            Path { path in
+                path.move(to: CGPoint(x: 0, y: h))
+                path.addLine(to: CGPoint(x: aX, y: 0))
+                path.addLine(to: CGPoint(x: dX, y: sustainY))
+                path.addLine(to: CGPoint(x: sX, y: sustainY))
+                path.addLine(to: CGPoint(x: rX, y: h))
+            }
+            .stroke(Color.accentColor, lineWidth: 2)
+
+            Path { path in
+                path.move(to: CGPoint(x: 0, y: h))
+                path.addLine(to: CGPoint(x: aX, y: 0))
+                path.addLine(to: CGPoint(x: dX, y: sustainY))
+                path.addLine(to: CGPoint(x: sX, y: sustainY))
+                path.addLine(to: CGPoint(x: rX, y: h))
+                path.closeSubpath()
+            }
+            .fill(Color.accentColor.opacity(0.1))
+
+            // Phase labels
+            let labels: [(String, CGFloat)] = [
+                ("A", aX / 2),
+                ("D", (aX + dX) / 2),
+                ("S", (dX + sX) / 2),
+                ("R", (sX + rX) / 2)
+            ]
+            ForEach(Array(labels.enumerated()), id: \.offset) { _, item in
+                Text(item.0)
+                    .font(.system(size: 9, weight: .bold))
+                    .foregroundStyle(.secondary)
+                    .position(x: item.1, y: h - 6)
+            }
+        }
+    }
+}
+
+// MARK: - Graphic EQ View
+
+struct GraphicEQView: View {
+    @Binding var low: Float
+    @Binding var mid: Float
+    @Binding var high: Float
+    let onChange: () -> Void
+
+    var body: some View {
+        VStack(spacing: 8) {
+            HStack {
+                Image(systemName: "waveform.path.ecg")
+                    .foregroundStyle(.secondary)
+                Text(String(localized: "Equalizer"))
+                    .font(.caption)
+                Spacer()
+            }
+
+            HStack(spacing: 16) {
+                eqBand(label: "200 Hz", value: $low)
+                eqBand(label: "1 kHz", value: $mid)
+                eqBand(label: "5 kHz", value: $high)
+            }
+            .frame(height: 120)
+        }
+    }
+
+    private func eqBand(label: String, value: Binding<Float>) -> some View {
+        VStack(spacing: 4) {
+            Text(String(format: "%+.0f", value.wrappedValue))
+                .font(.system(size: 9, design: .monospaced))
+                .foregroundStyle(.secondary)
+
+            GeometryReader { geo in
+                let h = geo.size.height
+                let normalized = CGFloat((value.wrappedValue + 12) / 24)
+                let thumbY = h * (1 - normalized)
+
+                ZStack {
+                    RoundedRectangle(cornerRadius: 2)
+                        .fill(Color(.systemGray5))
+                        .frame(width: 4)
+
+                    RoundedRectangle(cornerRadius: 2)
+                        .fill(Color.accentColor.opacity(0.3))
+                        .frame(width: 4, height: max(0, abs(h / 2 - thumbY)))
+                        .offset(y: value.wrappedValue >= 0 ? -(h / 2 - thumbY) / 2 : (thumbY - h / 2) / 2)
+
+                    Circle()
+                        .fill(Color.accentColor)
+                        .frame(width: 16, height: 16)
+                        .offset(y: thumbY - h / 2)
+                }
+                .frame(maxWidth: .infinity)
+                .contentShape(Rectangle())
+                .gesture(
+                    DragGesture(minimumDistance: 0)
+                        .onChanged { drag in
+                            let clamped = min(max(drag.location.y / h, 0), 1)
+                            value.wrappedValue = Float((1 - clamped) * 24 - 12)
+                            onChange()
+                        }
+                )
+            }
+
+            Text(label)
+                .font(.system(size: 9))
+                .foregroundStyle(.tertiary)
+        }
+    }
+}
+
 // MARK: - Sound Settings View
-// Two-level sound settings: Simple (default) + Advanced (expandable)
 
 struct SoundSettingsView: View {
     @ObservedObject var soundFontManager: SoundFontManager
@@ -28,7 +154,6 @@ struct SoundSettingsView: View {
     var body: some View {
         NavigationView {
             List {
-                // MARK: - Simple Level (always visible)
                 Section {
                     presetPicker
                     volumeSlider
@@ -38,7 +163,6 @@ struct SoundSettingsView: View {
                     Label(instrument.name, systemImage: "music.note")
                 }
 
-                // MARK: - Advanced Level (expandable)
                 Section {
                     Button {
                         withAnimation { showAdvanced.toggle() }
@@ -53,25 +177,85 @@ struct SoundSettingsView: View {
                     }
 
                     if showAdvanced {
-                        brightnessSlider
+                        // ADSR with visual curve
+                        ADSRCurveView(
+                            attack: settings.attack,
+                            decay: settings.decay,
+                            sustain: settings.sustain,
+                            release: settings.release
+                        )
+                        .frame(height: 80)
+                        .padding(.vertical, 4)
+
                         attackSlider
                         decaySlider
                         sustainSlider
                         releaseSlider
+
+                        Divider()
+
+                        brightnessSlider
+
+                        // Graphic EQ
+                        GraphicEQView(
+                            low: $settings.eqLow,
+                            mid: $settings.eqMid,
+                            high: $settings.eqHigh,
+                            onChange: saveAndApply
+                        )
+                        .padding(.vertical, 4)
+
+                        Divider()
+
                         instrumentSpecificControls
                     }
                 } header: {
                     Text(String(localized: "Sound Character"))
                 }
 
-                // MARK: - SoundFont Selection
                 Section {
                     soundFontPicker
                 } header: {
                     Text(String(localized: "Sound Source"))
                 }
 
-                // MARK: - Actions
+                // MARK: - Downloadable Sound Packs (ODR)
+                Section {
+                    ForEach(SoundFontManager.availableODRPacks) { pack in
+                        HStack {
+                            VStack(alignment: .leading, spacing: 2) {
+                                Text(pack.name).font(.body)
+                                Text(pack.description).font(.caption).foregroundStyle(.secondary)
+                            }
+                            Spacer()
+                            Text(pack.estimatedSize).font(.caption2).foregroundStyle(.tertiary)
+
+                            if soundFontManager.isODRPackDownloaded(pack) {
+                                Image(systemName: "checkmark.circle.fill")
+                                    .foregroundColor(.green)
+                            } else if let progress = soundFontManager.odrDownloadProgress[pack.id] {
+                                ProgressView(value: progress)
+                                    .frame(width: 50)
+                                Button {
+                                    soundFontManager.cancelODRDownload(pack)
+                                } label: {
+                                    Image(systemName: "xmark.circle")
+                                        .foregroundColor(.secondary)
+                                }
+                            } else {
+                                Button {
+                                    soundFontManager.downloadODRPack(pack)
+                                } label: {
+                                    Image(systemName: "icloud.and.arrow.down")
+                                        .foregroundColor(.accentColor)
+                                }
+                            }
+                        }
+                    }
+                } header: {
+                    Text(String(localized: "Sound Packs"))
+                }
+
                 Section {
                     Button {
                         onPreview()
@@ -95,7 +279,6 @@ struct SoundSettingsView: View {
                     }
                 }
 
-                // MARK: - User Presets
                 if let presets = soundFontManager.userPresets[instrument.group.rawValue], !presets.isEmpty {
                     Section {
                         ForEach(presets) { preset in
@@ -185,6 +368,7 @@ struct SoundSettingsView: View {
             icon: "speaker.wave.2",
             value: $settings.volume,
             range: 0...1,
+            tooltip: String(localized: "Master volume of this instrument (0–100%)"),
             onChange: saveAndApply
         )
     }
@@ -197,6 +381,7 @@ struct SoundSettingsView: View {
             range: -1...1,
             leftLabel: "L",
             rightLabel: "R",
+            tooltip: String(localized: "Stereo position: left (-100%) to right (+100%)"),
             onChange: saveAndApply
         )
     }
@@ -209,6 +394,7 @@ struct SoundSettingsView: View {
             range: 0...1,
             leftLabel: String(localized: "Dry"),
             rightLabel: String(localized: "Hall"),
+            tooltip: String(localized: "Reverb amount: dry (no echo) to hall (concert hall)"),
             onChange: saveAndApply
         )
     }
@@ -223,6 +409,7 @@ struct SoundSettingsView: View {
             range: 0...1,
             leftLabel: String(localized: "Warm"),
             rightLabel: String(localized: "Bright"),
+            tooltip: String(localized: "Tonal brightness: warm (darker) to bright (more overtones). Controls MIDI CC74 filter cutoff."),
             onChange: saveAndApply
         )
     }
@@ -235,6 +422,7 @@ struct SoundSettingsView: View {
             range: 0.001...0.5,
             leftLabel: String(localized: "Fast"),
             rightLabel: String(localized: "Slow"),
+            tooltip: String(localized: "Attack time: how quickly the sound reaches full volume. Fast = percussive, Slow = pad-like."),
             onChange: saveAndApply
         )
     }
@@ -245,6 +433,7 @@ struct SoundSettingsView: View {
             icon: "waveform.badge.minus",
             value: $settings.decay,
             range: 0.01...1.0,
+            tooltip: String(localized: "Decay time: how quickly the sound falls from peak to sustain level."),
             onChange: saveAndApply
         )
     }
@@ -255,6 +444,7 @@ struct SoundSettingsView: View {
             icon: "waveform",
             value: $settings.sustain,
             range: 0...1,
+            tooltip: String(localized: "Sustain level: volume maintained while the note is held (0–100%)."),
             onChange: saveAndApply
         )
     }
@@ -267,6 +457,7 @@ struct SoundSettingsView: View {
             range: 0.01...2.0,
             leftLabel: String(localized: "Short"),
             rightLabel: String(localized: "Long"),
+            tooltip: String(localized: "Release time: how quickly the sound fades after the note ends. Short = staccato, Long = resonant."),
             onChange: saveAndApply
         )
     }
@@ -287,6 +478,7 @@ struct SoundSettingsView: View {
                 range: 0...1,
                 leftLabel: String(localized: "Soft"),
                 rightLabel: String(localized: "Hard"),
+                tooltip: String(localized: "Piano hammer hardness: soft = mellow tone, hard = bright percussive attack."),
                 onChange: {}
             )
             sliderRow(
@@ -299,6 +491,7 @@ struct SoundSettingsView: View {
                 range: 0...1,
                 leftLabel: String(localized: "Dry"),
                 rightLabel: String(localized: "Rich"),
+                tooltip: String(localized: "Sustain pedal resonance: simulates sympathetic string vibration."),
                 onChange: {}
             )
             Picker(String(localized: "Lid Position"), selection: Binding(
@@ -310,6 +503,7 @@ struct SoundSettingsView: View {
                 Text(String(localized: "Full Open")).tag(2)
             }
             .pickerStyle(.segmented)
+            .help(String(localized: "Grand piano lid position affects brightness and projection."))
 
         case .strings:
             sliderRow(
@@ -322,6 +516,7 @@ struct SoundSettingsView: View {
                 range: 0...1,
                 leftLabel: String(localized: "Slow"),
                 rightLabel: String(localized: "Fast"),
+                tooltip: String(localized: "Vibrato oscillation speed: slow = expressive, fast = tense."),
                 onChange: {}
             )
             sliderRow(
@@ -334,6 +529,7 @@ struct SoundSettingsView: View {
                 range: 0...1,
                 leftLabel: String(localized: "Subtle"),
                 rightLabel: String(localized: "Wide"),
+                tooltip: String(localized: "Vibrato pitch deviation: subtle = barely noticeable, wide = dramatic."),
                 onChange: {}
             )
             Picker(String(localized: "Bow Type"), selection: Binding(
@@ -344,6 +540,7 @@ struct SoundSettingsView: View {
                 Text(String(localized: "Baroque")).tag(1)
             }
             .pickerStyle(.segmented)
+            .help(String(localized: "Bow style: standard (modern) or baroque (lighter, more articulate)."))
 
         case .woodwinds:
             sliderRow(
@@ -356,6 +553,7 @@ struct SoundSettingsView: View {
                 range: 0...1,
                 leftLabel: String(localized: "Less"),
                 rightLabel: String(localized: "More"),
+                tooltip: String(localized: "Breath intensity: affects fullness and presence of the wind sound."),
                 onChange: {}
             )
             sliderRow(
@@ -368,6 +566,7 @@ struct SoundSettingsView: View {
                 range: 0...1,
                 leftLabel: String(localized: "Dark"),
                 rightLabel: String(localized: "Bright"),
+                tooltip: String(localized: "Tonal quality: dark = hollow sound, bright = focused projection."),
                 onChange: {}
             )
 
@@ -383,6 +582,7 @@ struct SoundSettingsView: View {
                 Text(String(localized: "Plunger")).tag(4)
             }
             .pickerStyle(.menu)
+            .help(String(localized: "Brass mute: Open = full sound, Straight = nasal, Cup = muted, Harmon = wah-wah, Plunger = comic."))
 
             sliderRow(
                 label: String(localized: "Tone Brightness"),
@@ -394,6 +594,7 @@ struct SoundSettingsView: View {
                 range: 0...1,
                 leftLabel: String(localized: "Mellow"),
                 rightLabel: String(localized: "Brilliant"),
+                tooltip: String(localized: "Embouchure brightness: mellow = relaxed, brilliant = punchy."),
                 onChange: {}
             )
 
@@ -409,6 +610,7 @@ struct SoundSettingsView: View {
                 Text("U (oo)").tag(4)
             }
             .pickerStyle(.segmented)
+            .help(String(localized: "Sung vowel: affects the timbre and openness of the vocal sound."))
 
             sliderRow(
                 label: String(localized: "Ensemble Width"),
@@ -420,6 +622,7 @@ struct SoundSettingsView: View {
                 range: 0...1,
                 leftLabel: String(localized: "Solo"),
                 rightLabel: String(localized: "Section"),
+                tooltip: String(localized: "Ensemble size: Solo = single voice, Section = choir of 20+ voices."),
                 onChange: {}
             )
 
@@ -433,6 +636,7 @@ struct SoundSettingsView: View {
                 Text(String(localized: "Mallets")).tag(2)
             }
             .pickerStyle(.segmented)
+            .help(String(localized: "Strike implement: Sticks = standard, Brushes = jazz, Mallets = orchestral."))
 
             sliderRow(
                 label: String(localized: "Dampening"),
@@ -444,6 +648,7 @@ struct SoundSettingsView: View {
                 range: 0.01...2.0,
                 leftLabel: String(localized: "Tight"),
                 rightLabel: String(localized: "Ring"),
+                tooltip: String(localized: "Dampening: Tight = muted immediately, Ring = natural resonance."),
                 onChange: {}
             )
         }
@@ -472,6 +677,9 @@ struct SoundSettingsView: View {
                     HStack {
                         Text(sf.name)
                         Spacer()
+                        Text(sf.fileSizeString)
+                            .font(.caption2)
+                            .foregroundStyle(.tertiary)
                         sourceLabel(sf.source)
                         if sf == soundFontManager.activeSoundFont {
                             Image(systemName: "checkmark").foregroundColor(.accentColor)
@@ -497,6 +705,7 @@ struct SoundSettingsView: View {
             } label: {
                 Label(String(localized: "Import SoundFont"), systemImage: "square.and.arrow.down")
             }
+            .help(String(localized: "Import a .sf2 SoundFont file from Files app. Quality SF2 files are 10-30 MB."))
             .sheet(isPresented: $showSF2Picker) {
                 SoundFontDocumentPicker { url in
                     do {
@@ -532,6 +741,7 @@ struct SoundSettingsView: View {
         range: ClosedRange<Float>,
         leftLabel: String? = nil,
         rightLabel: String? = nil,
+        tooltip: String? = nil,
         onChange: @escaping () -> Void
     ) -> some View {
         VStack(alignment: .leading, spacing: 4) {
@@ -558,6 +768,7 @@ struct SoundSettingsView: View {
                 }
             }
         }
+        .help(tooltip ?? label)
     }
 
     private func sourceLabel(_ source: SoundFontManager.SoundFontSource) -> some View {
@@ -585,8 +796,6 @@ struct SoundSettingsView: View {
         }
     }
 }
-
-// InstrumentGroup already conforms to RawRepresentable via String raw type in Instrument.swift
 
 // MARK: - SoundFont Document Picker
 

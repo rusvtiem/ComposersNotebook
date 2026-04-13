@@ -108,7 +108,7 @@ class MIDIExporter {
         events.append((delta: 0, bytes: [0xFF, 0x03] + variableLength(nameBytes.count) + nameBytes))
 
         // Program change
-        events.append((delta: 0, bytes: [0xC0 | channel, UInt8(part.instrument.midiProgram)]))
+        events.append((delta: 0, bytes: [0xC0 | channel, UInt8(part.effectiveMidiProgram)]))
 
         var currentTick = 0
         var pendingNoteOffs: [(tick: Int, note: UInt8)] = []

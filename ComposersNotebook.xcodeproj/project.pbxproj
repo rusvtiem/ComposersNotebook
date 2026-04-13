@@ -12,6 +12,7 @@
 		1A8EBDA6B0D57D1D765DB808 /* MusicElements.swift in Sources */ = {isa = PBXBuildFile; fileRef = 41CC1828389F747C1307D5D9 /* MusicElements.swift */; };
 		1AEEF7BF0A66A7A3C3149A96 /* PluginManager.swift in Sources */ = {isa = PBXBuildFile; fileRef = C332283252D17AF92A4994C9 /* PluginManager.swift */; };
 		1F478093720BE42701AA1F6A /* SoundSettingsView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1BCFB51C3587D8D0E6748278 /* SoundSettingsView.swift */; };
+		20C50B0E3371BEA825D859FA /* MusicTerms.xcstrings in Resources */ = {isa = PBXBuildFile; fileRef = B4EF73134ACBD30DB13973BD /* MusicTerms.xcstrings */; };
 		24C5D4A7B94626B08147CFF1 /* PDFExporter.swift in Sources */ = {isa = PBXBuildFile; fileRef = 093CEAAE8CBA72093B7CC246 /* PDFExporter.swift */; };
 		27953B80AB317A69E8610ED7 /* CNBFileManager.swift in Sources */ = {isa = PBXBuildFile; fileRef = 96555FF85927B90F1BE79A91 /* CNBFileManager.swift */; };
 		27BAA223C44B7FCD6845EDEA /* Measure.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1C0D6FAE077C7817273CB5E0 /* Measure.swift */; };
@@ -30,7 +31,9 @@
 		833AA40610B6F6D5D321F577 /* MetronomeEngine.swift in Sources */ = {isa = PBXBuildFile; fileRef = D88126149726E770E48A8525 /* MetronomeEngine.swift */; };
 		86C71629511E39A92B889D68 /* ScoreViewModel.swift in Sources */ = {isa = PBXBuildFile; fileRef = BDDD972C2349864CBA4F7648 /* ScoreViewModel.swift */; };
 		8A0C37E370752650D55BA831 /* Theme.swift in Sources */ = {isa = PBXBuildFile; fileRef = 190212CA34ECBD03664EF613 /* Theme.swift */; };
+		907461038486626BD35EB5C9 /* EngravingEngine.swift in Sources */ = {isa = PBXBuildFile; fileRef = 8767746B686DE77B5255977D /* EngravingEngine.swift */; };
 		91DFDF6B0CB652E9CF19B6AA /* ThemeSettingsView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 0FA214476FE1FA3A1CD758E1 /* ThemeSettingsView.swift */; };
+		9678856E6C434F7C662756C5 /* StrumPatternEditorSheet.swift in Sources */ = {isa = PBXBuildFile; fileRef = 629565F33832C6910AD12E85 /* StrumPatternEditorSheet.swift */; };
 		988157514CB4E43155945F37 /* InstrumentPickerSheet.swift in Sources */ = {isa = PBXBuildFile; fileRef = 636E287F60233C6FFEB3EC34 /* InstrumentPickerSheet.swift */; };
 		A5C447F0166BC8776D4598C2 /* NoteToolbarView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 16488F411B4EA5FB4B977057 /* NoteToolbarView.swift */; };
 		B00A65CB074EC8EFA0E665AA /* HapticManager.swift in Sources */ = {isa = PBXBuildFile; fileRef = 258B049FF3BDAE14219D42FA /* HapticManager.swift */; };
@@ -70,15 +73,18 @@
 		49AF52E54BA47DD449ED89A8 /* Bravura.otf */ = {isa = PBXFileReference; lastKnownFileType = file; path = Bravura.otf; sourceTree = "<group>"; };
 		5812B8630C9063C710A50762 /* MEIImporter.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = MEIImporter.swift; sourceTree = "<group>"; };
 		5E0926F59E024C74C9195BF7 /* SoundFontManager.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SoundFontManager.swift; sourceTree = "<group>"; };
+		629565F33832C6910AD12E85 /* StrumPatternEditorSheet.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = StrumPatternEditorSheet.swift; sourceTree = "<group>"; };
 		636E287F60233C6FFEB3EC34 /* InstrumentPickerSheet.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = InstrumentPickerSheet.swift; sourceTree = "<group>"; };
 		68512AB05D9BE0C4BF62EB1C /* Score.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Score.swift; sourceTree = "<group>"; };
 		6DB29E2A4F0338EE1C46AA96 /* ComposersNotebookApp.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ComposersNotebookApp.swift; sourceTree = "<group>"; };
 		7E2571DAF48F482D437CD5BF /* Part.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Part.swift; sourceTree = "<group>"; };
 		845182DDC310ED1E6DCF3268 /* ABCNotationImporter.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ABCNotationImporter.swift; sourceTree = "<group>"; };
 		8589EB828201460A07C202F3 /* Note.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Note.swift; sourceTree = "<group>"; };
+		8767746B686DE77B5255977D /* EngravingEngine.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = EngravingEngine.swift; sourceTree = "<group>"; };
 		96555FF85927B90F1BE79A91 /* CNBFileManager.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = CNBFileManager.swift; sourceTree = "<group>"; };
 		A65DF18F2909BED9D221FE36 /* ContentView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ContentView.swift; sourceTree = "<group>"; };
 		A6B17635FA7B1DC13D45F669 /* Localizable.xcstrings */ = {isa = PBXFileReference; lastKnownFileType = text.json.xcstrings; path = Localizable.xcstrings; sourceTree = "<group>"; };
+		B4EF73134ACBD30DB13973BD /* MusicTerms.xcstrings */ = {isa = PBXFileReference; lastKnownFileType = text.json.xcstrings; path = MusicTerms.xcstrings; sourceTree = "<group>"; };
 		B96876E6DC6637C53E496FFA /* MIDIFileHandler.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = MIDIFileHandler.swift; sourceTree = "<group>"; };
 		BB67B46759B5D181F577F39F /* MusicOMREngine.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = MusicOMREngine.swift; sourceTree = "<group>"; };
 		BDDD972C2349864CBA4F7648 /* ScoreViewModel.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ScoreViewModel.swift; sourceTree = "<group>"; };
@@ -161,6 +167,7 @@
 			children = (
 				49AF52E54BA47DD449ED89A8 /* Bravura.otf */,
 				A6B17635FA7B1DC13D45F669 /* Localizable.xcstrings */,
+				B4EF73134ACBD30DB13973BD /* MusicTerms.xcstrings */,
 				3597BACFD67D58C734C7E184 /* TimGM6mb.sf2 */,
 			);
 			path = Resources;
@@ -180,6 +187,7 @@
 				845182DDC310ED1E6DCF3268 /* ABCNotationImporter.swift */,
 				CD1DD96E979B249E29F0672B /* CapellaImporter.swift */,
 				96555FF85927B90F1BE79A91 /* CNBFileManager.swift */,
+				8767746B686DE77B5255977D /* EngravingEngine.swift */,
 				068C6D907B670651E82A5C6E /* ExternalMIDIReceiver.swift */,
 				FCB4B56794BAD9F955316678 /* GuitarProImporter.swift */,
 				258B049FF3BDAE14219D42FA /* HapticManager.swift */,
@@ -207,6 +215,7 @@
 				16488F411B4EA5FB4B977057 /* NoteToolbarView.swift */,
 				ED18EBF60DE96441348A72DA /* PianoKeyboardView.swift */,
 				1BCFB51C3587D8D0E6748278 /* SoundSettingsView.swift */,
+				629565F33832C6910AD12E85 /* StrumPatternEditorSheet.swift */,
 			);
 			path = Components;
 			sourceTree = "<group>";
@@ -286,6 +295,7 @@
 			files = (
 				E3E97175137C3AED59E3A557 /* Bravura.otf in Resources */,
 				EB47F76217867C2E337264A6 /* Localizable.xcstrings in Resources */,
+				20C50B0E3371BEA825D859FA /* MusicTerms.xcstrings in Resources */,
 				813DDF8F0FC1AB93799DC1E0 /* TimGM6mb.sf2 in Resources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
@@ -304,6 +314,7 @@
 				FA705DE93A1865976F671DF6 /* ContentView.swift in Sources */,
 				2D036A5632087043F8F70BC7 /* DocumentPickerView.swift in Sources */,
 				E2580C41C84115D1BB8CC857 /* Duration.swift in Sources */,
+				907461038486626BD35EB5C9 /* EngravingEngine.swift in Sources */,
 				B92B212B3BD2A945FA99C721 /* ExternalMIDIReceiver.swift in Sources */,
 				D94B51B04E087D92A8F2B211 /* GuitarProImporter.swift in Sources */,
 				B00A65CB074EC8EFA0E665AA /* HapticManager.swift in Sources */,
@@ -333,6 +344,7 @@
 				CBD7CC61B245383EF27697B6 /* SoundFontManager.swift in Sources */,
 				1F478093720BE42701AA1F6A /* SoundSettingsView.swift in Sources */,
 				363073B08EC5297E80C8338F /* StaffAreaView.swift in Sources */,
+				9678856E6C434F7C662756C5 /* StrumPatternEditorSheet.swift in Sources */,
 				8A0C37E370752650D55BA831 /* Theme.swift in Sources */,
 				91DFDF6B0CB652E9CF19B6AA /* ThemeSettingsView.swift in Sources */,
 			);

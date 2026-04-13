@@ -34,6 +34,20 @@ enum InstrumentGroup: String, Codable, CaseIterable {
     }
 }
 
+// MARK: - Voice Type (Sections vs Soloists)
+
+enum VoiceType: String, Codable, CaseIterable {
+    case section
+    case solo
+
+    var displayName: String {
+        switch self {
+        case .section: return "Секция"
+        case .solo: return "Солист"
+        }
+    }
+}
+
 // MARK: - Instrument
 
 struct Instrument: Codable, Equatable, Identifiable {
@@ -45,6 +59,7 @@ struct Instrument: Codable, Equatable, Identifiable {
     var staves: Int             // 1 = single staff, 2 = grand staff (piano, organ)
     var clefs: [Clef]           // clef per staff: [treble] or [treble, bass]
     var midiProgram: Int        // General MIDI program number (0-127)
+    var midiProgramSolo: Int?   // Solo variant MIDI program (nil = same as section)
     var lowestNote: Pitch       // нижняя граница диапазона
     var highestNote: Pitch      // верхняя граница диапазона
     var transposition: Int      // semitones (0 = concert pitch, e.g. Bb clarinet = -2)
@@ -55,6 +70,7 @@ struct Instrument: Codable, Equatable, Identifiable {
         group: InstrumentGroup,
         defaultClef: Clef,
         midiProgram: Int,
+        midiProgramSolo: Int? = nil,
         lowestNote: Pitch,
         highestNote: Pitch,
         transposition: Int = 0,
@@ -69,9 +85,17 @@ struct Instrument: Codable, Equatable, Identifiable {
         self.staves = staves
         self.clefs = clefs ?? [defaultClef]
         self.midiProgram = midiProgram
+        self.midiProgramSolo = midiProgramSolo
         self.lowestNote = lowestNote
         self.highestNote = highestNote
         self.transposition = transposition
+    }
+
+    func effectiveMidiProgram(for voiceType: VoiceType) -> Int {
+        switch voiceType {
+        case .section: return midiProgram
+        case .solo: return midiProgramSolo ?? midiProgram
+        }
     }
 
     /// Check if a pitch is within the instrument's range
@@ -208,28 +232,28 @@ extension Instrument {
 
     static let violin = Instrument(
         name: "Скрипка", shortName: "Скр.",
-        group: .strings, defaultClef: .treble, midiProgram: 40,
+        group: .strings, defaultClef: .treble, midiProgram: 48, midiProgramSolo: 40,
         lowestNote: Pitch(name: .G, octave: 3),
         highestNote: Pitch(name: .A, octave: 7)
     )
 
     static let viola = Instrument(
         name: "Альт", shortName: "Альт",
-        group: .strings, defaultClef: .alto, midiProgram: 41,
+        group: .strings, defaultClef: .alto, midiProgram: 48, midiProgramSolo: 41,
         lowestNote: Pitch(name: .C, octave: 3),
         highestNote: Pitch(name: .E, octave: 6)
     )
 
     static let cello = Instrument(
         name: "Виолончель", shortName: "Влч.",
-        group: .strings, defaultClef: .bass, midiProgram: 42,
+        group: .strings, defaultClef: .bass, midiProgram: 48, midiProgramSolo: 42,
         lowestNote: Pitch(name: .C, octave: 2),
         highestNote: Pitch(name: .C, octave: 6)
     )
 
     static let doubleBass = Instrument(
         name: "Контрабас", shortName: "Кб.",
-        group: .strings, defaultClef: .bass, midiProgram: 43,
+        group: .strings, defaultClef: .bass, midiProgram: 48, midiProgramSolo: 43,
         lowestNote: Pitch(name: .E, octave: 1),
         highestNote: Pitch(name: .C, octave: 5),
         transposition: -12
@@ -289,28 +313,28 @@ extension Instrument {
 
     static let soprano = Instrument(
         name: "Сопрано", shortName: "С.",
-        group: .voices, defaultClef: .treble, midiProgram: 52,
+        group: .voices, defaultClef: .treble, midiProgram: 52, midiProgramSolo: 53,
         lowestNote: Pitch(name: .C, octave: 4),
         highestNote: Pitch(name: .C, octave: 6)
     )
 
     static let alto = Instrument(
         name: "Контральто", shortName: "А.",
-        group: .voices, defaultClef: .treble, midiProgram: 52,
+        group: .voices, defaultClef: .treble, midiProgram: 52, midiProgramSolo: 53,
         lowestNote: Pitch(name: .F, octave: 3),
         highestNote: Pitch(name: .F, octave: 5)
     )
 
     static let tenorVoice = Instrument(
         name: "Тенор", shortName: "Т.",
-        group: .voices, defaultClef: .treble, midiProgram: 52,
+        group: .voices, defaultClef: .treble, midiProgram: 52, midiProgramSolo: 53,
         lowestNote: Pitch(name: .C, octave: 3),
         highestNote: Pitch(name: .C, octave: 5)
     )
 
     static let bassVoice = Instrument(
         name: "Бас", shortName: "Б.",
-        group: .voices, defaultClef: .bass, midiProgram: 52,
+        group: .voices, defaultClef: .bass, midiProgram: 52, midiProgramSolo: 53,
         lowestNote: Pitch(name: .E, octave: 2),
         highestNote: Pitch(name: .E, octave: 4)
     )
