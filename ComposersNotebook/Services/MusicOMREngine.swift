@@ -1,12 +1,22 @@
 import Foundation
 import UIKit
-import CoreML
-import Vision
 
-// MARK: - Music OMR Engine
-// Optical Music Recognition — распознавание нот из PDF/изображений через Core ML + Vision
-// Phase 1: Image preprocessing + staff line detection + basic symbol recognition
-// Phase 2: Full Core ML model (requires trained model file)
+// MARK: - Music OMR Engine (no ML / no Vision / no CoreML)
+//
+// Optical Music Recognition — распознавание нот из PDF/изображений.
+// Полностью на пиксельной эвристике: render PDF → grayscale threshold →
+// horizontal projection для staff lines → connected components для noteheads →
+// геометрия для pitch определения.
+//
+// Никаких внешних ML / нейросетей / Apple Vision / Apple CoreML.
+// Ограничение: качество ниже чем у обученной ML модели; длительности
+// упрощённо (по плотности нот в системе). Импорт PDF остаётся как функция,
+// но результат — отправная точка для ручной правки в редакторе.
+//
+// Failure modes: PDF без чёткого нотного стана → noMusicDetected.
+//                Сильно скошенные сканы → пропуск систем.
+// Detect: пользователь видит мало нот после импорта.
+// Recover: ручной ввод поверх импортированной заготовки.
 
 class MusicOMREngine {
 
@@ -14,85 +24,79 @@ class MusicOMREngine {
         case imageLoadFailed
         case processingFailed(String)
         case noMusicDetected
-        case modelNotAvailable
 
         var errorDescription: String? {
             switch self {
             case .imageLoadFailed: return "Не удалось загрузить изображение"
             case .processingFailed(let msg): return "Ошибка OMR: \(msg)"
             case .noMusicDetected: return "Нотная запись не обнаружена"
-            case .modelNotAvailable: return "ML модель для OMR не найдена"
             }
         }
     }
 
     // MARK: - Public API
 
-    /// Recognize music from a PDF file
+    /// Импорт PDF — рендер всех страниц + поиск нот
     static func recognizeFromPDF(at url: URL) throws -> Score {
         let images = try renderPDFToImages(url: url)
         guard !images.isEmpty else { throw OMRError.imageLoadFailed }
 
-        var allEvents: [[NoteEvent]] = [] // events per page
-
+        var allEvents: [[NoteEvent]] = []
         for image in images {
-            let pageEvents = try recognizeFromImage(image)
+            let pageEvents = (try? recognizeFromImage(image)) ?? []
             allEvents.append(pageEvents)
         }
-
         return buildScore(from: allEvents)
     }
 
-    /// Recognize music from a single image
+    /// Распознавание из одного изображения
     static func recognizeFromImage(_ image: UIImage) throws -> [NoteEvent] {
         guard let cgImage = image.cgImage else { throw OMRError.imageLoadFailed }
-
-        // Step 1: Detect staff lines using Vision
-        let staffRegions = try detectStaffRegions(in: cgImage)
-        guard !staffRegions.isEmpty else { throw OMRError.noMusicDetected }
-
-        // Step 2: For each staff region, detect music symbols
-        var events: [NoteEvent] = []
-        for region in staffRegions {
-            let regionEvents = try recognizeSymbols(in: cgImage, region: region)
-            events.append(contentsOf: regionEvents)
+        guard let buffer = PixelBuffer(cgImage: cgImage) else {
+            throw OMRError.processingFailed("Не удалось прочитать пиксели")
         }
 
+        let systems = detectStaffSystems(in: buffer)
+        guard !systems.isEmpty else { throw OMRError.noMusicDetected }
+
+        var events: [NoteEvent] = []
+        for system in systems {
+            let heads = extractNoteHeads(in: buffer, system: system)
+            let systemEvents = convertToNoteEvents(heads: heads, system: system)
+            events.append(contentsOf: systemEvents)
+        }
         return events
     }
 
-    /// Import from image file URL
+    /// Импорт по URL (PDF или изображение)
     static func importFile(at url: URL) throws -> Score {
         let ext = url.pathExtension.lowercased()
         if ext == "pdf" {
             return try recognizeFromPDF(at: url)
         }
-
         let data = try Data(contentsOf: url)
         guard let image = UIImage(data: data) else { throw OMRError.imageLoadFailed }
         let events = try recognizeFromImage(image)
         return buildScore(from: [events])
     }
 
-    // MARK: - PDF Rendering
+    // MARK: - PDF Rendering (CGPDFDocument, no ML)
 
-    private static func renderPDFToImages(url: URL, dpi: CGFloat = 300) throws -> [UIImage] {
+    private static func renderPDFToImages(url: URL, dpi: CGFloat = 200) throws -> [UIImage] {
         guard let document = CGPDFDocument(url as CFURL) else {
             throw OMRError.imageLoadFailed
         }
 
         var images: [UIImage] = []
         let pageCount = document.numberOfPages
-
         for pageNum in 1...pageCount {
             guard let page = document.page(at: pageNum) else { continue }
             let mediaBox = page.getBoxRect(.mediaBox)
             let scale = dpi / 72.0
-
             let width = Int(mediaBox.width * scale)
             let height = Int(mediaBox.height * scale)
-
             let colorSpace = CGColorSpaceCreateDeviceRGB()
+
             guard let context = CGContext(
                 data: nil,
                 width: width,
@@ -112,206 +116,247 @@ class MusicOMREngine {
                 images.append(UIImage(cgImage: cgImage))
             }
         }
-
         return images
     }
 
-    // MARK: - Staff Line Detection (Vision Framework)
+    // MARK: - Staff System Detection (pure horizontal projection)
 
-    private struct StaffRegion {
-        var rect: CGRect       // normalized coordinates (0..1)
-        var lineCount: Int     // number of staff lines detected (should be 5)
+    /// 5 параллельных линий стана с равными промежутками
+    struct StaffSystem {
+        var lineY: [Int]
+        var leftX: Int
+        var rightX: Int
         var lineSpacing: CGFloat
+
+        var topY: Int { lineY.first ?? 0 }
+        var bottomY: Int { lineY.last ?? 0 }
     }
 
-    private static func detectStaffRegions(in image: CGImage) throws -> [StaffRegion] {
-        var regions: [StaffRegion] = []
+    /// Horizontal projection: % чёрных пикселей по каждой Y-строке.
+    /// Локальные максимумы выше порога = candidate staff lines.
+    /// Группируем по 5 с примерно равным интервалом.
+    private static func detectStaffSystems(in buffer: PixelBuffer) -> [StaffSystem] {
+        let width = buffer.width
+        let height = buffer.height
+        let darkThreshold: UInt8 = 128
 
-        // Use Vision to detect horizontal lines (staff lines)
-        let request = VNDetectRectanglesRequest()
-        request.minimumAspectRatio = 0.9  // near-horizontal
-        request.maximumAspectRatio = 1.0
-        request.minimumSize = 0.3         // at least 30% of image width
-        request.maximumObservations = 100
+        let leftMargin = width / 20
+        let rightMargin = width - width / 20
+        var rowDensity = [CGFloat](repeating: 0, count: height)
 
-        let handler = VNImageRequestHandler(cgImage: image, options: [:])
-        try handler.perform([request])
-
-        // Alternative approach: use contour detection for staff lines
-        let contourRequest = VNDetectContoursRequest()
-        contourRequest.contrastAdjustment = 1.5
-        contourRequest.maximumImageDimension = 1024
-
-        try handler.perform([contourRequest])
-
-        // Analyze detected features to find staff line groups
-        // A staff = 5 parallel horizontal lines with equal spacing
-
-        // Simplified heuristic: divide image into horizontal bands
-        // Each band that contains sufficient horizontal edge density = potential staff
-        let imageHeight = CGFloat(image.height)
-        let imageWidth = CGFloat(image.width)
-        let bandHeight: CGFloat = 0.08 // 8% of image height per staff system
-
-        var y: CGFloat = 0.05
-        while y < 0.95 {
-            let region = StaffRegion(
-                rect: CGRect(x: 0.02, y: y, width: 0.96, height: bandHeight),
-                lineCount: 5,
-                lineSpacing: bandHeight / 6.0
-            )
-            regions.append(region)
-            y += bandHeight + 0.03 // gap between systems
-            if regions.count >= 12 { break } // max 12 systems per page
+        for y in 0..<height {
+            var darkCount = 0
+            for x in leftMargin..<rightMargin {
+                if buffer.luminance(x: x, y: y) < darkThreshold {
+                    darkCount += 1
+                }
+            }
+            rowDensity[y] = CGFloat(darkCount) / CGFloat(rightMargin - leftMargin)
         }
 
-        return regions
+        let maxDensity = rowDensity.max() ?? 0
+        guard maxDensity > 0.15 else { return [] }
+        let strongThreshold: CGFloat = max(0.3, maxDensity * 0.55)
+
+        var peaks: [Int] = []
+        var y = 0
+        while y < height {
+            if rowDensity[y] >= strongThreshold {
+                var endY = y
+                while endY + 1 < height && rowDensity[endY + 1] >= strongThreshold {
+                    endY += 1
+                }
+                peaks.append((y + endY) / 2)
+                y = endY + 1
+            } else {
+                y += 1
+            }
+        }
+        guard peaks.count >= 5 else { return [] }
+
+        var systems: [StaffSystem] = []
+        var i = 0
+        while i + 4 < peaks.count {
+            let group = Array(peaks[i...i+4])
+            let intervals = zip(group.dropFirst(), group.dropLast()).map { $0 - $1 }
+            let avg = CGFloat(intervals.reduce(0, +)) / CGFloat(intervals.count)
+            let isEvenlySpaced = intervals.allSatisfy { interval in
+                abs(CGFloat(interval) - avg) <= avg * 0.35
+            }
+            if isEvenlySpaced && avg >= 3 && avg <= CGFloat(height) / 10 {
+                systems.append(StaffSystem(
+                    lineY: group,
+                    leftX: leftMargin,
+                    rightX: rightMargin,
+                    lineSpacing: avg
+                ))
+                i += 5
+            } else {
+                i += 1
+            }
+        }
+        return systems
     }
 
-    // MARK: - Symbol Recognition
+    // MARK: - Note Head Extraction (Connected Components Labeling, no ML)
 
-    private static func recognizeSymbols(in image: CGImage, region: StaffRegion) throws -> [NoteEvent] {
-        // Phase 1: Heuristic-based recognition using Vision text/shape detection
-        // Phase 2: Will use trained Core ML model for accurate recognition
+    struct NoteHead {
+        var x: Int
+        var y: Int
+        var width: Int
+        var height: Int
+        var pixelCount: Int
 
-        var events: [NoteEvent] = []
-
-        // Use Vision to detect text (for dynamics, tempo markings, etc.)
-        let textRequest = VNRecognizeTextRequest()
-        textRequest.recognitionLevel = .accurate
-        textRequest.recognitionLanguages = ["en"]
-
-        // Crop image to region
-        let x = Int(region.rect.minX * CGFloat(image.width))
-        let y = Int(region.rect.minY * CGFloat(image.height))
-        let w = Int(region.rect.width * CGFloat(image.width))
-        let h = Int(region.rect.height * CGFloat(image.height))
-
-        guard let croppedImage = image.cropping(to: CGRect(x: x, y: y, width: w, height: h)) else {
-            return events
-        }
-
-        let handler = VNImageRequestHandler(cgImage: croppedImage, options: [:])
-
-        // Detect shapes that could be noteheads
-        let featurePrintRequest = VNGenerateImageFeaturePrintRequest()
-        try? handler.perform([featurePrintRequest, textRequest])
-
-        // Basic heuristic: estimate number of notes based on region width
-        // This is a placeholder until proper ML model is integrated
-        let estimatedNotesPerSystem = 8
-        let defaultDuration = Duration(value: .quarter)
-
-        for noteIdx in 0..<estimatedNotesPerSystem {
-            // Estimate pitch based on vertical position within staff
-            // Middle line = B4 (treble clef)
-            let pitchNames: [PitchName] = [.C, .D, .E, .F, .G, .A, .B]
-            let pitchIdx = noteIdx % 7
-            let octave = 4 + (noteIdx / 7)
-
-            let pitch = Pitch(name: pitchNames[pitchIdx], octave: octave)
-            let event = NoteEvent(type: .note(pitch: pitch), duration: defaultDuration)
-            events.append(event)
-        }
-
-        return events
+        var centerX: CGFloat { CGFloat(x) + CGFloat(width) / 2 }
+        var centerY: CGFloat { CGFloat(y) + CGFloat(height) / 2 }
     }
 
-    // MARK: - Core ML Model Integration
+    private static func extractNoteHeads(in buffer: PixelBuffer, system: StaffSystem) -> [NoteHead] {
+        let spacing = system.lineSpacing
+        let searchTop = max(0, system.topY - Int(spacing * 4))
+        let searchBottom = min(buffer.height - 1, system.bottomY + Int(spacing * 4))
+        let searchLeft = system.leftX
+        let searchRight = system.rightX
 
-    /// Load and use a trained OMR Core ML model
-    /// Model file should be added to the app bundle as MusicOMR.mlmodelc
-    private static func recognizeWithCoreML(image: CGImage, region: StaffRegion) throws -> [NoteEvent] {
-        // Check if model exists in bundle
-        guard let modelURL = Bundle.main.url(forResource: "MusicOMR", withExtension: "mlmodelc") else {
-            throw OMRError.modelNotAvailable
-        }
+        let regionWidth = searchRight - searchLeft + 1
+        let regionHeight = searchBottom - searchTop + 1
+        guard regionWidth > 0, regionHeight > 0 else { return [] }
 
-        let config = MLModelConfiguration()
-        config.computeUnits = .cpuAndNeuralEngine
-
-        let model = try MLModel(contentsOf: modelURL, configuration: config)
-
-        // Create Vision request with Core ML model
-        let vnModel = try VNCoreMLModel(for: model)
-        let request = VNCoreMLRequest(model: vnModel)
-        request.imageCropAndScaleOption = .scaleFill
-
-        let handler = VNImageRequestHandler(cgImage: image, options: [:])
-        try handler.perform([request])
-
-        guard let results = request.results as? [VNClassificationObservation] else {
-            return []
-        }
-
-        // Convert ML predictions to note events
-        return results.compactMap { observation -> NoteEvent? in
-            // Expected label format: "note_C4_quarter", "rest_half", "chord_CEG_eighth"
-            parseMLPrediction(observation.identifier, confidence: observation.confidence)
-        }
-    }
-
-    private static func parseMLPrediction(_ label: String, confidence: Float) -> NoteEvent? {
-        guard confidence > 0.5 else { return nil }
-
-        let parts = label.split(separator: "_")
-        guard !parts.isEmpty else { return nil }
-
-        let type = String(parts[0])
-
-        if type == "rest" {
-            let durStr = parts.count > 1 ? String(parts[1]) : "quarter"
-            let dur = parseDurationName(durStr)
-            return NoteEvent.rest(duration: dur)
-        }
-
-        if type == "note" && parts.count >= 3 {
-            let pitchStr = String(parts[1])
-            let durStr = String(parts[2])
-            if let pitch = parsePitchString(pitchStr) {
-                return NoteEvent(type: .note(pitch: pitch), duration: parseDurationName(durStr))
+        // 1. Бинаризация в локальный буфер
+        var binary = [Bool](repeating: false, count: regionWidth * regionHeight)
+        let darkThreshold: UInt8 = 110
+        for ry in 0..<regionHeight {
+            let absY = searchTop + ry
+            for rx in 0..<regionWidth {
+                let absX = searchLeft + rx
+                if buffer.luminance(x: absX, y: absY) < darkThreshold {
+                    binary[ry * regionWidth + rx] = true
+                }
             }
         }
 
-        return nil
-    }
-
-    private static func parsePitchString(_ str: String) -> Pitch? {
-        guard !str.isEmpty else { return nil }
-        var s = str
-
-        let noteLetter = String(s.removeFirst())
-        var accidental: Accidental = .natural
-        if s.first == "#" { accidental = .sharp; s.removeFirst() }
-        else if s.first == "b" && s.count > 1 { accidental = .flat; s.removeFirst() }
-
-        let octave = Int(s) ?? 4
-
-        let name: PitchName
-        switch noteLetter {
-        case "C": name = .C
-        case "D": name = .D
-        case "E": name = .E
-        case "F": name = .F
-        case "G": name = .G
-        case "A": name = .A
-        case "B": name = .B
-        default: return nil
+        // 2. Стираем staff lines — чтобы не "соединять" соседние ноты
+        for absLineY in system.lineY {
+            let ry = absLineY - searchTop
+            guard ry >= 0 && ry < regionHeight else { continue }
+            for offset in -1...1 {
+                let yy = ry + offset
+                guard yy >= 0 && yy < regionHeight else { continue }
+                for rx in 0..<regionWidth {
+                    // удаляем только если в колонке мало чёрного (= это staff line, не штиль)
+                    let yStart = max(0, yy-2)
+                    let yEnd = min(regionHeight-1, yy+2)
+                    var columnDark = 0
+                    for y2 in yStart...yEnd {
+                        if binary[y2 * regionWidth + rx] { columnDark += 1 }
+                    }
+                    if columnDark <= 3 {
+                        binary[yy * regionWidth + rx] = false
+                    }
+                }
+            }
         }
 
-        return Pitch(name: name, octave: octave, accidental: accidental)
+        // 3. Connected Components Labeling — BFS flood fill
+        var visited = [Bool](repeating: false, count: binary.count)
+        var heads: [NoteHead] = []
+
+        let minBlobPixels = Int(spacing * spacing * 0.3)
+        let maxBlobPixels = Int(spacing * spacing * 3.0)
+        let minBlobWidth = Int(spacing * 0.6)
+        let maxBlobWidth = Int(spacing * 2.2)
+        let minBlobHeight = Int(spacing * 0.5)
+        let maxBlobHeight = Int(spacing * 1.8)
+
+        for startY in 0..<regionHeight {
+            for startX in 0..<regionWidth {
+                let idx0 = startY * regionWidth + startX
+                if visited[idx0] || !binary[idx0] { continue }
+
+                var queue: [(Int, Int)] = [(startX, startY)]
+                var minX = startX, maxX = startX
+                var minY = startY, maxY = startY
+                var pixelCount = 0
+                visited[idx0] = true
+
+                while let (cx, cy) = queue.popLast() {
+                    pixelCount += 1
+                    if cx < minX { minX = cx }
+                    if cx > maxX { maxX = cx }
+                    if cy < minY { minY = cy }
+                    if cy > maxY { maxY = cy }
+
+                    for (dx, dy) in [(-1, 0), (1, 0), (0, -1), (0, 1)] {
+                        let nx = cx + dx
+                        let ny = cy + dy
+                        guard nx >= 0 && nx < regionWidth && ny >= 0 && ny < regionHeight else { continue }
+                        let nidx = ny * regionWidth + nx
+                        if !visited[nidx] && binary[nidx] {
+                            visited[nidx] = true
+                            queue.append((nx, ny))
+                        }
+                    }
+                    if pixelCount > maxBlobPixels * 2 { break }
+                }
+
+                let bw = maxX - minX + 1
+                let bh = maxY - minY + 1
+                if pixelCount >= minBlobPixels && pixelCount <= maxBlobPixels &&
+                   bw >= minBlobWidth && bw <= maxBlobWidth &&
+                   bh >= minBlobHeight && bh <= maxBlobHeight {
+                    let absX = searchLeft + minX
+                    let absY = searchTop + minY
+                    heads.append(NoteHead(
+                        x: absX, y: absY,
+                        width: bw, height: bh,
+                        pixelCount: pixelCount
+                    ))
+                }
+            }
+        }
+
+        heads.sort { $0.centerX < $1.centerX }
+
+        // Слияние очень близких голов (артефакты бинаризации)
+        var merged: [NoteHead] = []
+        let mergeRadius = spacing * 0.4
+        for h in heads {
+            if let last = merged.last,
+               abs(h.centerX - last.centerX) < mergeRadius,
+               abs(h.centerY - last.centerY) < mergeRadius {
+                continue
+            }
+            merged.append(h)
+        }
+        return merged
     }
 
-    private static func parseDurationName(_ name: String) -> Duration {
-        switch name {
-        case "whole": return Duration(value: .whole)
-        case "half": return Duration(value: .half)
-        case "quarter": return Duration(value: .quarter)
-        case "eighth": return Duration(value: .eighth)
-        case "sixteenth": return Duration(value: .sixteenth)
-        case "thirtysecond": return Duration(value: .thirtySecond)
-        default: return Duration(value: .quarter)
+    // MARK: - Pitch Conversion (treble clef heuristic, no ML)
+
+    private static func convertToNoteEvents(heads: [NoteHead], system: StaffSystem) -> [NoteEvent] {
+        var events: [NoteEvent] = []
+        let spacing = system.lineSpacing
+        let halfStep = spacing / 2.0
+
+        // Middle line (3-я, index 2) = B4 на treble клефе
+        let middleLineDiatonic = 6 // B4 = C(0)+D(1)+E(2)+F(3)+G(4)+A(5)+B(6)
+        let middleLineY = CGFloat(system.lineY[2])
+
+        for head in heads {
+            let dy = (middleLineY - head.centerY) / halfStep
+            let stepsFromMiddle = Int(dy.rounded())
+            let diatonicStep = middleLineDiatonic + stepsFromMiddle
+
+            let octave = 4 + (diatonicStep / 7)
+            let stepInOctave = ((diatonicStep % 7) + 7) % 7
+
+            let names: [PitchName] = [.C, .D, .E, .F, .G, .A, .B]
+            let name = names[stepInOctave]
+
+            let pitch = Pitch(name: name, octave: octave, accidental: .natural)
+            events.append(NoteEvent(type: .note(pitch: pitch), duration: Duration(value: .quarter)))
         }
+        return events
     }
 
     // MARK: - Score Building
@@ -322,12 +367,11 @@ class MusicOMREngine {
 
         let allEvents = pageEvents.flatMap { $0 }
         guard !allEvents.isEmpty else {
-            for _ in 0..<15 { score.appendMeasure() }
+            for _ in 0..<8 { score.appendMeasure() }
             return score
         }
 
-        // Distribute into measures (4/4 time)
-        let measureCapacity = 4.0 // quarter notes
+        let measureCapacity = 4.0
         var measureEvents: [NoteEvent] = []
         var currentBeats = 0.0
         var measureIdx = 0
@@ -345,12 +389,60 @@ class MusicOMREngine {
                 currentBeats = 0.0
             }
         }
-
         if !measureEvents.isEmpty {
             while score.measureCount <= measureIdx { score.appendMeasure() }
             score.parts[0].measures[measureIdx].events = measureEvents
         }
-
         return score
+    }
+}
+
+// MARK: - Pixel Buffer (helper для эффективного доступа)
+
+/// Обёртка для доступа к RGBA8 пикселям CGImage.
+/// luminance = 0.299*R + 0.587*G + 0.114*B (Y из YCbCr).
+struct PixelBuffer {
+    let width: Int
+    let height: Int
+    private let bytes: [UInt8]
+    private let bytesPerRow: Int
+    private let bytesPerPixel: Int
+
+    init?(cgImage: CGImage) {
+        let w = cgImage.width
+        let h = cgImage.height
+        let bpr = w * 4
+        let cs = CGColorSpaceCreateDeviceRGB()
+        var raw = [UInt8](repeating: 0, count: bpr * h)
+
+        guard let ctx = raw.withUnsafeMutableBytes({ ptr -> CGContext? in
+            guard let base = ptr.baseAddress else { return nil }
+            return CGContext(
+                data: base,
+                width: w,
+                height: h,
+                bitsPerComponent: 8,
+                bytesPerRow: bpr,
+                space: cs,
+                bitmapInfo: CGImageAlphaInfo.premultipliedLast.rawValue
+            )
+        }) else { return nil }
+
+        ctx.draw(cgImage, in: CGRect(x: 0, y: 0, width: w, height: h))
+
+        self.width = w
+        self.height = h
+        self.bytes = raw
+        self.bytesPerRow = bpr
+        self.bytesPerPixel = 4
+    }
+
+    @inlinable
+    func luminance(x: Int, y: Int) -> UInt8 {
+        let offset = y * bytesPerRow + x * bytesPerPixel
+        let r = Int(bytes[offset])
+        let g = Int(bytes[offset + 1])
+        let b = Int(bytes[offset + 2])
+        return UInt8((299 * r + 587 * g + 114 * b) / 1000)
     }
 }
