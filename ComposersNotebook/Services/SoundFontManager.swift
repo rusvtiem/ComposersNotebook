@@ -173,7 +173,7 @@ class SoundFontManager: ObservableObject {
                 header[8] == 0x73 && header[9] == 0x66 && header[10] == 0x62 && header[11] == 0x6B   // sfbk
             if !isValidSF2 {
                 throw NSError(domain: "SoundFontManager", code: 1, userInfo: [
-                    NSLocalizedDescriptionKey: "Файл не является корректным SoundFont (.sf2)"
+                    NSLocalizedDescriptionKey: String(localized: "File is not a valid SoundFont (.sf2)")
                 ])
             }
         }
@@ -389,41 +389,41 @@ class SoundFontManager: ObservableObject {
             id: "general_user_gs",
             name: "GeneralUser GS 1.471",
             homepage: "https://schristiancollins.com/generaluser.php",
-            estimatedSize: "~30 МБ",
+            estimatedSize: String(localized: "~30 MB"),
             license: "CC BY 3.0",
-            summary: "Сбалансированный GM/GS банк, 259 пресетов, 11 ударных. Рекомендуется как универсальная замена встроенному TimGM6mb."
+            summary: String(localized: "Balanced GM/GS bank: 259 presets, 11 drum kits. Recommended as a universal replacement for the bundled TimGM6mb.")
         ),
         RecommendedSoundFont(
             id: "fluidr3_gm",
             name: "FluidR3 GM",
             homepage: "https://musescore.org/en/handbook/4/soundfonts",
-            estimatedSize: "~141 МБ",
+            estimatedSize: String(localized: "~141 MB"),
             license: "MIT",
-            summary: "Большой GM-банк, известный по FluidSynth/MuseScore. Лучше звучит для оркестровых партий."
+            summary: String(localized: "Large GM bank known from FluidSynth/MuseScore. Sounds better for orchestral parts.")
         ),
         RecommendedSoundFont(
             id: "musescore_general",
             name: "MuseScore_General",
             homepage: "https://musescore.org/en/handbook/4/soundfonts",
-            estimatedSize: "~208 МБ (.sf2) / 36 МБ (.sf3)",
+            estimatedSize: String(localized: "~208 MB (.sf2) / 36 MB (.sf3)"),
             license: "MIT",
-            summary: "Стандарт MuseScore. AVAudioUnitSampler понимает только .sf2 — берите 208 МБ версию, .sf3 не подойдёт."
+            summary: String(localized: "MuseScore standard. AVAudioUnitSampler accepts only .sf2 — take the 208 MB version; .sf3 will not load.")
         ),
         RecommendedSoundFont(
             id: "sonatina",
             name: "Sonatina Symphonic Orchestra",
             homepage: "https://sso.mattiaswestlund.net/",
-            estimatedSize: "~503 МБ",
+            estimatedSize: String(localized: "~503 MB"),
             license: "CC Sampling Plus 1.0",
-            summary: "Серьёзный оркестровый банк. Тяжёлый — стоит ставить только если памяти не жалко."
+            summary: String(localized: "Heavy-duty orchestral bank. Install only if memory is not a concern.")
         ),
         RecommendedSoundFont(
             id: "salamander",
             name: "Salamander Grand Piano",
             homepage: "https://sfzinstruments.github.io/pianos/salamander.html",
-            estimatedSize: "~200 МБ",
+            estimatedSize: String(localized: "~200 MB"),
             license: "CC BY 3.0",
-            summary: "Профессиональный концертный рояль (только пианино). Если основной инструмент — рояль."
+            summary: String(localized: "Professional concert grand piano (piano only). Pick this if your main instrument is grand piano.")
         ),
     ]
 }

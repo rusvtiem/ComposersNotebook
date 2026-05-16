@@ -27,9 +27,12 @@ class MusicOMREngine {
 
         var errorDescription: String? {
             switch self {
-            case .imageLoadFailed: return "Не удалось загрузить изображение"
-            case .processingFailed(let msg): return "Ошибка OMR: \(msg)"
-            case .noMusicDetected: return "Нотная запись не обнаружена"
+            case .imageLoadFailed:
+                return String(localized: "Failed to load image")
+            case .processingFailed(let msg):
+                return String(localized: "OMR error: \(msg)")
+            case .noMusicDetected:
+                return String(localized: "No music notation detected")
             }
         }
     }

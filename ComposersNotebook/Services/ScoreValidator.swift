@@ -59,7 +59,7 @@ enum ScoreValidator {
                 partIndex: partIndex,
                 measureIndex: measureIndex,
                 eventIndex: nil,
-                message: "Такт переполнен: \(String(format: "%.2f", used)) долей вместо \(String(format: "%.2f", total))"
+                message: String(localized: "Measure overflow: \(String(format: "%.2f", used)) beats instead of \(String(format: "%.2f", total))")
             ))
         }
         if used > 0 && used < total - 0.001 {
@@ -70,7 +70,7 @@ enum ScoreValidator {
                 partIndex: partIndex,
                 measureIndex: measureIndex,
                 eventIndex: nil,
-                message: "Такт не полный: \(String(format: "%.2f", used)) долей из \(String(format: "%.2f", total))"
+                message: String(localized: "Measure not full: \(String(format: "%.2f", used)) of \(String(format: "%.2f", total)) beats")
             ))
         }
 
@@ -92,7 +92,7 @@ enum ScoreValidator {
                         partIndex: partIndex,
                         measureIndex: measureIndex,
                         eventIndex: ei,
-                        message: "Нота \(p.displayString) (MIDI \(p.midiNote)) вне диапазона \(part.instrument.name): \(part.instrument.lowestNote.displayString)…\(part.instrument.highestNote.displayString)"
+                        message: String(localized: "Note \(p.displayString) (MIDI \(p.midiNote)) out of range for \(part.instrument.name): \(part.instrument.lowestNote.displayString)…\(part.instrument.highestNote.displayString)")
                     ))
                 }
             }
@@ -110,7 +110,7 @@ enum ScoreValidator {
                     partIndex: partIndex,
                     measureIndex: measureIndex,
                     eventIndex: nil,
-                    message: "Голос \(event.voice.displayName): две ноты на одной доле (\(String(format: "%.2f", beat)))"
+                    message: String(localized: "Voice \(event.voice.displayName): two notes on the same beat (\(String(format: "%.2f", beat)))")
                 ))
             }
             voiceBeats[event.voice] = existing + [beat]
@@ -127,7 +127,7 @@ enum ScoreValidator {
                     partIndex: partIndex,
                     measureIndex: measureIndex,
                     eventIndex: ei,
-                    message: "Техника \(tech.italianName) обычно неприменима к \(part.instrument.name)"
+                    message: String(localized: "Technique \(tech.italianName) is usually not applicable to \(part.instrument.name)")
                 ))
             }
         }
