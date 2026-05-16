@@ -50,6 +50,12 @@ struct EngravingEngine {
         isFirstSystem: Bool
     ) -> CGFloat {
         let z = zoomScale
+
+        // Multi-measure rest: фиксированная ширина блока, не зависит от нот.
+        if measure.multiMeasureRestCount > 0 {
+            return 90 * z
+        }
+
         var width: CGFloat = 16 * z
 
         if index == 0 && isFirstSystem {
@@ -60,7 +66,26 @@ struct EngravingEngine {
             width += 20 * z
         }
 
-        let noteCount = max(measure.events.count, 1)
+        // Дополнительное место под repeat barline / Volta bracket / Rehearsal mark
+        switch measure.barlineEnd {
+        case .repeatEnd, .repeatBoth:
+            width += 12 * z
+        case .double, .final_:
+            width += 6 * z
+        case .repeatStart:
+            width += 12 * z
+        case .regular:
+            break
+        }
+        if measure.volta != nil {
+            width += 8 * z
+        }
+        if measure.rehearsalMark != nil {
+            width += 12 * z   // не отнимаем место у нот, но даём раздуть систему
+        }
+
+        // Учёт tuplet timing через actualBeats — то же количество нот занимает
+        // фактически меньше долей. totalBeats для пропорций берём по actualBeats.
         let totalBeats = max(measure.usedBeats, timeSignature.totalBeats)
 
         let hasAccidentals = measure.events.contains { event in
@@ -76,8 +101,12 @@ struct EngravingEngine {
         let accPad: CGFloat = hasAccidentals ? 10 * z : 0
 
         for event in measure.events {
-            let proportional = CGFloat(event.duration.beats / totalBeats) * 160 * z
-            noteSpace += max(proportional, minNoteWidth + accPad)
+            let proportional = CGFloat(event.actualBeats / totalBeats) * 160 * z
+            // Tuplet ноты получают небольшой бонус по ширине (читаемость скобки).
+            let tupletBonus: CGFloat = event.tuplet != nil ? 4 * z : 0
+            // Аккордовый символ требует дополнительной высоты, но и ширину чуть больше
+            let chordBonus: CGFloat = event.chordSymbol != nil ? 6 * z : 0
+            noteSpace += max(proportional + tupletBonus + chordBonus, minNoteWidth + accPad)
         }
 
         if measure.events.isEmpty {

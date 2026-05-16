@@ -27,6 +27,7 @@
 		43A3102B35157066B5B481ED /* ScoreEditorView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 2994638C367DA9CF18556A26 /* ScoreEditorView.swift */; };
 		46DCD35DD9C81C1BF12F9D4A /* PianoKeyboardView.swift in Sources */ = {isa = PBXBuildFile; fileRef = ED18EBF60DE96441348A72DA /* PianoKeyboardView.swift */; };
 		55AC7CBDB15EF5343AB32436 /* Part.swift in Sources */ = {isa = PBXBuildFile; fileRef = 7E2571DAF48F482D437CD5BF /* Part.swift */; };
+		56E13911DEC0752358192E85 /* ScoreValidator.swift in Sources */ = {isa = PBXBuildFile; fileRef = 283B65C3125C9250B0E8AB52 /* ScoreValidator.swift */; };
 		591358A9C10D7A3284BC13DB /* Score.swift in Sources */ = {isa = PBXBuildFile; fileRef = 68512AB05D9BE0C4BF62EB1C /* Score.swift */; };
 		6C4139C1C8A3DA2A135DD3C6 /* MusicXMLExporter.swift in Sources */ = {isa = PBXBuildFile; fileRef = F180ED3F1454863D8676C257 /* MusicXMLExporter.swift */; };
 		7401A39AB70F6E84025CF54D /* MusicXMLImporter.swift in Sources */ = {isa = PBXBuildFile; fileRef = 287E43EA5C25B87FEF4570C3 /* MusicXMLImporter.swift */; };
@@ -38,6 +39,7 @@
 		91DFDF6B0CB652E9CF19B6AA /* ThemeSettingsView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 0FA214476FE1FA3A1CD758E1 /* ThemeSettingsView.swift */; };
 		9678856E6C434F7C662756C5 /* StrumPatternEditorSheet.swift in Sources */ = {isa = PBXBuildFile; fileRef = 629565F33832C6910AD12E85 /* StrumPatternEditorSheet.swift */; };
 		988157514CB4E43155945F37 /* InstrumentPickerSheet.swift in Sources */ = {isa = PBXBuildFile; fileRef = 636E287F60233C6FFEB3EC34 /* InstrumentPickerSheet.swift */; };
+		A576554D32DE2DF5AF3A6567 /* MIDIInputBinder.swift in Sources */ = {isa = PBXBuildFile; fileRef = 2DBDE34D84A6EE8ACDF2DED5 /* MIDIInputBinder.swift */; };
 		A5C447F0166BC8776D4598C2 /* NoteToolbarView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 16488F411B4EA5FB4B977057 /* NoteToolbarView.swift */; };
 		B00A65CB074EC8EFA0E665AA /* HapticManager.swift in Sources */ = {isa = PBXBuildFile; fileRef = 258B049FF3BDAE14219D42FA /* HapticManager.swift */; };
 		B92B212B3BD2A945FA99C721 /* ExternalMIDIReceiver.swift in Sources */ = {isa = PBXBuildFile; fileRef = 068C6D907B670651E82A5C6E /* ExternalMIDIReceiver.swift */; };
@@ -69,8 +71,10 @@
 		1BCFB51C3587D8D0E6748278 /* SoundSettingsView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SoundSettingsView.swift; sourceTree = "<group>"; };
 		1C0D6FAE077C7817273CB5E0 /* Measure.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Measure.swift; sourceTree = "<group>"; };
 		258B049FF3BDAE14219D42FA /* HapticManager.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = HapticManager.swift; sourceTree = "<group>"; };
+		283B65C3125C9250B0E8AB52 /* ScoreValidator.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ScoreValidator.swift; sourceTree = "<group>"; };
 		287E43EA5C25B87FEF4570C3 /* MusicXMLImporter.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = MusicXMLImporter.swift; sourceTree = "<group>"; };
 		2994638C367DA9CF18556A26 /* ScoreEditorView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ScoreEditorView.swift; sourceTree = "<group>"; };
+		2DBDE34D84A6EE8ACDF2DED5 /* MIDIInputBinder.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = MIDIInputBinder.swift; sourceTree = "<group>"; };
 		2E920D069D49DC524D2C9B3F /* MeasureText.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = MeasureText.swift; sourceTree = "<group>"; };
 		3597BACFD67D58C734C7E184 /* TimGM6mb.sf2 */ = {isa = PBXFileReference; path = TimGM6mb.sf2; sourceTree = "<group>"; };
 		416F6A4FA620714487C9D02C /* Duration.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Duration.swift; sourceTree = "<group>"; };
@@ -209,6 +213,7 @@
 				D88126149726E770E48A8525 /* MetronomeEngine.swift */,
 				1B80768D47A05D75303032ED /* MIDIEngine.swift */,
 				B96876E6DC6637C53E496FFA /* MIDIFileHandler.swift */,
+				2DBDE34D84A6EE8ACDF2DED5 /* MIDIInputBinder.swift */,
 				1612CB53F692E768A4C781C8 /* MusicFontManager.swift */,
 				BB67B46759B5D181F577F39F /* MusicOMREngine.swift */,
 				F180ED3F1454863D8676C257 /* MusicXMLExporter.swift */,
@@ -216,6 +221,7 @@
 				093CEAAE8CBA72093B7CC246 /* PDFExporter.swift */,
 				C14D67B6647B9BC7E49E7743 /* PlaybackScheduler.swift */,
 				C332283252D17AF92A4994C9 /* PluginManager.swift */,
+				283B65C3125C9250B0E8AB52 /* ScoreValidator.swift */,
 				5E0926F59E024C74C9195BF7 /* SoundFontManager.swift */,
 			);
 			path = Services;
@@ -340,6 +346,7 @@
 				D83CA4FE19B5B797B3483568 /* MEIImporter.swift in Sources */,
 				3734652E7AA0D578931FC4B8 /* MIDIEngine.swift in Sources */,
 				FA88E65596789A4B3D28E3BC /* MIDIFileHandler.swift in Sources */,
+				A576554D32DE2DF5AF3A6567 /* MIDIInputBinder.swift in Sources */,
 				27BAA223C44B7FCD6845EDEA /* Measure.swift in Sources */,
 				163A5B55C125884C2F9C5408 /* MeasureText.swift in Sources */,
 				833AA40610B6F6D5D321F577 /* MetronomeEngine.swift in Sources */,
@@ -359,6 +366,7 @@
 				1AEEF7BF0A66A7A3C3149A96 /* PluginManager.swift in Sources */,
 				591358A9C10D7A3284BC13DB /* Score.swift in Sources */,
 				43A3102B35157066B5B481ED /* ScoreEditorView.swift in Sources */,
+				56E13911DEC0752358192E85 /* ScoreValidator.swift in Sources */,
 				86C71629511E39A92B889D68 /* ScoreViewModel.swift in Sources */,
 				CBD7CC61B245383EF27697B6 /* SoundFontManager.swift in Sources */,
 				1F478093720BE42701AA1F6A /* SoundSettingsView.swift in Sources */,
