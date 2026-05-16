@@ -156,6 +156,9 @@ struct NoteEvent: Codable, Equatable, Identifiable {
     var lyric: String?               // подтекстовка (lyrics)
     var technique: PlaybackTechnique? // исполнительская техника
     var strumPattern: StrumPattern?   // паттерн боя (для гитары)
+    var tuplet: Tuplet?              // часть триоли / квинтоли / и т.д.
+    var chordSymbol: ChordSymbol?    // аккордовый символ (G7, Am, C/E)
+    var fingering: String?           // аппликатура (1-5 или гитарная)
 
     init(
         type: NoteEventType,
@@ -170,7 +173,10 @@ struct NoteEvent: Codable, Equatable, Identifiable {
         voice: VoiceLayer = .voice1,
         lyric: String? = nil,
         technique: PlaybackTechnique? = nil,
-        strumPattern: StrumPattern? = nil
+        strumPattern: StrumPattern? = nil,
+        tuplet: Tuplet? = nil,
+        chordSymbol: ChordSymbol? = nil,
+        fingering: String? = nil
     ) {
         self.id = UUID()
         self.type = type
@@ -186,6 +192,38 @@ struct NoteEvent: Codable, Equatable, Identifiable {
         self.lyric = lyric
         self.technique = technique
         self.strumPattern = strumPattern
+        self.tuplet = tuplet
+        self.chordSymbol = chordSymbol
+        self.fingering = fingering
+    }
+
+    // Backward compatibility: старые .cnb файлы без новых полей -> nil по умолчанию.
+    // Codable optional обеспечивает миграцию.
+    private enum CodingKeys: String, CodingKey {
+        case id, type, duration, articulations, dynamic, tiedToNext, slurStart, slurEnd
+        case stemDirection, showNatural, voice, lyric, technique, strumPattern
+        case tuplet, chordSymbol, fingering
+    }
+
+    init(from decoder: Decoder) throws {
+        let c = try decoder.container(keyedBy: CodingKeys.self)
+        self.id = try c.decodeIfPresent(UUID.self, forKey: .id) ?? UUID()
+        self.type = try c.decode(NoteEventType.self, forKey: .type)
+        self.duration = try c.decode(Duration.self, forKey: .duration)
+        self.articulations = try c.decodeIfPresent([Articulation].self, forKey: .articulations) ?? []
+        self.dynamic = try c.decodeIfPresent(DynamicMarking.self, forKey: .dynamic)
+        self.tiedToNext = try c.decodeIfPresent(Bool.self, forKey: .tiedToNext) ?? false
+        self.slurStart = try c.decodeIfPresent(Bool.self, forKey: .slurStart) ?? false
+        self.slurEnd = try c.decodeIfPresent(Bool.self, forKey: .slurEnd) ?? false
+        self.stemDirection = try c.decodeIfPresent(StemDirection.self, forKey: .stemDirection) ?? .auto
+        self.showNatural = try c.decodeIfPresent(Bool.self, forKey: .showNatural) ?? false
+        self.voice = try c.decodeIfPresent(VoiceLayer.self, forKey: .voice) ?? .voice1
+        self.lyric = try c.decodeIfPresent(String.self, forKey: .lyric)
+        self.technique = try c.decodeIfPresent(PlaybackTechnique.self, forKey: .technique)
+        self.strumPattern = try c.decodeIfPresent(StrumPattern.self, forKey: .strumPattern)
+        self.tuplet = try c.decodeIfPresent(Tuplet.self, forKey: .tuplet)
+        self.chordSymbol = try c.decodeIfPresent(ChordSymbol.self, forKey: .chordSymbol)
+        self.fingering = try c.decodeIfPresent(String.self, forKey: .fingering)
     }
 
     var isRest: Bool {
@@ -204,6 +242,15 @@ struct NoteEvent: Codable, Equatable, Identifiable {
     /// MIDI velocity based on dynamic marking
     var velocity: Int {
         dynamic?.velocity ?? DynamicMarking.mf.velocity
+    }
+
+    /// Фактическая длительность в долях с учётом tuplet'а.
+    /// Если ноты нет в tuplet — равна `duration.beats`.
+    /// Если в tuplet 3:2 — `duration.beats * 2/3`.
+    var actualBeats: Double {
+        let base = duration.beats
+        let multiplier = tuplet?.durationMultiplier ?? 1.0
+        return base * multiplier
     }
 
     // Convenience constructors

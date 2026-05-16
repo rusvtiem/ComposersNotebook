@@ -32,6 +32,34 @@ enum PitchName: Int, Codable, CaseIterable, Comparable {
     static func < (lhs: PitchName, rhs: PitchName) -> Bool {
         lhs.rawValue < rhs.rawValue
     }
+
+    /// Semitone offset within an octave from C (C=0, D=2, E=4, F=5, G=7, A=9, B=11).
+    /// Used by ChordSymbol, parsers, exporters.
+    var semitoneOffset: Int {
+        switch self {
+        case .C: return 0
+        case .D: return 2
+        case .E: return 4
+        case .F: return 5
+        case .G: return 7
+        case .A: return 9
+        case .B: return 11
+        }
+    }
+
+    /// Parse pitch name from "A".."G".
+    static func fromEnglishName(_ letter: String) -> PitchName? {
+        switch letter.uppercased() {
+        case "C": return .C
+        case "D": return .D
+        case "E": return .E
+        case "F": return .F
+        case "G": return .G
+        case "A": return .A
+        case "B": return .B
+        default: return nil
+        }
+    }
 }
 
 // MARK: - Accidental

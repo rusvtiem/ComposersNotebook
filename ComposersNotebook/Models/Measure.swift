@@ -13,6 +13,12 @@ struct Measure: Codable, Equatable, Identifiable {
     var navigationMark: NavigationMark?     // D.C., D.S., Fine, etc.
     var hairpins: [Hairpin]
     var volta: Volta?
+    // --- Phase 2c extensions ---
+    var octaveShifts: [OctaveShift]         // 8va/15ma spanners в пределах такта
+    var rehearsalMark: RehearsalMark?       // буквенный/числовой маркер для оркестра
+    var expressionTexts: [ExpressionText]   // espressivo, dolce, agitato и т.д.
+    var tempoChange: TempoChange?           // accel./rit. начинающийся в этом такте
+    var multiMeasureRestCount: Int          // > 0 — пауза N тактов, рисуется одним блоком
 
     init(
         events: [NoteEvent] = [],
@@ -23,7 +29,12 @@ struct Measure: Codable, Equatable, Identifiable {
         barlineEnd: BarlineType = .regular,
         navigationMark: NavigationMark? = nil,
         hairpins: [Hairpin] = [],
-        volta: Volta? = nil
+        volta: Volta? = nil,
+        octaveShifts: [OctaveShift] = [],
+        rehearsalMark: RehearsalMark? = nil,
+        expressionTexts: [ExpressionText] = [],
+        tempoChange: TempoChange? = nil,
+        multiMeasureRestCount: Int = 0
     ) {
         self.id = UUID()
         self.events = events
@@ -35,11 +46,42 @@ struct Measure: Codable, Equatable, Identifiable {
         self.navigationMark = navigationMark
         self.hairpins = hairpins
         self.volta = volta
+        self.octaveShifts = octaveShifts
+        self.rehearsalMark = rehearsalMark
+        self.expressionTexts = expressionTexts
+        self.tempoChange = tempoChange
+        self.multiMeasureRestCount = multiMeasureRestCount
     }
 
-    /// Total beats used in this measure
+    // Backward compatibility: старые .cnb файлы без новых полей.
+    private enum CodingKeys: String, CodingKey {
+        case id, events, timeSignature, keySignature, clefChange, tempoMarking
+        case barlineEnd, navigationMark, hairpins, volta
+        case octaveShifts, rehearsalMark, expressionTexts, tempoChange, multiMeasureRestCount
+    }
+
+    init(from decoder: Decoder) throws {
+        let c = try decoder.container(keyedBy: CodingKeys.self)
+        self.id = try c.decodeIfPresent(UUID.self, forKey: .id) ?? UUID()
+        self.events = try c.decodeIfPresent([NoteEvent].self, forKey: .events) ?? []
+        self.timeSignature = try c.decodeIfPresent(TimeSignature.self, forKey: .timeSignature)
+        self.keySignature = try c.decodeIfPresent(KeySignature.self, forKey: .keySignature)
+        self.clefChange = try c.decodeIfPresent(Clef.self, forKey: .clefChange)
+        self.tempoMarking = try c.decodeIfPresent(TempoMarking.self, forKey: .tempoMarking)
+        self.barlineEnd = try c.decodeIfPresent(BarlineType.self, forKey: .barlineEnd) ?? .regular
+        self.navigationMark = try c.decodeIfPresent(NavigationMark.self, forKey: .navigationMark)
+        self.hairpins = try c.decodeIfPresent([Hairpin].self, forKey: .hairpins) ?? []
+        self.volta = try c.decodeIfPresent(Volta.self, forKey: .volta)
+        self.octaveShifts = try c.decodeIfPresent([OctaveShift].self, forKey: .octaveShifts) ?? []
+        self.rehearsalMark = try c.decodeIfPresent(RehearsalMark.self, forKey: .rehearsalMark)
+        self.expressionTexts = try c.decodeIfPresent([ExpressionText].self, forKey: .expressionTexts) ?? []
+        self.tempoChange = try c.decodeIfPresent(TempoChange.self, forKey: .tempoChange)
+        self.multiMeasureRestCount = try c.decodeIfPresent(Int.self, forKey: .multiMeasureRestCount) ?? 0
+    }
+
+    /// Total beats used in this measure (учитывает tuplet'ы).
     var usedBeats: Double {
-        events.reduce(0) { $0 + $1.duration.beats }
+        events.reduce(0) { $0 + $1.actualBeats }
     }
 
     /// Check if measure is full (no more room for notes)

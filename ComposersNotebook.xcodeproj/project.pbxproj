@@ -8,6 +8,7 @@
 
 /* Begin PBXBuildFile section */
 		098029A71190BFCD796DFF6C /* MusicOMREngine.swift in Sources */ = {isa = PBXBuildFile; fileRef = BB67B46759B5D181F577F39F /* MusicOMREngine.swift */; };
+		163A5B55C125884C2F9C5408 /* MeasureText.swift in Sources */ = {isa = PBXBuildFile; fileRef = 2E920D069D49DC524D2C9B3F /* MeasureText.swift */; };
 		17F5D248B9DB58295D28573A /* ComposersNotebookApp.swift in Sources */ = {isa = PBXBuildFile; fileRef = 6DB29E2A4F0338EE1C46AA96 /* ComposersNotebookApp.swift */; };
 		1A8EBDA6B0D57D1D765DB808 /* MusicElements.swift in Sources */ = {isa = PBXBuildFile; fileRef = 41CC1828389F747C1307D5D9 /* MusicElements.swift */; };
 		1AEEF7BF0A66A7A3C3149A96 /* PluginManager.swift in Sources */ = {isa = PBXBuildFile; fileRef = C332283252D17AF92A4994C9 /* PluginManager.swift */; };
@@ -17,6 +18,7 @@
 		27953B80AB317A69E8610ED7 /* CNBFileManager.swift in Sources */ = {isa = PBXBuildFile; fileRef = 96555FF85927B90F1BE79A91 /* CNBFileManager.swift */; };
 		27BAA223C44B7FCD6845EDEA /* Measure.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1C0D6FAE077C7817273CB5E0 /* Measure.swift */; };
 		2923C55958FBA5B20C1F5067 /* CapellaImporter.swift in Sources */ = {isa = PBXBuildFile; fileRef = CD1DD96E979B249E29F0672B /* CapellaImporter.swift */; };
+		2923DF5AA7F529221194CB34 /* Tuplet.swift in Sources */ = {isa = PBXBuildFile; fileRef = D240C3418081BF2BCBDC02E8 /* Tuplet.swift */; };
 		2D036A5632087043F8F70BC7 /* DocumentPickerView.swift in Sources */ = {isa = PBXBuildFile; fileRef = E787F5BE541F1950B58DEB22 /* DocumentPickerView.swift */; };
 		363073B08EC5297E80C8338F /* StaffAreaView.swift in Sources */ = {isa = PBXBuildFile; fileRef = D49B5EBD3BC6ECABB2157696 /* StaffAreaView.swift */; };
 		3734652E7AA0D578931FC4B8 /* MIDIEngine.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1B80768D47A05D75303032ED /* MIDIEngine.swift */; };
@@ -40,6 +42,7 @@
 		B92B212B3BD2A945FA99C721 /* ExternalMIDIReceiver.swift in Sources */ = {isa = PBXBuildFile; fileRef = 068C6D907B670651E82A5C6E /* ExternalMIDIReceiver.swift */; };
 		BB881ADB87E40142AE3804C3 /* Pitch.swift in Sources */ = {isa = PBXBuildFile; fileRef = D82806EEF19B77753B5E8F85 /* Pitch.swift */; };
 		CBD7CC61B245383EF27697B6 /* SoundFontManager.swift in Sources */ = {isa = PBXBuildFile; fileRef = 5E0926F59E024C74C9195BF7 /* SoundFontManager.swift */; };
+		CE08C92988EF4608810D80F1 /* OctaveShift.swift in Sources */ = {isa = PBXBuildFile; fileRef = CF37449983CAD06A212D3231 /* OctaveShift.swift */; };
 		CEFC23B266A4FC844E1DD9F6 /* LetterInputView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 437AEBD2A108F257A1639D28 /* LetterInputView.swift */; };
 		CF0C34584979F0ADEDBD06C9 /* Note.swift in Sources */ = {isa = PBXBuildFile; fileRef = 8589EB828201460A07C202F3 /* Note.swift */; };
 		CF9CA91F7C622F016A451F9D /* ABCNotationImporter.swift in Sources */ = {isa = PBXBuildFile; fileRef = 845182DDC310ED1E6DCF3268 /* ABCNotationImporter.swift */; };
@@ -48,6 +51,7 @@
 		D94B51B04E087D92A8F2B211 /* GuitarProImporter.swift in Sources */ = {isa = PBXBuildFile; fileRef = FCB4B56794BAD9F955316678 /* GuitarProImporter.swift */; };
 		E2580C41C84115D1BB8CC857 /* Duration.swift in Sources */ = {isa = PBXBuildFile; fileRef = 416F6A4FA620714487C9D02C /* Duration.swift */; };
 		E3E97175137C3AED59E3A557 /* Bravura.otf in Resources */ = {isa = PBXBuildFile; fileRef = 49AF52E54BA47DD449ED89A8 /* Bravura.otf */; };
+		E49A1C810CB8801B28DBDCED /* ChordSymbol.swift in Sources */ = {isa = PBXBuildFile; fileRef = A79528689BF95ABCA43E9C29 /* ChordSymbol.swift */; };
 		EB47F76217867C2E337264A6 /* Localizable.xcstrings in Resources */ = {isa = PBXBuildFile; fileRef = A6B17635FA7B1DC13D45F669 /* Localizable.xcstrings */; };
 		FA705DE93A1865976F671DF6 /* ContentView.swift in Sources */ = {isa = PBXBuildFile; fileRef = A65DF18F2909BED9D221FE36 /* ContentView.swift */; };
 		FA88E65596789A4B3D28E3BC /* MIDIFileHandler.swift in Sources */ = {isa = PBXBuildFile; fileRef = B96876E6DC6637C53E496FFA /* MIDIFileHandler.swift */; };
@@ -66,6 +70,7 @@
 		258B049FF3BDAE14219D42FA /* HapticManager.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = HapticManager.swift; sourceTree = "<group>"; };
 		287E43EA5C25B87FEF4570C3 /* MusicXMLImporter.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = MusicXMLImporter.swift; sourceTree = "<group>"; };
 		2994638C367DA9CF18556A26 /* ScoreEditorView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ScoreEditorView.swift; sourceTree = "<group>"; };
+		2E920D069D49DC524D2C9B3F /* MeasureText.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = MeasureText.swift; sourceTree = "<group>"; };
 		3597BACFD67D58C734C7E184 /* TimGM6mb.sf2 */ = {isa = PBXFileReference; path = TimGM6mb.sf2; sourceTree = "<group>"; };
 		416F6A4FA620714487C9D02C /* Duration.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Duration.swift; sourceTree = "<group>"; };
 		41CC1828389F747C1307D5D9 /* MusicElements.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = MusicElements.swift; sourceTree = "<group>"; };
@@ -84,12 +89,15 @@
 		96555FF85927B90F1BE79A91 /* CNBFileManager.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = CNBFileManager.swift; sourceTree = "<group>"; };
 		A65DF18F2909BED9D221FE36 /* ContentView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ContentView.swift; sourceTree = "<group>"; };
 		A6B17635FA7B1DC13D45F669 /* Localizable.xcstrings */ = {isa = PBXFileReference; lastKnownFileType = text.json.xcstrings; path = Localizable.xcstrings; sourceTree = "<group>"; };
+		A79528689BF95ABCA43E9C29 /* ChordSymbol.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ChordSymbol.swift; sourceTree = "<group>"; };
 		B4EF73134ACBD30DB13973BD /* MusicTerms.xcstrings */ = {isa = PBXFileReference; lastKnownFileType = text.json.xcstrings; path = MusicTerms.xcstrings; sourceTree = "<group>"; };
 		B96876E6DC6637C53E496FFA /* MIDIFileHandler.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = MIDIFileHandler.swift; sourceTree = "<group>"; };
 		BB67B46759B5D181F577F39F /* MusicOMREngine.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = MusicOMREngine.swift; sourceTree = "<group>"; };
 		BDDD972C2349864CBA4F7648 /* ScoreViewModel.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ScoreViewModel.swift; sourceTree = "<group>"; };
 		C332283252D17AF92A4994C9 /* PluginManager.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = PluginManager.swift; sourceTree = "<group>"; };
 		CD1DD96E979B249E29F0672B /* CapellaImporter.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = CapellaImporter.swift; sourceTree = "<group>"; };
+		CF37449983CAD06A212D3231 /* OctaveShift.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = OctaveShift.swift; sourceTree = "<group>"; };
+		D240C3418081BF2BCBDC02E8 /* Tuplet.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Tuplet.swift; sourceTree = "<group>"; };
 		D49B5EBD3BC6ECABB2157696 /* StaffAreaView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = StaffAreaView.swift; sourceTree = "<group>"; };
 		D82806EEF19B77753B5E8F85 /* Pitch.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Pitch.swift; sourceTree = "<group>"; };
 		D88126149726E770E48A8525 /* MetronomeEngine.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = MetronomeEngine.swift; sourceTree = "<group>"; };
@@ -130,15 +138,19 @@
 		4447B4526F303E95BC8D85FA /* Models */ = {
 			isa = PBXGroup;
 			children = (
+				A79528689BF95ABCA43E9C29 /* ChordSymbol.swift */,
 				416F6A4FA620714487C9D02C /* Duration.swift */,
 				FDA522273EC144D26A43A262 /* Instrument.swift */,
 				1C0D6FAE077C7817273CB5E0 /* Measure.swift */,
+				2E920D069D49DC524D2C9B3F /* MeasureText.swift */,
 				41CC1828389F747C1307D5D9 /* MusicElements.swift */,
 				8589EB828201460A07C202F3 /* Note.swift */,
+				CF37449983CAD06A212D3231 /* OctaveShift.swift */,
 				7E2571DAF48F482D437CD5BF /* Part.swift */,
 				D82806EEF19B77753B5E8F85 /* Pitch.swift */,
 				68512AB05D9BE0C4BF62EB1C /* Score.swift */,
 				190212CA34ECBD03664EF613 /* Theme.swift */,
+				D240C3418081BF2BCBDC02E8 /* Tuplet.swift */,
 			);
 			path = Models;
 			sourceTree = "<group>";
@@ -310,6 +322,7 @@
 				CF9CA91F7C622F016A451F9D /* ABCNotationImporter.swift in Sources */,
 				27953B80AB317A69E8610ED7 /* CNBFileManager.swift in Sources */,
 				2923C55958FBA5B20C1F5067 /* CapellaImporter.swift in Sources */,
+				E49A1C810CB8801B28DBDCED /* ChordSymbol.swift in Sources */,
 				17F5D248B9DB58295D28573A /* ComposersNotebookApp.swift in Sources */,
 				FA705DE93A1865976F671DF6 /* ContentView.swift in Sources */,
 				2D036A5632087043F8F70BC7 /* DocumentPickerView.swift in Sources */,
@@ -325,6 +338,7 @@
 				3734652E7AA0D578931FC4B8 /* MIDIEngine.swift in Sources */,
 				FA88E65596789A4B3D28E3BC /* MIDIFileHandler.swift in Sources */,
 				27BAA223C44B7FCD6845EDEA /* Measure.swift in Sources */,
+				163A5B55C125884C2F9C5408 /* MeasureText.swift in Sources */,
 				833AA40610B6F6D5D321F577 /* MetronomeEngine.swift in Sources */,
 				1A8EBDA6B0D57D1D765DB808 /* MusicElements.swift in Sources */,
 				D8C547840D8B83B9B860FFD2 /* MusicFontManager.swift in Sources */,
@@ -333,6 +347,7 @@
 				7401A39AB70F6E84025CF54D /* MusicXMLImporter.swift in Sources */,
 				CF0C34584979F0ADEDBD06C9 /* Note.swift in Sources */,
 				A5C447F0166BC8776D4598C2 /* NoteToolbarView.swift in Sources */,
+				CE08C92988EF4608810D80F1 /* OctaveShift.swift in Sources */,
 				24C5D4A7B94626B08147CFF1 /* PDFExporter.swift in Sources */,
 				55AC7CBDB15EF5343AB32436 /* Part.swift in Sources */,
 				46DCD35DD9C81C1BF12F9D4A /* PianoKeyboardView.swift in Sources */,
@@ -347,6 +362,7 @@
 				9678856E6C434F7C662756C5 /* StrumPatternEditorSheet.swift in Sources */,
 				8A0C37E370752650D55BA831 /* Theme.swift in Sources */,
 				91DFDF6B0CB652E9CF19B6AA /* ThemeSettingsView.swift in Sources */,
+				2923DF5AA7F529221194CB34 /* Tuplet.swift in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
