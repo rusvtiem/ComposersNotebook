@@ -207,7 +207,61 @@ class MIDIEngine: ObservableObject {
         }
     }
 
-    // MARK: - Play Score
+    // MARK: - Play Score (expanded: repeats, voltas, D.S./D.C./Coda, tempo changes, hairpins, octave shifts, tuplets)
+
+    /// Полный плейбек партитуры через PlaybackScheduler.
+    /// Развёрнуто учитывает повторы, voltas, D.S./D.C./Coda, accel/rit,
+    /// hairpins (интерполяция velocity), octave shifts, tuplet timing.
+    func playScoreExpanded(_ score: Score) {
+        stop()
+        isPlaying = true
+
+        let plan = PlaybackScheduler.expand(score: score)
+        guard !plan.isEmpty else { isPlaying = false; return }
+
+        // Загружаем инструменты партий заранее
+        var partProgramByIndex: [Int: Int] = [:]
+        for (idx, part) in score.parts.enumerated() {
+            partProgramByIndex[idx] = part.effectiveMidiProgram
+            applySettingsForInstrument(part.instrument)
+        }
+
+        // Группируем по startBeat — все ноты с одним startBeat играем одновременно
+        playbackTask = Task { @MainActor in
+            var lastBeat: Double = 0
+            for ev in plan {
+                guard isPlaying else { break }
+
+                let beatGap = ev.startBeat - lastBeat
+                if beatGap > 0 {
+                    let secGap = beatGap * (60.0 / ev.bpmAtStart)
+                    try? await Task.sleep(for: .seconds(secGap))
+                }
+                lastBeat = ev.startBeat
+
+                // Переключаем инструмент партии если изменился
+                if let prog = partProgramByIndex[ev.partIndex] {
+                    setInstrument(midiProgram: prog)
+                }
+
+                let note = UInt8(clamping: ev.midiNote)
+                let vel = UInt8(clamping: ev.velocity)
+                sampler.startNote(note, withVelocity: vel, onChannel: 0)
+
+                let durSec = ev.durationBeats * (60.0 / ev.bpmAtStart)
+                let noteEnd = ev.tiedToNext ? nil : Task {
+                    try? await Task.sleep(for: .seconds(durSec))
+                    if !Task.isCancelled {
+                        await MainActor.run { self.sampler.stopNote(note, onChannel: 0) }
+                    }
+                }
+                _ = noteEnd
+            }
+            isPlaying = false
+        }
+    }
+
+    // MARK: - Play Score (legacy: без раскрытия повторов)
 
     func playScore(_ score: Score, fromMeasure: Int = 0) {
         stop()

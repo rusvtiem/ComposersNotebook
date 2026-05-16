@@ -10,6 +10,7 @@
 		098029A71190BFCD796DFF6C /* MusicOMREngine.swift in Sources */ = {isa = PBXBuildFile; fileRef = BB67B46759B5D181F577F39F /* MusicOMREngine.swift */; };
 		163A5B55C125884C2F9C5408 /* MeasureText.swift in Sources */ = {isa = PBXBuildFile; fileRef = 2E920D069D49DC524D2C9B3F /* MeasureText.swift */; };
 		17F5D248B9DB58295D28573A /* ComposersNotebookApp.swift in Sources */ = {isa = PBXBuildFile; fileRef = 6DB29E2A4F0338EE1C46AA96 /* ComposersNotebookApp.swift */; };
+		19FCD0B26A41002969D5CDC5 /* PlaybackScheduler.swift in Sources */ = {isa = PBXBuildFile; fileRef = C14D67B6647B9BC7E49E7743 /* PlaybackScheduler.swift */; };
 		1A8EBDA6B0D57D1D765DB808 /* MusicElements.swift in Sources */ = {isa = PBXBuildFile; fileRef = 41CC1828389F747C1307D5D9 /* MusicElements.swift */; };
 		1AEEF7BF0A66A7A3C3149A96 /* PluginManager.swift in Sources */ = {isa = PBXBuildFile; fileRef = C332283252D17AF92A4994C9 /* PluginManager.swift */; };
 		1F478093720BE42701AA1F6A /* SoundSettingsView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1BCFB51C3587D8D0E6748278 /* SoundSettingsView.swift */; };
@@ -94,6 +95,7 @@
 		B96876E6DC6637C53E496FFA /* MIDIFileHandler.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = MIDIFileHandler.swift; sourceTree = "<group>"; };
 		BB67B46759B5D181F577F39F /* MusicOMREngine.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = MusicOMREngine.swift; sourceTree = "<group>"; };
 		BDDD972C2349864CBA4F7648 /* ScoreViewModel.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ScoreViewModel.swift; sourceTree = "<group>"; };
+		C14D67B6647B9BC7E49E7743 /* PlaybackScheduler.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = PlaybackScheduler.swift; sourceTree = "<group>"; };
 		C332283252D17AF92A4994C9 /* PluginManager.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = PluginManager.swift; sourceTree = "<group>"; };
 		CD1DD96E979B249E29F0672B /* CapellaImporter.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = CapellaImporter.swift; sourceTree = "<group>"; };
 		CF37449983CAD06A212D3231 /* OctaveShift.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = OctaveShift.swift; sourceTree = "<group>"; };
@@ -212,6 +214,7 @@
 				F180ED3F1454863D8676C257 /* MusicXMLExporter.swift */,
 				287E43EA5C25B87FEF4570C3 /* MusicXMLImporter.swift */,
 				093CEAAE8CBA72093B7CC246 /* PDFExporter.swift */,
+				C14D67B6647B9BC7E49E7743 /* PlaybackScheduler.swift */,
 				C332283252D17AF92A4994C9 /* PluginManager.swift */,
 				5E0926F59E024C74C9195BF7 /* SoundFontManager.swift */,
 			);
@@ -352,6 +355,7 @@
 				55AC7CBDB15EF5343AB32436 /* Part.swift in Sources */,
 				46DCD35DD9C81C1BF12F9D4A /* PianoKeyboardView.swift in Sources */,
 				BB881ADB87E40142AE3804C3 /* Pitch.swift in Sources */,
+				19FCD0B26A41002969D5CDC5 /* PlaybackScheduler.swift in Sources */,
 				1AEEF7BF0A66A7A3C3149A96 /* PluginManager.swift in Sources */,
 				591358A9C10D7A3284BC13DB /* Score.swift in Sources */,
 				43A3102B35157066B5B481ED /* ScoreEditorView.swift in Sources */,
