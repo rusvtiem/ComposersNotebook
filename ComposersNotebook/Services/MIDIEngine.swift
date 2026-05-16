@@ -61,6 +61,21 @@ class MIDIEngine: ObservableObject {
 
         setupAudioSession()
         loadActiveSoundFont()
+        subscribeToSoundFontChanges()
+    }
+
+    /// Подписка на смену активного SoundFont (через NotificationCenter).
+    /// Когда пользователь меняет SF — sampler перезагружается на лету.
+    private func subscribeToSoundFontChanges() {
+        NotificationCenter.default.addObserver(
+            forName: .activeSoundFontDidChange,
+            object: nil,
+            queue: .main
+        ) { [weak self] _ in
+            Task { @MainActor in
+                self?.loadActiveSoundFont()
+            }
+        }
     }
 
     private func setupAudioSession() {

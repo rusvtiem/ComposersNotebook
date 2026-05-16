@@ -78,6 +78,29 @@ class SoundFontManager: ObservableObject {
     private init() {
         scanAvailableSoundFonts()
         loadSettings()
+        restoreActiveSoundFont()
+    }
+
+    // MARK: - Active SoundFont Persistence
+
+    private let activeSoundFontKey = "ComposersNotebook.activeSoundFontID"
+
+    /// Сохраняем выбор пользователя между запусками.
+    func setActiveSoundFont(_ font: SoundFontInfo?) {
+        activeSoundFont = font
+        if let id = font?.id {
+            UserDefaults.standard.set(id, forKey: activeSoundFontKey)
+        } else {
+            UserDefaults.standard.removeObject(forKey: activeSoundFontKey)
+        }
+        NotificationCenter.default.post(name: .activeSoundFontDidChange, object: nil)
+    }
+
+    private func restoreActiveSoundFont() {
+        guard let savedID = UserDefaults.standard.string(forKey: activeSoundFontKey) else { return }
+        if let found = availableSoundFonts.first(where: { $0.id == savedID }) {
+            activeSoundFont = found
+        }
     }
 
     // MARK: - SoundFont Discovery
@@ -131,7 +154,8 @@ class SoundFontManager: ObservableObject {
         return dir
     }
 
-    /// Import a user's .sf2 file (copy to app's SoundFonts directory)
+    /// Import a user's .sf2 file (copy to app's SoundFonts directory).
+    /// Validates SoundFont magic bytes ("RIFF...sfbk") before accepting.
     func importSoundFont(from sourceURL: URL) throws -> SoundFontInfo {
         let fileName = sourceURL.lastPathComponent
         let destURL = userSoundFontDirectory.appendingPathComponent(fileName)
@@ -139,6 +163,20 @@ class SoundFontManager: ObservableObject {
         // Accessing security-scoped resource
         let accessing = sourceURL.startAccessingSecurityScopedResource()
         defer { if accessing { sourceURL.stopAccessingSecurityScopedResource() } }
+
+        // Magic-byte validation: SF2 = "RIFF<size>sfbk"
+        if let handle = try? FileHandle(forReadingFrom: sourceURL) {
+            defer { try? handle.close() }
+            let header = handle.readData(ofLength: 12)
+            let isValidSF2 = header.count == 12 &&
+                header[0] == 0x52 && header[1] == 0x49 && header[2] == 0x46 && header[3] == 0x46 && // RIFF
+                header[8] == 0x73 && header[9] == 0x66 && header[10] == 0x62 && header[11] == 0x6B   // sfbk
+            if !isValidSF2 {
+                throw NSError(domain: "SoundFontManager", code: 1, userInfo: [
+                    NSLocalizedDescriptionKey: "Файл не является корректным SoundFont (.sf2)"
+                ])
+            }
+        }
 
         if FileManager.default.fileExists(atPath: destURL.path) {
             try FileManager.default.removeItem(at: destURL)
@@ -331,4 +369,69 @@ class SoundFontManager: ObservableObject {
     func isODRPackDownloaded(_ pack: ODRPack) -> Bool {
         odrDownloadedPacks.contains(pack.id)
     }
+
+    // MARK: - Recommended Free SoundFonts (no AI, no purchase)
+    //
+    // Список бесплатных SoundFont, которые можно скачать в Files
+    // и импортировать через `importSoundFont(from:)`. Никаких ИИ.
+
+    struct RecommendedSoundFont: Identifiable {
+        let id: String
+        let name: String
+        let homepage: String
+        let estimatedSize: String
+        let license: String
+        let summary: String
+    }
+
+    static let recommendedSoundFonts: [RecommendedSoundFont] = [
+        RecommendedSoundFont(
+            id: "general_user_gs",
+            name: "GeneralUser GS 1.471",
+            homepage: "https://schristiancollins.com/generaluser.php",
+            estimatedSize: "~30 МБ",
+            license: "CC BY 3.0",
+            summary: "Сбалансированный GM/GS банк, 259 пресетов, 11 ударных. Рекомендуется как универсальная замена встроенному TimGM6mb."
+        ),
+        RecommendedSoundFont(
+            id: "fluidr3_gm",
+            name: "FluidR3 GM",
+            homepage: "https://musescore.org/en/handbook/4/soundfonts",
+            estimatedSize: "~141 МБ",
+            license: "MIT",
+            summary: "Большой GM-банк, известный по FluidSynth/MuseScore. Лучше звучит для оркестровых партий."
+        ),
+        RecommendedSoundFont(
+            id: "musescore_general",
+            name: "MuseScore_General",
+            homepage: "https://musescore.org/en/handbook/4/soundfonts",
+            estimatedSize: "~208 МБ (.sf2) / 36 МБ (.sf3)",
+            license: "MIT",
+            summary: "Стандарт MuseScore. AVAudioUnitSampler понимает только .sf2 — берите 208 МБ версию, .sf3 не подойдёт."
+        ),
+        RecommendedSoundFont(
+            id: "sonatina",
+            name: "Sonatina Symphonic Orchestra",
+            homepage: "https://sso.mattiaswestlund.net/",
+            estimatedSize: "~503 МБ",
+            license: "CC Sampling Plus 1.0",
+            summary: "Серьёзный оркестровый банк. Тяжёлый — стоит ставить только если памяти не жалко."
+        ),
+        RecommendedSoundFont(
+            id: "salamander",
+            name: "Salamander Grand Piano",
+            homepage: "https://sfzinstruments.github.io/pianos/salamander.html",
+            estimatedSize: "~200 МБ",
+            license: "CC BY 3.0",
+            summary: "Профессиональный концертный рояль (только пианино). Если основной инструмент — рояль."
+        ),
+    ]
+}
+
+// MARK: - Notifications
+
+extension Notification.Name {
+    /// Постится когда `activeSoundFont` меняется (через `setActiveSoundFont`).
+    /// MIDIEngine подписывается и перезагружает sampler.
+    static let activeSoundFontDidChange = Notification.Name("ComposersNotebook.activeSoundFontDidChange")
 }
