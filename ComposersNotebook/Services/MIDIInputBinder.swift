@@ -14,10 +14,18 @@ final class MIDIInputBinder {
     private weak var viewModel: ScoreViewModel?
     private let receiver: ExternalMIDIReceiver
 
-    init(viewModel: ScoreViewModel, receiver: ExternalMIDIReceiver = .shared) {
+    init(viewModel: ScoreViewModel, receiver: ExternalMIDIReceiver) {
         self.viewModel = viewModel
         self.receiver = receiver
         attach()
+    }
+
+    /// Convenience: bind to the shared CoreMIDI receiver. Stays on MainActor
+    /// so the static `.shared` access is allowed (default-value form was
+    /// evaluated in a nonisolated context and triggered a Swift 6 warning).
+    @MainActor
+    static func bindToShared(viewModel: ScoreViewModel) -> MIDIInputBinder {
+        MIDIInputBinder(viewModel: viewModel, receiver: .shared)
     }
 
     private func attach() {

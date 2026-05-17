@@ -323,38 +323,59 @@ class SoundFontManager: ObservableObject {
         activeRequests[pack.id] = request
         odrDownloadProgress[pack.id] = 0.0
 
-        request.conditionallyBeginAccessingResources { [weak self] available in
-            Task { @MainActor in
-                guard let self else { return }
-                if available {
-                    self.odrDownloadedPacks.insert(pack.id)
-                    self.odrDownloadProgress.removeValue(forKey: pack.id)
-                    self.scanAvailableSoundFonts()
-                    return
-                }
+        // Async path avoids non-Sendable closure capture warnings that the
+        // legacy completion-handler API triggered under Swift 6 strict mode.
+        Task { @MainActor [weak self] in
+            guard let self else { return }
 
-                request.beginAccessingResources { error in
-                    Task { @MainActor in
-                        if let error {
-                            print("ODR download error: \(error)")
-                            self.odrDownloadProgress.removeValue(forKey: pack.id)
-                        } else {
-                            self.odrDownloadedPacks.insert(pack.id)
-                            self.odrDownloadProgress.removeValue(forKey: pack.id)
-                            self.scanAvailableSoundFonts()
-                        }
-                        self.activeRequests.removeValue(forKey: pack.id)
-                    }
-                }
+            if await Self.conditionallyBegin(request) {
+                self.odrDownloadedPacks.insert(pack.id)
+                self.odrDownloadProgress.removeValue(forKey: pack.id)
+                self.scanAvailableSoundFonts()
+                self.activeRequests.removeValue(forKey: pack.id)
+                return
+            }
 
-                let progress = request.progress
-                Task {
-                    while !progress.isFinished && !progress.isCancelled {
-                        try? await Task.sleep(for: .milliseconds(200))
-                        await MainActor.run {
-                            self.odrDownloadProgress[pack.id] = progress.fractionCompleted
-                        }
-                    }
+            let progress = request.progress
+            let progressTask = Task { @MainActor [weak self] in
+                while !progress.isFinished && !progress.isCancelled {
+                    try? await Task.sleep(for: .milliseconds(200))
+                    self?.odrDownloadProgress[pack.id] = progress.fractionCompleted
+                }
+            }
+
+            do {
+                try await Self.beginAccessing(request)
+                self.odrDownloadedPacks.insert(pack.id)
+                self.scanAvailableSoundFonts()
+            } catch {
+                print("ODR download error: \(error)")
+            }
+
+            progressTask.cancel()
+            self.odrDownloadProgress.removeValue(forKey: pack.id)
+            self.activeRequests.removeValue(forKey: pack.id)
+        }
+    }
+
+    /// Continuation wrapper around the completion-handler API. Confines the
+    /// non-Sendable `NSBundleResourceRequest` to this single function so the
+    /// capture warning does not propagate into the caller's task.
+    private static func conditionallyBegin(_ request: NSBundleResourceRequest) async -> Bool {
+        await withCheckedContinuation { (cont: CheckedContinuation<Bool, Never>) in
+            request.conditionallyBeginAccessingResources { available in
+                cont.resume(returning: available)
+            }
+        }
+    }
+
+    private static func beginAccessing(_ request: NSBundleResourceRequest) async throws {
+        try await withCheckedThrowingContinuation { (cont: CheckedContinuation<Void, Error>) in
+            request.beginAccessingResources { error in
+                if let error {
+                    cont.resume(throwing: error)
+                } else {
+                    cont.resume(returning: ())
                 }
             }
         }

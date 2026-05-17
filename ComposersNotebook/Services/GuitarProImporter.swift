@@ -54,16 +54,17 @@ class GuitarProImporter {
             throw GPError.parseError("Not a Guitar Pro 5 file: \(versionString)")
         }
 
-        // Title (int-prefixed string)
+        // Title (int-prefixed string). The other header fields advance offset
+        // but are not used by the minimal importer; discard their values.
         let title = try readIntString(data: data, offset: &offset)
-        let subtitle = try readIntString(data: data, offset: &offset)
-        let artist = try readIntString(data: data, offset: &offset)
-        let album = try readIntString(data: data, offset: &offset)
-        let words = try readIntString(data: data, offset: &offset)
-        let music = try readIntString(data: data, offset: &offset)
-        let copyright = try readIntString(data: data, offset: &offset)
-        let tab = try readIntString(data: data, offset: &offset)
-        let instructions = try readIntString(data: data, offset: &offset)
+        _ = try readIntString(data: data, offset: &offset) // subtitle
+        _ = try readIntString(data: data, offset: &offset) // artist
+        _ = try readIntString(data: data, offset: &offset) // album
+        _ = try readIntString(data: data, offset: &offset) // words
+        _ = try readIntString(data: data, offset: &offset) // music
+        _ = try readIntString(data: data, offset: &offset) // copyright
+        _ = try readIntString(data: data, offset: &offset) // tab
+        _ = try readIntString(data: data, offset: &offset) // instructions
 
         // Notice lines
         guard offset + 4 <= data.count else { throw GPError.invalidFile }
