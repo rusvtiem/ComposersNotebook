@@ -2750,6 +2750,246 @@
           }
         }
       }
+    },
+    "SoundFont": {
+      "localizations": {
+        "ru": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Звуковой банк"
+          }
+        }
+      }
+    },
+    "Choose which SoundFont to use for playback. Built-in fonts come with the app; you can download more from the recommended list or import your own .sf2 file.": {
+      "localizations": {
+        "ru": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Выберите звуковой банк для воспроизведения. Встроенные банки идут с приложением; дополнительные можно скачать из рекомендованного списка или импортировать свой .sf2 файл."
+          }
+        }
+      }
+    },
+    "No built-in SoundFonts found in the app bundle.": {
+      "localizations": {
+        "ru": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "В bundle приложения нет встроенных банков."
+          }
+        }
+      }
+    },
+    "Downloaded": {
+      "localizations": {
+        "ru": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Скачанные мной"
+          }
+        }
+      }
+    },
+    "Available for download": {
+      "localizations": {
+        "ru": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Доступны для скачивания"
+          }
+        }
+      }
+    },
+    "My imported": {
+      "localizations": {
+        "ru": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Импортированные мной"
+          }
+        }
+      }
+    },
+    "Import my own .sf2 file": {
+      "localizations": {
+        "ru": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Импортировать свой .sf2"
+          }
+        }
+      }
+    },
+    "Pick a .sf2 file from Files. The app validates it and copies into its own storage.": {
+      "localizations": {
+        "ru": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Выберите .sf2 файл из Files. Приложение проверит формат и скопирует в своё хранилище."
+          }
+        }
+      }
+    },
+    "Import error": {
+      "localizations": {
+        "ru": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Ошибка импорта"
+          }
+        }
+      }
+    },
+    "Open author site": {
+      "localizations": {
+        "ru": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Открыть сайт автора"
+          }
+        }
+      }
+    },
+    "Downloading... %d%%": {
+      "localizations": {
+        "ru": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Скачивание... %d%%"
+          }
+        }
+      }
+    },
+    "All download sources are unavailable. Try opening the author site and importing the file manually.": {
+      "localizations": {
+        "ru": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Все источники скачивания недоступны. Откройте сайт автора и импортируйте файл вручную."
+          }
+        }
+      }
+    },
+    "Download": {
+      "localizations": {
+        "ru": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Скачать"
+          }
+        }
+      }
+    },
+    "This font has no auto-download. Open the author site, download the .sf2 manually, then import via the button below.": {
+      "localizations": {
+        "ru": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "У этого банка нет авто-скачивания. Откройте сайт автора, скачайте .sf2 вручную, потом импортируйте через кнопку ниже."
+          }
+        }
+      }
+    },
+    "License": {
+      "localizations": {
+        "ru": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Лицензия"
+          }
+        }
+      }
+    },
+    "How to install manually:": {
+      "localizations": {
+        "ru": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Как установить вручную:"
+          }
+        }
+      }
+    },
+    "Tap «Open in Safari» below.": {
+      "localizations": {
+        "ru": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Нажмите «Открыть в Safari» ниже."
+          }
+        }
+      }
+    },
+    "Find the download link on the author site (usually a .zip).": {
+      "localizations": {
+        "ru": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Найдите ссылку для скачивания на сайте автора (обычно .zip)."
+          }
+        }
+      }
+    },
+    "Save to Files.": {
+      "localizations": {
+        "ru": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Сохраните в Files."
+          }
+        }
+      }
+    },
+    "If it's a .zip — extract it (long-press → Uncompress).": {
+      "localizations": {
+        "ru": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Если файл .zip — распакуйте (долгое нажатие → Распаковать)."
+          }
+        }
+      }
+    },
+    "Return to Composer's Notebook → SoundFont menu → \"Import my own .sf2 file\".": {
+      "localizations": {
+        "ru": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Вернитесь в Composer's Notebook → меню SoundFont → «Импортировать свой .sf2»."
+          }
+        }
+      }
+    },
+    "Open in Safari": {
+      "localizations": {
+        "ru": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Открыть в Safari"
+          }
+        }
+      }
+    },
+    "Manual install": {
+      "localizations": {
+        "ru": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Ручная установка"
+          }
+        }
+      }
+    },
+    "Close": {
+      "localizations": {
+        "ru": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Закрыть"
+          }
+        }
+      }
     }
   },
   "version": "1.0"

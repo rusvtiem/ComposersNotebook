@@ -33,6 +33,7 @@ struct ScoreEditorView: View {
     @State private var showAddInstrument = false
     @State private var showMeasureProperties = false
     @State private var showValidation = false
+    @State private var showSoundFontPicker = false
     @State private var shareURL: URL?
     @State private var alertMessage: String?
     @State private var showAlert = false
@@ -155,6 +156,11 @@ struct ScoreEditorView: View {
 
                     Divider()
 
+                    // SoundFont picker (built-in / downloaded / available / imported)
+                    Button { showSoundFontPicker = true } label: {
+                        Label(String(localized: "SoundFont"), systemImage: "music.note.list")
+                    }
+
                     // Sound settings
                     Button { showSoundSettings = true } label: {
                         Label(String(localized: "Sound Settings"), systemImage: "speaker.wave.2")
@@ -230,6 +236,10 @@ struct ScoreEditorView: View {
         }
         .sheet(isPresented: $showValidation) {
             ValidationView(viewModel: viewModel)
+                .presentationDetents([.large])
+        }
+        .sheet(isPresented: $showSoundFontPicker) {
+            SoundFontPickerView(soundFontManager: soundFontManager)
                 .presentationDetents([.large])
         }
     }
