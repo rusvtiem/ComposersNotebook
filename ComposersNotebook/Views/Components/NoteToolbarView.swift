@@ -6,6 +6,8 @@ struct NoteToolbarView: View {
     @ObservedObject var viewModel: ScoreViewModel
     @EnvironmentObject var themeManager: ThemeManager
 
+    @State private var showChordSymbolEditor = false
+
     private var isEditing: Bool {
         viewModel.selectedEventIndex != nil
     }
@@ -13,6 +15,18 @@ struct NoteToolbarView: View {
     private var isChordSelected: Bool {
         if case .chord = viewModel.selectedEvent?.type { return true }
         return false
+    }
+
+    private var selectedHasTuplet: Bool {
+        viewModel.selectedEvent?.tuplet != nil
+    }
+
+    private var selectedHasChordSymbol: Bool {
+        viewModel.selectedEvent?.chordSymbol != nil
+    }
+
+    private var selectedFingering: String? {
+        viewModel.selectedEvent?.fingering
     }
 
     var body: some View {
@@ -60,6 +74,10 @@ struct NoteToolbarView: View {
         }
         .background(isEditing ? Color.blue.opacity(0.05) : Color.clear)
         .background(.bar)
+        .sheet(isPresented: $showChordSymbolEditor) {
+            ChordSymbolEditor(viewModel: viewModel)
+                .presentationDetents([.medium, .large])
+        }
     }
 
     // MARK: - Edit Mode
@@ -159,6 +177,101 @@ struct NoteToolbarView: View {
 
             Divider().frame(height: 30)
 
+            // Phase 2c: Tuplet group menu
+            Menu {
+                Button {
+                    viewModel.applyTupletGroupStartingAtSelected(actualCount: 3, normalCount: 2)
+                    HapticManager.success()
+                } label: {
+                    Label(String(localized: "Triplet (3:2)"), systemImage: "3.circle")
+                }
+                Button {
+                    viewModel.applyTupletGroupStartingAtSelected(actualCount: 5, normalCount: 4)
+                    HapticManager.success()
+                } label: {
+                    Label(String(localized: "Quintuplet (5:4)"), systemImage: "5.circle")
+                }
+                Button {
+                    viewModel.applyTupletGroupStartingAtSelected(actualCount: 6, normalCount: 4)
+                    HapticManager.success()
+                } label: {
+                    Label(String(localized: "Sextuplet (6:4)"), systemImage: "6.circle")
+                }
+                Button {
+                    viewModel.applyTupletGroupStartingAtSelected(actualCount: 7, normalCount: 4)
+                    HapticManager.success()
+                } label: {
+                    Label(String(localized: "Septuplet (7:4)"), systemImage: "7.circle")
+                }
+                Button {
+                    viewModel.applyTupletGroupStartingAtSelected(actualCount: 9, normalCount: 8)
+                    HapticManager.success()
+                } label: {
+                    Label(String(localized: "Nonuplet (9:8)"), systemImage: "9.circle")
+                }
+
+                if selectedHasTuplet {
+                    Divider()
+                    Button(role: .destructive) {
+                        viewModel.removeTupletGroupFromSelected()
+                        HapticManager.buttonTap()
+                    } label: {
+                        Label(String(localized: "Remove tuplet group"), systemImage: "minus.circle")
+                    }
+                }
+            } label: {
+                NoteToolbarButton(
+                    icon: nil,
+                    label: tupletButtonLabel,
+                    isActive: selectedHasTuplet,
+                    fontSize: 14,
+                    tooltip: "Триоль/квинтоль и т.д."
+                ) {}
+                    .allowsHitTesting(false)
+            }
+
+            // Chord symbol (Am7 / G/B)
+            NoteToolbarButton(
+                icon: "music.quarternote.3",
+                label: "Акк.",
+                isActive: selectedHasChordSymbol,
+                tooltip: "Аккордовый символ (Am7 / G/B)"
+            ) {
+                showChordSymbolEditor = true
+            }
+
+            // Fingering (1..5 + custom)
+            Menu {
+                ForEach(1...5, id: \.self) { num in
+                    Button {
+                        viewModel.setFingeringForSelectedEvent(String(num))
+                        HapticManager.buttonTap()
+                    } label: {
+                        Label("\(num)", systemImage: "\(num).circle")
+                    }
+                }
+                if selectedFingering != nil {
+                    Divider()
+                    Button(role: .destructive) {
+                        viewModel.setFingeringForSelectedEvent(nil)
+                        HapticManager.buttonTap()
+                    } label: {
+                        Label(String(localized: "Remove fingering"), systemImage: "minus.circle")
+                    }
+                }
+            } label: {
+                NoteToolbarButton(
+                    icon: nil,
+                    label: selectedFingering ?? "1-5",
+                    isActive: selectedFingering != nil,
+                    fontSize: 14,
+                    tooltip: "Аппликатура (1-5)"
+                ) {}
+                    .allowsHitTesting(false)
+            }
+
+            Divider().frame(height: 30)
+
             // Copy / Cut / Paste
             NoteToolbarButton(
                 icon: "doc.on.doc",
@@ -254,6 +367,136 @@ struct NoteToolbarView: View {
         case .up: return "↑"
         case .down: return "↓"
         }
+    }
+
+    private var tupletButtonLabel: String {
+        guard let tup = viewModel.selectedEvent?.tuplet else { return "3:2" }
+        return tup.displayLabel
+    }
+
+    // MARK: - Measure shortcuts menu (Phase 2c quick actions)
+    //
+    // Быстрые действия для текущего выбранного такта. Все эти операции также
+    // доступны через "..." → Measure Properties. Эта Menu — shortcut для частых.
+
+    @ViewBuilder
+    private var measureShortcutsMenu: some View {
+        Menu {
+            Section(String(localized: "Dynamics span")) {
+                Button {
+                    addHairpin(.crescendo)
+                } label: {
+                    Label(String(localized: "Add crescendo (<)"), systemImage: "lessthan")
+                }
+                Button {
+                    addHairpin(.diminuendo)
+                } label: {
+                    Label(String(localized: "Add diminuendo (>)"), systemImage: "greaterthan")
+                }
+            }
+
+            Section(String(localized: "Octave shift")) {
+                Button {
+                    addOctaveShift(.ottavaAlta)
+                } label: {
+                    Label("8va", systemImage: "arrow.up")
+                }
+                Button {
+                    addOctaveShift(.ottavaBassa)
+                } label: {
+                    Label("8vb", systemImage: "arrow.down")
+                }
+            }
+
+            Section(String(localized: "Barline")) {
+                Button {
+                    viewModel.setBarline(.repeatEnd)
+                    HapticManager.buttonTap()
+                } label: {
+                    Label(String(localized: "Repeat end"), systemImage: "repeat.circle")
+                }
+                Button {
+                    viewModel.setBarline(.repeatStart)
+                    HapticManager.buttonTap()
+                } label: {
+                    Label(String(localized: "Repeat start"), systemImage: "repeat.circle")
+                }
+                Button {
+                    viewModel.setBarline(.final_)
+                    HapticManager.buttonTap()
+                } label: {
+                    Label(String(localized: "Final"), systemImage: "stop.circle")
+                }
+            }
+
+            Section(String(localized: "Navigation mark")) {
+                Button { viewModel.setNavigationMark(.coda); HapticManager.buttonTap() } label: {
+                    Label("Coda", systemImage: "circle.grid.cross")
+                }
+                Button { viewModel.setNavigationMark(.segno); HapticManager.buttonTap() } label: {
+                    Label("Segno", systemImage: "s.circle")
+                }
+                Button { viewModel.setNavigationMark(.dcAlFine); HapticManager.buttonTap() } label: {
+                    Label("D.C. al Fine", systemImage: "arrow.uturn.left")
+                }
+                Button { viewModel.setNavigationMark(.fine); HapticManager.buttonTap() } label: {
+                    Label("Fine", systemImage: "f.circle")
+                }
+            }
+
+            Section(String(localized: "Texts")) {
+                Button {
+                    viewModel.setRehearsalMark(RehearsalMark(text: nextRehearsalLetter(), style: .boxed))
+                    HapticManager.buttonTap()
+                } label: {
+                    Label(String(localized: "Add rehearsal mark"), systemImage: "a.square")
+                }
+                Menu(String(localized: "Add expression text")) {
+                    ForEach(ExpressionText.commonExpressions.prefix(8), id: \.self) { expr in
+                        Button(expr) {
+                            viewModel.addExpressionText(ExpressionText(text: expr, italianTerm: true, attachToBeat: 0))
+                            HapticManager.buttonTap()
+                        }
+                    }
+                }
+            }
+        } label: {
+            NoteToolbarButton(
+                icon: "plus.square.on.square",
+                label: "Такт",
+                isActive: false,
+                tooltip: "Быстрые действия для текущего такта"
+            ) {}
+            .allowsHitTesting(false)
+        }
+    }
+
+    private func addHairpin(_ type: HairpinType) {
+        let end = viewModel.currentMeasure?.usedBeats ?? 1.0
+        viewModel.addHairpin(Hairpin(type: type, startBeat: 0, endBeat: end))
+        HapticManager.success()
+    }
+
+    private func addOctaveShift(_ kind: OctaveShiftKind) {
+        let end = viewModel.currentMeasure?.usedBeats ?? 1.0
+        viewModel.addOctaveShift(OctaveShift(kind: kind, startBeat: 0, endBeat: end))
+        HapticManager.success()
+    }
+
+    /// Следующая буква для rehearsal mark в порядке появления в партитуре.
+    /// "A" если ещё нет ни одного, "B" если есть "A", и т.д.
+    private func nextRehearsalLetter() -> String {
+        var used: Set<String> = []
+        for part in viewModel.score.parts {
+            for measure in part.measures where measure.rehearsalMark != nil {
+                used.insert(measure.rehearsalMark!.text)
+            }
+        }
+        for letter in "ABCDEFGHIJKLMNOPQRSTUVWXYZ" {
+            let s = String(letter)
+            if !used.contains(s) { return s }
+        }
+        return "A"
     }
 
     // MARK: - Mode
@@ -545,6 +788,11 @@ struct NoteToolbarView: View {
 
     private var actionButtons: some View {
         HStack(spacing: 4) {
+            // Phase 2c quick actions for current measure
+            measureShortcutsMenu
+
+            Divider().frame(height: 30)
+
             // Playback Technique
             techniqueButtons
 

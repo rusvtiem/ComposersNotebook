@@ -2570,6 +2570,186 @@
           }
         }
       }
+    },
+    "Triplet (3:2)": {
+      "localizations": {
+        "ru": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Триоль (3:2)"
+          }
+        }
+      }
+    },
+    "Quintuplet (5:4)": {
+      "localizations": {
+        "ru": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Квинтоль (5:4)"
+          }
+        }
+      }
+    },
+    "Sextuplet (6:4)": {
+      "localizations": {
+        "ru": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Секстоль (6:4)"
+          }
+        }
+      }
+    },
+    "Septuplet (7:4)": {
+      "localizations": {
+        "ru": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Септоль (7:4)"
+          }
+        }
+      }
+    },
+    "Nonuplet (9:8)": {
+      "localizations": {
+        "ru": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Девятоль (9:8)"
+          }
+        }
+      }
+    },
+    "Remove tuplet group": {
+      "localizations": {
+        "ru": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Снять группу триоли"
+          }
+        }
+      }
+    },
+    "Remove fingering": {
+      "localizations": {
+        "ru": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Убрать аппликатуру"
+          }
+        }
+      }
+    },
+    "Chord Symbol": {
+      "localizations": {
+        "ru": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Аккордовый символ"
+          }
+        }
+      }
+    },
+    "Could not parse chord symbol. Examples: C, Am, G7, Cmaj7, C/E": {
+      "localizations": {
+        "ru": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Не удалось распознать аккорд. Примеры: C, Am, G7, Cmaj7, C/E"
+          }
+        }
+      }
+    },
+    "Quick presets": {
+      "localizations": {
+        "ru": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Быстрые варианты"
+          }
+        }
+      }
+    },
+    "Remove chord symbol": {
+      "localizations": {
+        "ru": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Убрать аккорд"
+          }
+        }
+      }
+    },
+    "Dynamics span": {
+      "localizations": {
+        "ru": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Динамическая вилка"
+          }
+        }
+      }
+    },
+    "Octave shift": {
+      "localizations": {
+        "ru": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Октавный знак"
+          }
+        }
+      }
+    },
+    "Barline": {
+      "localizations": {
+        "ru": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Тактовая черта"
+          }
+        }
+      }
+    },
+    "Texts": {
+      "localizations": {
+        "ru": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Тексты"
+          }
+        }
+      }
+    },
+    "Add crescendo (<)": {
+      "localizations": {
+        "ru": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Крещендо (<)"
+          }
+        }
+      }
+    },
+    "Add diminuendo (>)": {
+      "localizations": {
+        "ru": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Диминуэндо (>)"
+          }
+        }
+      }
+    },
+    "Add rehearsal mark": {
+      "localizations": {
+        "ru": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Маркер репетиции"
+          }
+        }
+      }
     }
   },
   "version": "1.0"

@@ -856,6 +856,67 @@ class ScoreViewModel: ObservableObject {
         }
     }
 
+    // MARK: - Event-level Phase 2c attributes (tuplet, chord symbol, fingering)
+
+    /// Установить tuplet на одиночное событие (не группа — для группы см.
+    /// `applyTupletGroupStartingAtSelected`). Если nil — снять группировку.
+    func setTupletForSelectedEvent(_ tuplet: Tuplet?) {
+        guard let idx = selectedEventIndex else { return }
+        mutateCurrentMeasure { measure in
+            guard idx < measure.events.count else { return }
+            measure.events[idx].tuplet = tuplet
+        }
+    }
+
+    /// Применить tuplet-группу начиная с выбранного события и захватывая
+    /// следующие `actualCount - 1` событий в том же такте. Если событий не
+    /// хватает — группа сокращается до доступных.
+    func applyTupletGroupStartingAtSelected(actualCount: Int, normalCount: Int) {
+        guard let start = selectedEventIndex,
+              actualCount > 1 else { return }
+        mutateCurrentMeasure { measure in
+            let groupID = UUID()
+            let end = min(start + actualCount, measure.events.count)
+            for (i, idx) in (start..<end).enumerated() {
+                measure.events[idx].tuplet = Tuplet(
+                    actualCount: actualCount,
+                    normalCount: normalCount,
+                    groupID: groupID,
+                    positionInGroup: i
+                )
+            }
+        }
+    }
+
+    /// Снять tuplet со всех событий группы выбранного события.
+    func removeTupletGroupFromSelected() {
+        guard let idx = selectedEventIndex,
+              let measure = currentMeasure,
+              idx < measure.events.count,
+              let groupID = measure.events[idx].tuplet?.groupID else { return }
+        mutateCurrentMeasure { measure in
+            for i in measure.events.indices where measure.events[i].tuplet?.groupID == groupID {
+                measure.events[i].tuplet = nil
+            }
+        }
+    }
+
+    func setChordSymbolForSelectedEvent(_ symbol: ChordSymbol?) {
+        guard let idx = selectedEventIndex else { return }
+        mutateCurrentMeasure { measure in
+            guard idx < measure.events.count else { return }
+            measure.events[idx].chordSymbol = symbol
+        }
+    }
+
+    func setFingeringForSelectedEvent(_ fingering: String?) {
+        guard let idx = selectedEventIndex else { return }
+        mutateCurrentMeasure { measure in
+            guard idx < measure.events.count else { return }
+            measure.events[idx].fingering = (fingering?.isEmpty == true) ? nil : fingering
+        }
+    }
+
     // MARK: - Voice Layers
 
     /// Events in current measure filtered by selected voice (or all if showAllVoices)
