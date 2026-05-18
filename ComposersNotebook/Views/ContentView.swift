@@ -23,6 +23,7 @@ struct HomeView: View {
     @State private var showNewScoreSheet = false
     @State private var showImportPicker = false
     @State private var showThemeSettings = false
+    @State private var showAbout = false
     @State private var recentFiles: [URL] = []
 
     var body: some View {
@@ -121,6 +122,13 @@ struct HomeView: View {
         .toolbar {
             ToolbarItem(placement: .topBarTrailing) {
                 Button {
+                    showAbout = true
+                } label: {
+                    Image(systemName: "info.circle")
+                }
+            }
+            ToolbarItem(placement: .topBarTrailing) {
+                Button {
                     showThemeSettings = true
                 } label: {
                     Image(systemName: "paintpalette")
@@ -129,6 +137,10 @@ struct HomeView: View {
         }
         .sheet(isPresented: $showThemeSettings) {
             ThemeSettingsView()
+                .presentationDetents([.large])
+        }
+        .sheet(isPresented: $showAbout) {
+            AboutView()
                 .presentationDetents([.large])
         }
         .onAppear {
