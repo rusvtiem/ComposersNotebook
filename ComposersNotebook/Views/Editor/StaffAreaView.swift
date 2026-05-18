@@ -426,21 +426,29 @@ struct MeasureView: View {
             let startX: CGFloat = scaled(8)
             let staffTop: CGFloat = scaled(20)
 
-            // Draw 5 staff lines
+            // Draw 5 staff lines.
+            // Visibility guarantee: clamp the theme's staffLineOpacity to a
+            // minimum readable value, and never render thinner than 1pt
+            // regardless of zoom. Empty scores must show the staff plainly
+            // (the rendered staff is the visual cue that a measure exists);
+            // before this clamp the default dark theme used 40% white at
+            // 0.5pt × 0.85 zoom ≈ 0.43pt — sub-pixel and visually empty.
+            let staffLineVisibleOpacity = max(theme.staffLineOpacity, 0.7)
+            let staffLineWidth: CGFloat = max(1.0, scaled(0.6))
             for line in 0..<5 {
                 let y = staffTop + CGFloat(line) * staffLineSpacing
                 var path = Path()
                 path.move(to: CGPoint(x: 0, y: y))
                 path.addLine(to: CGPoint(x: size.width, y: y))
-                context.stroke(path, with: .color(theme.staffLine.opacity(theme.staffLineOpacity)), lineWidth: 0.5)
+                context.stroke(path, with: .color(theme.staffLine.opacity(staffLineVisibleOpacity)), lineWidth: staffLineWidth)
             }
 
-            // Draw barline at end
+            // Draw barline at end with the same readability floor.
             var barline = Path()
             let barlineX = size.width - 1
             barline.move(to: CGPoint(x: barlineX, y: staffTop))
             barline.addLine(to: CGPoint(x: barlineX, y: staffTop + 4 * staffLineSpacing))
-            context.stroke(barline, with: .color(theme.barline.opacity(0.6)), lineWidth: 1)
+            context.stroke(barline, with: .color(theme.barline.opacity(0.9)), lineWidth: max(1.0, scaled(1.0)))
 
             // Draw measure number above staff
             let measureNum = Text("\(measureIndex + 1)")
