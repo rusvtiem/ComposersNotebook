@@ -763,6 +763,99 @@ class ScoreViewModel: ObservableObject {
         score.touch()
     }
 
+    // MARK: - Measure properties (Phase 2c spanner/text editing)
+    //
+    // Общий мутирующий хелпер: позволяет UI редактировать текущий такт
+    // через одну точку входа с автоматическим saveUndoState + score.touch().
+
+    /// Применяет мутацию к текущему выбранному такту с undo/touch.
+    /// Если выбранный такт вне диапазона — ничего не делает.
+    func mutateCurrentMeasure(_ mutate: (inout Measure) -> Void) {
+        guard selectedPartIndex < score.parts.count,
+              selectedStaffIndex < score.parts[selectedPartIndex].staves.count,
+              selectedMeasureIndex < score.parts[selectedPartIndex].staves[selectedStaffIndex].measures.count else { return }
+        saveUndoState()
+        mutate(&score.parts[selectedPartIndex].staves[selectedStaffIndex].measures[selectedMeasureIndex])
+        score.touch()
+    }
+
+    // Volta
+    func setVolta(_ volta: Volta?) {
+        mutateCurrentMeasure { $0.volta = volta }
+    }
+
+    // Rehearsal mark
+    func setRehearsalMark(_ mark: RehearsalMark?) {
+        mutateCurrentMeasure { $0.rehearsalMark = mark }
+    }
+
+    // Tempo change (accel/rit)
+    func setTempoChange(_ change: TempoChange?) {
+        mutateCurrentMeasure { $0.tempoChange = change }
+    }
+
+    // Multi-measure rest count
+    func setMultiMeasureRestCount(_ count: Int) {
+        mutateCurrentMeasure { $0.multiMeasureRestCount = max(0, count) }
+    }
+
+    // Hairpins
+    func addHairpin(_ hairpin: Hairpin) {
+        mutateCurrentMeasure { $0.hairpins.append(hairpin) }
+    }
+
+    func updateHairpin(id: UUID, type: HairpinType, startBeat: Double, endBeat: Double) {
+        mutateCurrentMeasure { measure in
+            guard let idx = measure.hairpins.firstIndex(where: { $0.id == id }) else { return }
+            measure.hairpins[idx].type = type
+            measure.hairpins[idx].startBeat = startBeat
+            measure.hairpins[idx].endBeat = endBeat
+        }
+    }
+
+    func removeHairpin(id: UUID) {
+        mutateCurrentMeasure { $0.hairpins.removeAll { $0.id == id } }
+    }
+
+    // Octave shifts
+    func addOctaveShift(_ shift: OctaveShift) {
+        mutateCurrentMeasure { $0.octaveShifts.append(shift) }
+    }
+
+    func updateOctaveShift(id: UUID, kind: OctaveShiftKind, startBeat: Double, endBeat: Double) {
+        mutateCurrentMeasure { measure in
+            guard let idx = measure.octaveShifts.firstIndex(where: { $0.id == id }) else { return }
+            measure.octaveShifts[idx].kind = kind
+            measure.octaveShifts[idx].startBeat = startBeat
+            measure.octaveShifts[idx].endBeat = endBeat
+        }
+    }
+
+    func removeOctaveShift(id: UUID) {
+        mutateCurrentMeasure { $0.octaveShifts.removeAll { $0.id == id } }
+    }
+
+    // Expression texts
+    func addExpressionText(_ text: ExpressionText) {
+        mutateCurrentMeasure { $0.expressionTexts.append(text) }
+    }
+
+    func updateExpressionText(at index: Int, text: String, italianTerm: Bool, attachToBeat: Double) {
+        mutateCurrentMeasure { measure in
+            guard index < measure.expressionTexts.count else { return }
+            measure.expressionTexts[index].text = text
+            measure.expressionTexts[index].italianTerm = italianTerm
+            measure.expressionTexts[index].attachToBeat = attachToBeat
+        }
+    }
+
+    func removeExpressionText(at index: Int) {
+        mutateCurrentMeasure { measure in
+            guard index < measure.expressionTexts.count else { return }
+            measure.expressionTexts.remove(at: index)
+        }
+    }
+
     // MARK: - Voice Layers
 
     /// Events in current measure filtered by selected voice (or all if showAllVoices)

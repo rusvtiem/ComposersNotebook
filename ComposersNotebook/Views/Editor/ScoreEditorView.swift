@@ -31,6 +31,7 @@ struct ScoreEditorView: View {
     @State private var showShareSheet = false
     @State private var showThemeSettings = false
     @State private var showAddInstrument = false
+    @State private var showMeasureProperties = false
     @State private var shareURL: URL?
     @State private var alertMessage: String?
     @State private var showAlert = false
@@ -141,6 +142,13 @@ struct ScoreEditorView: View {
 
                     Divider()
 
+                    // Measure properties (barline, volta, hairpins, octave shifts, tempo change, ...)
+                    Button { showMeasureProperties = true } label: {
+                        Label(String(localized: "Measure Properties"), systemImage: "slider.horizontal.3")
+                    }
+
+                    Divider()
+
                     // Sound settings
                     Button { showSoundSettings = true } label: {
                         Label(String(localized: "Sound Settings"), systemImage: "speaker.wave.2")
@@ -209,6 +217,10 @@ struct ScoreEditorView: View {
                 viewModel.addPart(instrument: instrument)
             }
             .presentationDetents([.large])
+        }
+        .sheet(isPresented: $showMeasureProperties) {
+            MeasurePropertiesView(viewModel: viewModel)
+                .presentationDetents([.large])
         }
     }
 

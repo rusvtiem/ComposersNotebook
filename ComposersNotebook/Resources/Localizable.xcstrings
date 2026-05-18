@@ -1980,6 +1980,486 @@
           }
         }
       }
+    },
+    "No measure selected": {
+      "localizations": {
+        "ru": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Такт не выбран"
+          }
+        }
+      }
+    },
+    "Tap a measure in the score to select it, then reopen this menu.": {
+      "localizations": {
+        "ru": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Коснитесь такта в партитуре, чтобы выбрать его, и откройте это меню заново."
+          }
+        }
+      }
+    },
+    "Measure Properties": {
+      "localizations": {
+        "ru": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Свойства такта"
+          }
+        }
+      }
+    },
+    "Measure": {
+      "localizations": {
+        "ru": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Такт"
+          }
+        }
+      }
+    },
+    "Part": {
+      "localizations": {
+        "ru": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Партия"
+          }
+        }
+      }
+    },
+    "Ending barline": {
+      "localizations": {
+        "ru": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Тактовая черта (в конце)"
+          }
+        }
+      }
+    },
+    "Type": {
+      "localizations": {
+        "ru": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Тип"
+          }
+        }
+      }
+    },
+    "Regular": {
+      "localizations": {
+        "ru": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Обычная"
+          }
+        }
+      }
+    },
+    "Double": {
+      "localizations": {
+        "ru": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Двойная"
+          }
+        }
+      }
+    },
+    "Final": {
+      "localizations": {
+        "ru": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Финальная"
+          }
+        }
+      }
+    },
+    "Repeat start": {
+      "localizations": {
+        "ru": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Начало репризы"
+          }
+        }
+      }
+    },
+    "Repeat end": {
+      "localizations": {
+        "ru": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Конец репризы"
+          }
+        }
+      }
+    },
+    "Repeat both": {
+      "localizations": {
+        "ru": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Реприза с обеих сторон"
+          }
+        }
+      }
+    },
+    "Volta (ending bracket)": {
+      "localizations": {
+        "ru": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Вольта (окончание)"
+          }
+        }
+      }
+    },
+    "Has volta": {
+      "localizations": {
+        "ru": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Есть вольта"
+          }
+        }
+      }
+    },
+    "Volta number: %d": {
+      "localizations": {
+        "ru": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Номер вольты: %d"
+          }
+        }
+      }
+    },
+    "Rehearsal mark": {
+      "localizations": {
+        "ru": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Маркер репетиции"
+          }
+        }
+      }
+    },
+    "Has rehearsal mark": {
+      "localizations": {
+        "ru": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Есть маркер репетиции"
+          }
+        }
+      }
+    },
+    "Text (A, B, 1, ...)": {
+      "localizations": {
+        "ru": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Текст (A, B, 1, ...)"
+          }
+        }
+      }
+    },
+    "Style": {
+      "localizations": {
+        "ru": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Стиль"
+          }
+        }
+      }
+    },
+    "Boxed": {
+      "localizations": {
+        "ru": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "В рамке"
+          }
+        }
+      }
+    },
+    "Bold": {
+      "localizations": {
+        "ru": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Жирный"
+          }
+        }
+      }
+    },
+    "Plain": {
+      "localizations": {
+        "ru": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Обычный"
+          }
+        }
+      }
+    },
+    "Navigation mark": {
+      "localizations": {
+        "ru": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Знак навигации"
+          }
+        }
+      }
+    },
+    "Mark": {
+      "localizations": {
+        "ru": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Знак"
+          }
+        }
+      }
+    },
+    "None": {
+      "localizations": {
+        "ru": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Нет"
+          }
+        }
+      }
+    },
+    "Crescendo / Diminuendo (hairpins)": {
+      "localizations": {
+        "ru": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Крещендо / диминуэндо (вилки)"
+          }
+        }
+      }
+    },
+    "Add hairpin": {
+      "localizations": {
+        "ru": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Добавить вилку"
+          }
+        }
+      }
+    },
+    "Octave shift (8va / 8vb / 15ma / 15mb)": {
+      "localizations": {
+        "ru": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Октавный знак (8va / 8vb / 15ma / 15mb)"
+          }
+        }
+      }
+    },
+    "Add octave shift": {
+      "localizations": {
+        "ru": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Добавить октавный знак"
+          }
+        }
+      }
+    },
+    "Tempo change (accel / rit)": {
+      "localizations": {
+        "ru": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Изменение темпа (accel / rit)"
+          }
+        }
+      }
+    },
+    "Has tempo change": {
+      "localizations": {
+        "ru": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Есть изменение темпа"
+          }
+        }
+      }
+    },
+    "Kind": {
+      "localizations": {
+        "ru": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Вид"
+          }
+        }
+      }
+    },
+    "Target BPM": {
+      "localizations": {
+        "ru": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Целевой BPM"
+          }
+        }
+      }
+    },
+    "Expression texts (espressivo, dolce, ...)": {
+      "localizations": {
+        "ru": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Экспрессивные тексты (espressivo, dolce, ...)"
+          }
+        }
+      }
+    },
+    "Custom text...": {
+      "localizations": {
+        "ru": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Свой текст..."
+          }
+        }
+      }
+    },
+    "Add expression text": {
+      "localizations": {
+        "ru": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Добавить экспрессивный текст"
+          }
+        }
+      }
+    },
+    "Multi-measure rest": {
+      "localizations": {
+        "ru": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Многотактовая пауза"
+          }
+        }
+      }
+    },
+    "Combine into %d-bar rest": {
+      "localizations": {
+        "ru": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Объединить в паузу на %d тактов"
+          }
+        }
+      }
+    },
+    "0 means no multi-bar rest. Higher values display a single rest block spanning N measures.": {
+      "localizations": {
+        "ru": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "0 — нет многотактовой паузы. Большие значения отображают единый блок паузы на N тактов."
+          }
+        }
+      }
+    },
+    "Crescendo (<)": {
+      "localizations": {
+        "ru": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Крещендо (<)"
+          }
+        }
+      }
+    },
+    "Diminuendo (>)": {
+      "localizations": {
+        "ru": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Диминуэндо (>)"
+          }
+        }
+      }
+    },
+    "Start beat": {
+      "localizations": {
+        "ru": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Начальная доля"
+          }
+        }
+      }
+    },
+    "End beat": {
+      "localizations": {
+        "ru": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Конечная доля"
+          }
+        }
+      }
+    },
+    "Direction": {
+      "localizations": {
+        "ru": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Направление"
+          }
+        }
+      }
+    },
+    "Italian (italic)": {
+      "localizations": {
+        "ru": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Итальянский (курсив)"
+          }
+        }
+      }
+    },
+    "Attach to beat": {
+      "localizations": {
+        "ru": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Привязка к доле"
+          }
+        }
+      }
+    },
+    "espressivo, dolce, ...": {
+      "localizations": {
+        "ru": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "espressivo, dolce, ..."
+          }
+        }
+      }
     }
   },
   "version": "1.0"
