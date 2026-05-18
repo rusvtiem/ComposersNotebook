@@ -661,7 +661,7 @@ struct MeasureView: View {
                 context.draw(navText, at: CGPoint(x: size.width / 2, y: staffTop - scaled(10)))
             }
 
-            // Repeat barlines
+            // Repeat barlines (end side)
             if measure.barlineEnd == .repeatEnd || measure.barlineEnd == .repeatBoth {
                 let dotY1 = staffTop + 1.5 * staffLineSpacing
                 let dotY2 = staffTop + 2.5 * staffLineSpacing
@@ -670,6 +670,229 @@ struct MeasureView: View {
                 let dot2 = Path(ellipseIn: CGRect(x: barlineX - dotSize * 2, y: dotY2 - dotSize / 2, width: dotSize, height: dotSize))
                 context.fill(dot, with: .color(theme.noteHead))
                 context.fill(dot2, with: .color(theme.noteHead))
+                // Thicker barline for repeat
+                var thick = Path()
+                thick.move(to: CGPoint(x: barlineX - scaled(3), y: staffTop))
+                thick.addLine(to: CGPoint(x: barlineX - scaled(3), y: staffTop + 4 * staffLineSpacing))
+                context.stroke(thick, with: .color(theme.barline), lineWidth: 2.5)
+            }
+            // Double / Final barlines
+            if measure.barlineEnd == .double {
+                var second = Path()
+                second.move(to: CGPoint(x: barlineX - scaled(3), y: staffTop))
+                second.addLine(to: CGPoint(x: barlineX - scaled(3), y: staffTop + 4 * staffLineSpacing))
+                context.stroke(second, with: .color(theme.barline), lineWidth: 1)
+            }
+            if measure.barlineEnd == .final_ {
+                var thick = Path()
+                thick.move(to: CGPoint(x: barlineX - scaled(3), y: staffTop))
+                thick.addLine(to: CGPoint(x: barlineX - scaled(3), y: staffTop + 4 * staffLineSpacing))
+                context.stroke(thick, with: .color(theme.barline), lineWidth: 3)
+            }
+            // Repeat start (left side of this measure if first)
+            if measure.barlineEnd == .repeatStart || measure.barlineEnd == .repeatBoth {
+                let leftX: CGFloat = scaled(2)
+                var thick = Path()
+                thick.move(to: CGPoint(x: leftX, y: staffTop))
+                thick.addLine(to: CGPoint(x: leftX, y: staffTop + 4 * staffLineSpacing))
+                context.stroke(thick, with: .color(theme.barline), lineWidth: 2.5)
+                let dotY1 = staffTop + 1.5 * staffLineSpacing
+                let dotY2 = staffTop + 2.5 * staffLineSpacing
+                let dotSize = scaled(4)
+                context.fill(Path(ellipseIn: CGRect(x: leftX + scaled(4), y: dotY1 - dotSize / 2, width: dotSize, height: dotSize)), with: .color(theme.noteHead))
+                context.fill(Path(ellipseIn: CGRect(x: leftX + scaled(4), y: dotY2 - dotSize / 2, width: dotSize, height: dotSize)), with: .color(theme.noteHead))
+            }
+
+            // MARK: - Phase 2c spanners and texts
+
+            // Helper to convert a beat position to an x coordinate, given the
+            // already-computed event layout. Clamps to [noteStartX, barlineX].
+            func xForBeat(_ beat: Double) -> CGFloat {
+                guard !measure.events.isEmpty, totalBeats > 0 else {
+                    let t = max(0, min(1, beat / max(timeSignature.totalBeats, 0.001)))
+                    return noteStartX + availableWidth * CGFloat(t)
+                }
+                // Walk through events accumulating actualBeats; interpolate within an event.
+                var x = noteStartX
+                var b: Double = 0
+                for (i, event) in measure.events.enumerated() {
+                    let eventWidth = idealWidths[i] * scaleFactor
+                    let eb = event.actualBeats
+                    if beat < b + eb {
+                        let t = eb > 0 ? max(0, (beat - b)) / eb : 0
+                        return x + eventWidth * CGFloat(t)
+                    }
+                    x += eventWidth
+                    b += eb
+                }
+                return min(x, barlineX - scaled(2))
+            }
+
+            // Tuplet brackets (group-aware)
+            //
+            // Группы определяются через NoteEvent.tuplet.groupID. Для каждой
+            // уникальной группы находим первую и последнюю позицию ноты,
+            // рисуем скобку и число над/под (выше штили вверх → скобка снизу).
+            do {
+                var seenGroups: Set<UUID> = []
+                for (i, event) in measure.events.enumerated() {
+                    guard let tup = event.tuplet, !seenGroups.contains(tup.groupID) else { continue }
+                    seenGroups.insert(tup.groupID)
+                    // Find all events of this group within the measure
+                    let groupIndices = measure.events.enumerated().compactMap { (j, e) -> Int? in
+                        e.tuplet?.groupID == tup.groupID ? j : nil
+                    }
+                    guard let firstIdx = groupIndices.first,
+                          let lastIdx = groupIndices.last else { continue }
+                    let firstPos = notePositions.first { $0.eventIndex == firstIdx }
+                    let lastPos = notePositions.first { $0.eventIndex == lastIdx }
+                    guard let fp = firstPos, let lp = lastPos else { continue }
+
+                    let bracketY = staffTop - scaled(8)
+                    var bracket = Path()
+                    bracket.move(to: CGPoint(x: fp.x, y: bracketY + scaled(3)))
+                    bracket.addLine(to: CGPoint(x: fp.x, y: bracketY))
+                    bracket.addLine(to: CGPoint(x: (fp.x + lp.x) / 2 - scaled(5), y: bracketY))
+                    bracket.move(to: CGPoint(x: (fp.x + lp.x) / 2 + scaled(5), y: bracketY))
+                    bracket.addLine(to: CGPoint(x: lp.x, y: bracketY))
+                    bracket.addLine(to: CGPoint(x: lp.x, y: bracketY + scaled(3)))
+                    context.stroke(bracket, with: .color(theme.noteHead), lineWidth: 1)
+
+                    let label = Text(tup.displayLabel).font(.system(size: scaled(10), weight: .semibold))
+                    context.draw(label, at: CGPoint(x: (fp.x + lp.x) / 2, y: bracketY))
+
+                    _ = i // suppress unused warning
+                }
+            }
+
+            // Chord symbols + Fingering above each note
+            for (eventIndex, event) in measure.events.enumerated() {
+                guard let pos = notePositions.first(where: { $0.eventIndex == eventIndex }) else { continue }
+
+                if let chord = event.chordSymbol {
+                    let text = Text(chord.displayText)
+                        .font(.system(size: scaled(11), weight: .medium))
+                        .foregroundColor(theme.accent)
+                    context.draw(text, at: CGPoint(x: pos.x, y: staffTop - scaled(18)))
+                }
+
+                if let fingering = event.fingering {
+                    let text = Text(fingering)
+                        .font(.system(size: scaled(9), weight: .semibold))
+                        .foregroundColor(theme.noteHead)
+                    // Place fingering near notehead — to the right and slightly above
+                    context.draw(text, at: CGPoint(x: pos.x + scaled(8), y: pos.y - scaled(6)))
+                }
+            }
+
+            // Hairpins (crescendo <  / diminuendo >)
+            for hairpin in measure.hairpins {
+                let x1 = xForBeat(hairpin.startBeat)
+                let x2 = xForBeat(hairpin.endBeat)
+                let yCenter = staffTop + 5 * staffLineSpacing + scaled(18)
+                let half = scaled(3)
+                var path = Path()
+                switch hairpin.type {
+                case .crescendo:
+                    path.move(to: CGPoint(x: x1, y: yCenter))
+                    path.addLine(to: CGPoint(x: x2, y: yCenter - half))
+                    path.move(to: CGPoint(x: x1, y: yCenter))
+                    path.addLine(to: CGPoint(x: x2, y: yCenter + half))
+                case .diminuendo:
+                    path.move(to: CGPoint(x: x1, y: yCenter - half))
+                    path.addLine(to: CGPoint(x: x2, y: yCenter))
+                    path.move(to: CGPoint(x: x1, y: yCenter + half))
+                    path.addLine(to: CGPoint(x: x2, y: yCenter))
+                }
+                context.stroke(path, with: .color(theme.noteHead), lineWidth: 1)
+            }
+
+            // Octave shifts (8va / 8vb / 15ma / 15mb) — dashed line + small number
+            for shift in measure.octaveShifts {
+                let x1 = xForBeat(shift.startBeat)
+                let x2 = xForBeat(shift.endBeat)
+                let isAbove = shift.kind == .ottavaAlta || shift.kind == .quindicesimaAlta
+                let y = isAbove ? staffTop - scaled(18) : staffTop + 5 * staffLineSpacing + scaled(28)
+
+                let label = Text(shift.kind.symbol).font(.system(size: scaled(10), weight: .semibold).italic())
+                context.draw(label, at: CGPoint(x: x1 + scaled(6), y: y))
+
+                // Dashed line from after label to x2
+                var dash = Path()
+                dash.move(to: CGPoint(x: x1 + scaled(14), y: y))
+                dash.addLine(to: CGPoint(x: x2, y: y))
+                let stroke = StrokeStyle(lineWidth: 0.8, dash: [scaled(3), scaled(3)])
+                context.stroke(dash, with: .color(theme.noteHead.opacity(0.8)), style: stroke)
+                // Closing hook at the end
+                var hook = Path()
+                hook.move(to: CGPoint(x: x2, y: y))
+                hook.addLine(to: CGPoint(x: x2, y: y + (isAbove ? scaled(3) : -scaled(3))))
+                context.stroke(hook, with: .color(theme.noteHead.opacity(0.8)), lineWidth: 0.8)
+            }
+
+            // Volta (1st / 2nd ending bracket)
+            if let volta = measure.volta {
+                let y = staffTop - scaled(26)
+                let xStart = noteStartX
+                let xEnd = barlineX - scaled(2)
+                var v = Path()
+                v.move(to: CGPoint(x: xStart, y: y + scaled(8)))
+                v.addLine(to: CGPoint(x: xStart, y: y))
+                v.addLine(to: CGPoint(x: xEnd, y: y))
+                v.addLine(to: CGPoint(x: xEnd, y: y + scaled(8)))
+                context.stroke(v, with: .color(theme.noteHead), lineWidth: 1)
+                let label = Text("\(volta.number).").font(.system(size: scaled(10), weight: .semibold))
+                context.draw(label, at: CGPoint(x: xStart + scaled(8), y: y + scaled(4)))
+            }
+
+            // Rehearsal mark (buffered above volta if any)
+            if let mark = measure.rehearsalMark {
+                let y = (measure.volta != nil) ? staffTop - scaled(36) : staffTop - scaled(24)
+                let label = Text(mark.text)
+                    .font(.system(size: scaled(12), weight: mark.style == .bold ? .bold : .semibold))
+                let center = CGPoint(x: noteStartX + scaled(2), y: y)
+                if mark.style == .boxed {
+                    let pad = scaled(3)
+                    let textW = scaled(14)
+                    let textH = scaled(14)
+                    let rect = CGRect(x: center.x - textW / 2 - pad, y: center.y - textH / 2 - pad, width: textW + pad * 2, height: textH + pad * 2)
+                    context.stroke(Path(rect), with: .color(theme.noteHead), lineWidth: 1)
+                }
+                context.draw(label, at: center)
+            }
+
+            // Expression texts (espressivo, dolce, ...) — italic above staff
+            for expr in measure.expressionTexts {
+                let x = xForBeat(expr.attachToBeat)
+                let text = Text(expr.text)
+                    .font(.system(size: scaled(10), design: .serif).italic())
+                    .foregroundColor(theme.textSecondary)
+                context.draw(text, at: CGPoint(x: x, y: staffTop - scaled(28)), anchor: .leading)
+            }
+
+            // Tempo change (accel / rit / ...) — italic text + dashed continuation
+            if let tc = measure.tempoChange {
+                let x1 = xForBeat(tc.startBeat)
+                let x2 = xForBeat(tc.endBeat)
+                let y = staffTop - scaled(14)
+                let label = Text(tc.kind.symbol)
+                    .font(.system(size: scaled(10), design: .serif).italic())
+                context.draw(label, at: CGPoint(x: x1, y: y), anchor: .leading)
+                var dash = Path()
+                dash.move(to: CGPoint(x: x1 + scaled(20), y: y))
+                dash.addLine(to: CGPoint(x: x2, y: y))
+                context.stroke(dash, with: .color(theme.noteHead.opacity(0.6)), style: StrokeStyle(lineWidth: 0.6, dash: [scaled(2), scaled(2)]))
+            }
+
+            // Multi-measure rest — thick horizontal block with count number
+            if measure.multiMeasureRestCount > 0 {
+                let midY = staffTop + 2 * staffLineSpacing
+                let blockHeight = staffLineSpacing
+                let pad = scaled(20)
+                let rect = CGRect(x: noteStartX + pad, y: midY - blockHeight / 2, width: max(availableWidth - pad * 2, scaled(40)), height: blockHeight)
+                context.fill(Path(rect), with: .color(theme.noteHead))
+                let countText = Text("\(measure.multiMeasureRestCount)").font(.system(size: scaled(14), weight: .bold))
+                context.draw(countText, at: CGPoint(x: rect.midX, y: midY - blockHeight - scaled(2)))
             }
         }
     }
