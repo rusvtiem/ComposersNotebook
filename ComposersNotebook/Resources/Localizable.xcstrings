@@ -2460,6 +2460,116 @@
           }
         }
       }
+    },
+    "Score Validation": {
+      "localizations": {
+        "ru": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Проверка партитуры"
+          }
+        }
+      }
+    },
+    "Validate Score": {
+      "localizations": {
+        "ru": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Проверить партитуру"
+          }
+        }
+      }
+    },
+    "Re-check": {
+      "localizations": {
+        "ru": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Перепроверить"
+          }
+        }
+      }
+    },
+    "No issues found": {
+      "localizations": {
+        "ru": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Проблем не найдено"
+          }
+        }
+      }
+    },
+    "The score passes all built-in checks: instrument ranges, measure timing, voice conflicts, and playback techniques.": {
+      "localizations": {
+        "ru": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Партитура прошла все встроенные проверки: диапазоны инструментов, длительности тактов, конфликты голосов и техники исполнения."
+          }
+        }
+      }
+    },
+    "Errors": {
+      "localizations": {
+        "ru": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Ошибки"
+          }
+        }
+      }
+    },
+    "Warnings": {
+      "localizations": {
+        "ru": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Предупреждения"
+          }
+        }
+      }
+    },
+    "Notes": {
+      "localizations": {
+        "ru": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Заметки"
+          }
+        }
+      }
+    },
+    "Part %d": {
+      "localizations": {
+        "ru": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Партия %d"
+          }
+        }
+      }
+    },
+    "measure %d": {
+      "localizations": {
+        "ru": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "такт %d"
+          }
+        }
+      }
+    },
+    "note %d": {
+      "localizations": {
+        "ru": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "нота %d"
+          }
+        }
+      }
     }
   },
   "version": "1.0"

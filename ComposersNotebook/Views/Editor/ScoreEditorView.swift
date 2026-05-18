@@ -32,6 +32,7 @@ struct ScoreEditorView: View {
     @State private var showThemeSettings = false
     @State private var showAddInstrument = false
     @State private var showMeasureProperties = false
+    @State private var showValidation = false
     @State private var shareURL: URL?
     @State private var alertMessage: String?
     @State private var showAlert = false
@@ -147,6 +148,11 @@ struct ScoreEditorView: View {
                         Label(String(localized: "Measure Properties"), systemImage: "slider.horizontal.3")
                     }
 
+                    // Validation (out-of-range notes, measure overflow, voice conflicts, ...)
+                    Button { showValidation = true } label: {
+                        Label(String(localized: "Validate Score"), systemImage: "checkmark.shield")
+                    }
+
                     Divider()
 
                     // Sound settings
@@ -220,6 +226,10 @@ struct ScoreEditorView: View {
         }
         .sheet(isPresented: $showMeasureProperties) {
             MeasurePropertiesView(viewModel: viewModel)
+                .presentationDetents([.large])
+        }
+        .sheet(isPresented: $showValidation) {
+            ValidationView(viewModel: viewModel)
                 .presentationDetents([.large])
         }
     }
