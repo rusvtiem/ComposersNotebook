@@ -776,6 +776,7 @@ struct SoundSettingsView: View {
             switch source {
             case .builtIn: return String(localized: "Built-in")
             case .bundledPlugin: return String(localized: "Plugin")
+            case .downloaded: return String(localized: "Downloaded")
             case .userImported: return String(localized: "Custom")
             }
         }())
