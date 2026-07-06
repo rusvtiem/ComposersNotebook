@@ -115,7 +115,8 @@ enum PlaybackScheduler {
                 partIndex: partIndex,
                 globalBeatOffset: globalBeat,
                 bpm: currentBPM,
-                octaveShiftSemitones: computeOctaveShift(measure: measure)
+                octaveShiftSemitones: computeOctaveShift(measure: measure),
+                instrumentTransposition: part.instrument.transposition
             )
             events.append(contentsOf: measureEvents)
             globalBeat += measureBeats
@@ -201,10 +202,17 @@ enum PlaybackScheduler {
         measure.octaveShifts.first?.kind.semitones ?? 0
     }
 
+    /// Ограничить MIDI-ноту допустимым диапазоном 0…127 после сдвигов
+    /// (транспозиция + октавы могут вывести крайние ноты за границу).
+    private static func clampMIDI(_ note: Int) -> Int {
+        min(127, max(0, note))
+    }
+
     /// Превратить ноты одного такта в PlaybackEvent.
     /// Учитывается:
     ///   - actualBeats (tuplet timing),
     ///   - octaveShift (полутоновый сдвиг),
+    ///   - instrumentTransposition (концертный строй: written → sounding),
     ///   - hairpin (линейная интерполяция velocity от текущей dynamic к целевой),
     ///   - tempo change (BPM меняется в течение такта).
     private static func generateMeasureEvents(
@@ -213,10 +221,16 @@ enum PlaybackScheduler {
         partIndex: Int,
         globalBeatOffset: Double,
         bpm: Double,
-        octaveShiftSemitones: Int
+        octaveShiftSemitones: Int,
+        instrumentTransposition: Int
     ) -> [PlaybackEvent] {
         var events: [PlaybackEvent] = []
         var localBeat: Double = 0
+
+        // Суммарный полутоновый сдвиг записанной ноты до звучащей (концертной):
+        // октавные переносы + строй инструмента (Bb-кларнет -2, валторна F -7,
+        // пикколо +12). MIDI-нота клампится в 0…127.
+        let semitoneShift = octaveShiftSemitones + instrumentTransposition
 
         let baseVelocity = DynamicMarking.mf.velocity
         let measureBeats = (measure.timeSignature?.totalBeats ?? 4.0)
@@ -246,7 +260,7 @@ enum PlaybackScheduler {
                 events.append(PlaybackEvent(
                     startBeat: globalBeatOffset + localBeat,
                     durationBeats: beats,
-                    midiNote: pitch.midiNote + octaveShiftSemitones,
+                    midiNote: clampMIDI(pitch.midiNote + semitoneShift),
                     velocity: vel,
                     partIndex: partIndex,
                     voice: event.voice,
@@ -258,7 +272,7 @@ enum PlaybackScheduler {
                     events.append(PlaybackEvent(
                         startBeat: globalBeatOffset + localBeat,
                         durationBeats: beats,
-                        midiNote: p.midiNote + octaveShiftSemitones,
+                        midiNote: clampMIDI(p.midiNote + semitoneShift),
                         velocity: vel,
                         partIndex: partIndex,
                         voice: event.voice,
