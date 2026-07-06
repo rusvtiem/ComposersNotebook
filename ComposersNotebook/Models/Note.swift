@@ -245,12 +245,15 @@ struct NoteEvent: Codable, Equatable, Identifiable {
     }
 
     /// Фактическая длительность в долях с учётом tuplet'а.
-    /// Если ноты нет в tuplet — равна `duration.beats`.
-    /// Если в tuplet 3:2 — `duration.beats * 2/3`.
+    /// Если ноты нет в tuplet — равна `duration.beats` (включая legacy triplet-флаг).
+    /// Если в tuplet 3:2 — `duration.beatsIgnoringTriplet * 2/3`.
+    ///
+    /// Явный `Tuplet` — единственный источник триольного тайминга: он берёт
+    /// базу БЕЗ triplet-флага, иначе старые .cnb с обоими признаками звучали
+    /// как ×4/9 вместо ×2/3.
     var actualBeats: Double {
-        let base = duration.beats
-        let multiplier = tuplet?.durationMultiplier ?? 1.0
-        return base * multiplier
+        guard let tuplet = tuplet else { return duration.beats }
+        return duration.beatsIgnoringTriplet * tuplet.durationMultiplier
     }
 
     // Convenience constructors

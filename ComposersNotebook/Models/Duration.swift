@@ -71,6 +71,20 @@ struct Duration: Codable, Equatable {
         return result
     }
 
+    /// Доли без учёта триольного флага (точки учитываются).
+    /// Нужно чтобы явный `Tuplet` на событии не умножался повторно на 2/3:
+    /// при выставленных ОБОИХ (legacy `triplet` + `NoteEvent.tuplet`) наивный
+    /// `beats * multiplier` давал ×4/9 вместо ×2/3.
+    var beatsIgnoringTriplet: Double {
+        var result = value.beats
+        if doubleDotted {
+            result *= 1.75
+        } else if dotted {
+            result *= 1.5
+        }
+        return result
+    }
+
     /// Duration in seconds at given BPM
     func seconds(atBPM bpm: Double) -> Double {
         return beats * (60.0 / bpm)
