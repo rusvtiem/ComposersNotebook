@@ -1,612 +1,12 @@
 {
   "sourceLanguage": "en",
   "strings": {
-    "Quick Note": {
+    "+1 octave ↑": {
       "localizations": {
         "ru": {
           "stringUnit": {
             "state": "translated",
-            "value": "Быстрая заметка"
-          }
-        }
-      }
-    },
-    "New Score": {
-      "localizations": {
-        "ru": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Новая партитура"
-          }
-        }
-      }
-    },
-    "Open File": {
-      "localizations": {
-        "ru": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Открыть файл"
-          }
-        }
-      }
-    },
-    "Recent": {
-      "localizations": {
-        "ru": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Недавние"
-          }
-        }
-      }
-    },
-    "Composer's Sketchbook": {
-      "localizations": {
-        "ru": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Блокнот композитора"
-          }
-        }
-      }
-    },
-    "Save": {
-      "localizations": {
-        "ru": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Сохранить"
-          }
-        }
-      }
-    },
-    "Export": {
-      "localizations": {
-        "ru": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Экспорт"
-          }
-        }
-      }
-    },
-    "Export as CNB": {
-      "localizations": {
-        "ru": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Экспорт CNB"
-          }
-        }
-      }
-    },
-    "Export as MusicXML": {
-      "localizations": {
-        "ru": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Экспорт MusicXML"
-          }
-        }
-      }
-    },
-    "Export as MIDI": {
-      "localizations": {
-        "ru": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Экспорт MIDI"
-          }
-        }
-      }
-    },
-    "Export as PDF": {
-      "localizations": {
-        "ru": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Экспорт PDF"
-          }
-        }
-      }
-    },
-    "Import File": {
-      "localizations": {
-        "ru": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Импорт файла"
-          }
-        }
-      }
-    },
-    "Sound Settings": {
-      "localizations": {
-        "ru": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Настройки звука"
-          }
-        }
-      }
-    },
-    "Theme": {
-      "localizations": {
-        "ru": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Тема оформления"
-          }
-        }
-      }
-    },
-    "Advanced Settings": {
-      "localizations": {
-        "ru": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Детальные настройки"
-          }
-        }
-      }
-    },
-    "Sound Character": {
-      "localizations": {
-        "ru": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Характер звука"
-          }
-        }
-      }
-    },
-    "Sound Source": {
-      "localizations": {
-        "ru": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Источник звука"
-          }
-        }
-      }
-    },
-    "Sound Preset": {
-      "localizations": {
-        "ru": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Пресет звучания"
-          }
-        }
-      }
-    },
-    "Preview Sound": {
-      "localizations": {
-        "ru": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Прослушать"
-          }
-        }
-      }
-    },
-    "Save as Preset": {
-      "localizations": {
-        "ru": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Сохранить как пресет"
-          }
-        }
-      }
-    },
-    "Reset to Default": {
-      "localizations": {
-        "ru": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Вернуть к стандартным"
-          }
-        }
-      }
-    },
-    "Save Preset": {
-      "localizations": {
-        "ru": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Сохранить пресет"
-          }
-        }
-      }
-    },
-    "Preset name": {
-      "localizations": {
-        "ru": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Название пресета"
-          }
-        }
-      }
-    },
-    "Cancel": {
-      "localizations": {
-        "ru": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Отмена"
-          }
-        }
-      }
-    },
-    "My Presets": {
-      "localizations": {
-        "ru": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Мои пресеты"
-          }
-        }
-      }
-    },
-    "Volume": {
-      "localizations": {
-        "ru": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Громкость"
-          }
-        }
-      }
-    },
-    "Pan": {
-      "localizations": {
-        "ru": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Панорама"
-          }
-        }
-      }
-    },
-    "Reverb": {
-      "localizations": {
-        "ru": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Реверберация"
-          }
-        }
-      }
-    },
-    "Brightness": {
-      "localizations": {
-        "ru": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Яркость"
-          }
-        }
-      }
-    },
-    "Attack": {
-      "localizations": {
-        "ru": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Атака"
-          }
-        }
-      }
-    },
-    "Decay": {
-      "localizations": {
-        "ru": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Затухание"
-          }
-        }
-      }
-    },
-    "Sustain": {
-      "localizations": {
-        "ru": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Сустейн"
-          }
-        }
-      }
-    },
-    "Release": {
-      "localizations": {
-        "ru": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Релиз"
-          }
-        }
-      }
-    },
-    "Dry": {
-      "localizations": {
-        "ru": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Сухо"
-          }
-        }
-      }
-    },
-    "Hall": {
-      "localizations": {
-        "ru": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Зал"
-          }
-        }
-      }
-    },
-    "Warm": {
-      "localizations": {
-        "ru": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Тёплый"
-          }
-        }
-      }
-    },
-    "Bright": {
-      "localizations": {
-        "ru": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Яркий"
-          }
-        }
-      }
-    },
-    "Classical": {
-      "localizations": {
-        "ru": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Классический"
-          }
-        }
-      }
-    },
-    "Soft": {
-      "localizations": {
-        "ru": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Мягкий"
-          }
-        }
-      }
-    },
-    "Fast": {
-      "localizations": {
-        "ru": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Быстро"
-          }
-        }
-      }
-    },
-    "Slow": {
-      "localizations": {
-        "ru": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Медленно"
-          }
-        }
-      }
-    },
-    "Short": {
-      "localizations": {
-        "ru": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Коротко"
-          }
-        }
-      }
-    },
-    "Long": {
-      "localizations": {
-        "ru": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Длинно"
-          }
-        }
-      }
-    },
-    "Built-in": {
-      "localizations": {
-        "ru": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Встроенный"
-          }
-        }
-      }
-    },
-    "Plugin": {
-      "localizations": {
-        "ru": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Плагин"
-          }
-        }
-      }
-    },
-    "Custom": {
-      "localizations": {
-        "ru": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Свой"
-          }
-        }
-      }
-    },
-    "Piano-specific settings": {
-      "localizations": {
-        "ru": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Настройки пианино"
-          }
-        }
-      }
-    },
-    "String-specific settings": {
-      "localizations": {
-        "ru": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Настройки струнных"
-          }
-        }
-      }
-    },
-    "Woodwind-specific settings": {
-      "localizations": {
-        "ru": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Настройки деревянных духовых"
-          }
-        }
-      }
-    },
-    "Brass-specific settings": {
-      "localizations": {
-        "ru": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Настройки медных духовых"
-          }
-        }
-      }
-    },
-    "Voice-specific settings": {
-      "localizations": {
-        "ru": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Настройки вокала"
-          }
-        }
-      }
-    },
-    "Percussion-specific settings": {
-      "localizations": {
-        "ru": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Настройки ударных"
-          }
-        }
-      }
-    },
-    "Piano Keyboard": {
-      "localizations": {
-        "ru": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Пианино"
-          }
-        }
-      }
-    },
-    "Letter Input": {
-      "localizations": {
-        "ru": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Буквы"
-          }
-        }
-      }
-    },
-    "Insert Measure Before": {
-      "localizations": {
-        "ru": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Вставить такт до"
-          }
-        }
-      }
-    },
-    "Insert Measure After": {
-      "localizations": {
-        "ru": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Вставить такт после"
-          }
-        }
-      }
-    },
-    "Delete Measure": {
-      "localizations": {
-        "ru": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Удалить такт"
-          }
-        }
-      }
-    },
-    "Change Time Signature": {
-      "localizations": {
-        "ru": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Сменить размер"
-          }
-        }
-      }
-    },
-    "Change Key": {
-      "localizations": {
-        "ru": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Сменить тональность"
-          }
-        }
-      }
-    },
-    "Change Tempo": {
-      "localizations": {
-        "ru": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Сменить темп"
-          }
-        }
-      }
-    },
-    "Transpose Measure": {
-      "localizations": {
-        "ru": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Транспозиция такта"
+            "value": "+1 октава ↑"
           }
         }
       }
@@ -621,26 +21,6 @@
         }
       }
     },
-    "-1 semitone ↓": {
-      "localizations": {
-        "ru": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "-1 полутон ↓"
-          }
-        }
-      }
-    },
-    "+1 octave ↑": {
-      "localizations": {
-        "ru": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "+1 октава ↑"
-          }
-        }
-      }
-    },
     "-1 octave ↓": {
       "localizations": {
         "ru": {
@@ -651,1722 +31,12 @@
         }
       }
     },
-    "Copy": {
+    "-1 semitone ↓": {
       "localizations": {
         "ru": {
           "stringUnit": {
             "state": "translated",
-            "value": "Копировать"
-          }
-        }
-      }
-    },
-    "Copy Measure": {
-      "localizations": {
-        "ru": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Копировать такт"
-          }
-        }
-      }
-    },
-    "Paste": {
-      "localizations": {
-        "ru": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Вставить"
-          }
-        }
-      }
-    },
-    "Time Signature": {
-      "localizations": {
-        "ru": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Размер"
-          }
-        }
-      }
-    },
-    "Key Signature": {
-      "localizations": {
-        "ru": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Тональность"
-          }
-        }
-      }
-    },
-    "Tempo": {
-      "localizations": {
-        "ru": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Темп"
-          }
-        }
-      }
-    },
-    "Apply": {
-      "localizations": {
-        "ru": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Применить"
-          }
-        }
-      }
-    },
-    "Edit": {
-      "localizations": {
-        "ru": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Ред."
-          }
-        }
-      }
-    },
-    "General": {
-      "localizations": {
-        "ru": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Основное"
-          }
-        }
-      }
-    },
-    "Title": {
-      "localizations": {
-        "ru": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Название"
-          }
-        }
-      }
-    },
-    "Composer": {
-      "localizations": {
-        "ru": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Композитор"
-          }
-        }
-      }
-    },
-    "Solo": {
-      "localizations": {
-        "ru": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Соло"
-          }
-        }
-      }
-    },
-    "Chamber Music": {
-      "localizations": {
-        "ru": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Камерная музыка"
-          }
-        }
-      }
-    },
-    "Vocal": {
-      "localizations": {
-        "ru": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Вокал"
-          }
-        }
-      }
-    },
-    "Orchestra": {
-      "localizations": {
-        "ru": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Оркестр"
-          }
-        }
-      }
-    },
-    "Custom Setup": {
-      "localizations": {
-        "ru": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Свой состав"
-          }
-        }
-      }
-    },
-    "Key": {
-      "localizations": {
-        "ru": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Знаки"
-          }
-        }
-      }
-    },
-    "Mode": {
-      "localizations": {
-        "ru": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Лад"
-          }
-        }
-      }
-    },
-    "Major": {
-      "localizations": {
-        "ru": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Мажор"
-          }
-        }
-      }
-    },
-    "Minor": {
-      "localizations": {
-        "ru": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Минор"
-          }
-        }
-      }
-    },
-    "Create": {
-      "localizations": {
-        "ru": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Создать"
-          }
-        }
-      }
-    },
-    "Add Instrument": {
-      "localizations": {
-        "ru": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Добавить инструмент"
-          }
-        }
-      }
-    },
-    "Untitled": {
-      "localizations": {
-        "ru": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Без названия"
-          }
-        }
-      }
-    },
-    "Octave %lld": {
-      "localizations": {
-        "ru": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Октава %lld"
-          }
-        }
-      }
-    },
-    "Measure %lld/%lld": {
-      "localizations": {
-        "ru": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Такт %lld/%lld"
-          }
-        }
-      }
-    },
-    "Change time signature from measure %lld": {
-      "localizations": {
-        "ru": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Сменить размер с такта %lld"
-          }
-        }
-      }
-    },
-    "Change key from measure %lld": {
-      "localizations": {
-        "ru": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Сменить тональность с такта %lld"
-          }
-        }
-      }
-    },
-    "Change tempo from measure %lld": {
-      "localizations": {
-        "ru": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Сменить темп с такта %lld"
-          }
-        }
-      }
-    },
-    "Import SoundFont": {
-      "localizations": {
-        "ru": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Импорт SoundFont"
-          }
-        }
-      }
-    },
-    "Delete": {
-      "localizations": {
-        "ru": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Удалить"
-          }
-        }
-      }
-    },
-    "Hammer Hardness": {
-      "localizations": {
-        "ru": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Жёсткость молоточка"
-          }
-        }
-      }
-    },
-    "Hard": {
-      "localizations": {
-        "ru": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Жёстко"
-          }
-        }
-      }
-    },
-    "Pedal Resonance": {
-      "localizations": {
-        "ru": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Резонанс педали"
-          }
-        }
-      }
-    },
-    "Rich": {
-      "localizations": {
-        "ru": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Насыщенно"
-          }
-        }
-      }
-    },
-    "Lid Position": {
-      "localizations": {
-        "ru": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Положение крышки"
-          }
-        }
-      }
-    },
-    "Closed": {
-      "localizations": {
-        "ru": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Закрыта"
-          }
-        }
-      }
-    },
-    "Half Open": {
-      "localizations": {
-        "ru": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Полуоткрыта"
-          }
-        }
-      }
-    },
-    "Full Open": {
-      "localizations": {
-        "ru": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Полностью открыта"
-          }
-        }
-      }
-    },
-    "Vibrato Speed": {
-      "localizations": {
-        "ru": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Скорость вибрато"
-          }
-        }
-      }
-    },
-    "Vibrato Depth": {
-      "localizations": {
-        "ru": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Глубина вибрато"
-          }
-        }
-      }
-    },
-    "Subtle": {
-      "localizations": {
-        "ru": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Тонко"
-          }
-        }
-      }
-    },
-    "Wide": {
-      "localizations": {
-        "ru": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Широко"
-          }
-        }
-      }
-    },
-    "Bow Type": {
-      "localizations": {
-        "ru": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Тип смычка"
-          }
-        }
-      }
-    },
-    "Standard": {
-      "localizations": {
-        "ru": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Стандартный"
-          }
-        }
-      }
-    },
-    "Baroque": {
-      "localizations": {
-        "ru": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Барочный"
-          }
-        }
-      }
-    },
-    "Air Amount": {
-      "localizations": {
-        "ru": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Количество воздуха"
-          }
-        }
-      }
-    },
-    "Less": {
-      "localizations": {
-        "ru": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Меньше"
-          }
-        }
-      }
-    },
-    "More": {
-      "localizations": {
-        "ru": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Больше"
-          }
-        }
-      }
-    },
-    "Tone Brightness": {
-      "localizations": {
-        "ru": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Яркость тона"
-          }
-        }
-      }
-    },
-    "Dark": {
-      "localizations": {
-        "ru": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Тёмный"
-          }
-        }
-      }
-    },
-    "Mute Type": {
-      "localizations": {
-        "ru": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Тип сурдины"
-          }
-        }
-      }
-    },
-    "Open": {
-      "localizations": {
-        "ru": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Открыто"
-          }
-        }
-      }
-    },
-    "Straight": {
-      "localizations": {
-        "ru": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Прямая"
-          }
-        }
-      }
-    },
-    "Cup": {
-      "localizations": {
-        "ru": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Чашка"
-          }
-        }
-      }
-    },
-    "Harmon": {
-      "localizations": {
-        "ru": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Хармон"
-          }
-        }
-      }
-    },
-    "Plunger": {
-      "localizations": {
-        "ru": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Плунжер"
-          }
-        }
-      }
-    },
-    "Mellow": {
-      "localizations": {
-        "ru": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Мягко"
-          }
-        }
-      }
-    },
-    "Brilliant": {
-      "localizations": {
-        "ru": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Блестяще"
-          }
-        }
-      }
-    },
-    "Vowel": {
-      "localizations": {
-        "ru": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Гласная"
-          }
-        }
-      }
-    },
-    "Ensemble Width": {
-      "localizations": {
-        "ru": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Ширина ансамбля"
-          }
-        }
-      }
-    },
-    "Section": {
-      "localizations": {
-        "ru": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Секция"
-          }
-        }
-      }
-    },
-    "Stick Type": {
-      "localizations": {
-        "ru": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Тип палочек"
-          }
-        }
-      }
-    },
-    "Sticks": {
-      "localizations": {
-        "ru": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Палочки"
-          }
-        }
-      }
-    },
-    "Brushes": {
-      "localizations": {
-        "ru": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Щётки"
-          }
-        }
-      }
-    },
-    "Mallets": {
-      "localizations": {
-        "ru": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Маллеты"
-          }
-        }
-      }
-    },
-    "Dampening": {
-      "localizations": {
-        "ru": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Демпфирование"
-          }
-        }
-      }
-    },
-    "Tight": {
-      "localizations": {
-        "ru": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Сухо"
-          }
-        }
-      }
-    },
-    "Ring": {
-      "localizations": {
-        "ru": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Звон"
-          }
-        }
-      }
-    },
-    "Remove Current Part": {
-      "localizations": {
-        "ru": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Удалить текущую партию"
-          }
-        }
-      }
-    },
-    "Встроенные темы": {
-      "localizations": {
-        "en": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Built-in Themes"
-          }
-        }
-      }
-    },
-    "Пользовательские": {
-      "localizations": {
-        "en": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Custom"
-          }
-        }
-      }
-    },
-    "Светлая": {
-      "localizations": {
-        "en": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Light"
-          }
-        }
-      }
-    },
-    "Тёмная": {
-      "localizations": {
-        "en": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Dark"
-          }
-        }
-      }
-    },
-    "Сепия": {
-      "localizations": {
-        "en": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Sepia"
-          }
-        }
-      }
-    },
-    "Полночь": {
-      "localizations": {
-        "en": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Midnight"
-          }
-        }
-      }
-    },
-    "Пергамент": {
-      "localizations": {
-        "en": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Parchment"
-          }
-        }
-      }
-    },
-    "Системная": {
-      "localizations": {
-        "en": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "System"
-          }
-        }
-      }
-    },
-    "Failed to load image": {
-      "localizations": {
-        "ru": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Не удалось загрузить изображение"
-          }
-        }
-      }
-    },
-    "OMR error: %@": {
-      "localizations": {
-        "ru": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Ошибка OMR: %@"
-          }
-        }
-      }
-    },
-    "No music notation detected": {
-      "localizations": {
-        "ru": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Нотная запись не обнаружена"
-          }
-        }
-      }
-    },
-    "File is not a valid SoundFont (.sf2)": {
-      "localizations": {
-        "ru": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Файл не является корректным SoundFont (.sf2)"
-          }
-        }
-      }
-    },
-    "Balanced GM/GS bank: 259 presets, 11 drum kits. Recommended as a universal replacement for the bundled TimGM6mb.": {
-      "localizations": {
-        "ru": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Сбалансированный GM/GS банк: 259 пресетов, 11 ударных. Рекомендуется как универсальная замена встроенному TimGM6mb."
-          }
-        }
-      }
-    },
-    "Large GM bank known from FluidSynth/MuseScore. Sounds better for orchestral parts.": {
-      "localizations": {
-        "ru": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Большой GM-банк, известный по FluidSynth/MuseScore. Лучше звучит для оркестровых партий."
-          }
-        }
-      }
-    },
-    "MuseScore standard. AVAudioUnitSampler accepts only .sf2 — take the 208 MB version; .sf3 will not load.": {
-      "localizations": {
-        "ru": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Стандарт MuseScore. AVAudioUnitSampler понимает только .sf2 — берите 208 МБ версию, .sf3 не загрузится."
-          }
-        }
-      }
-    },
-    "Heavy-duty orchestral bank. Install only if memory is not a concern.": {
-      "localizations": {
-        "ru": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Серьёзный оркестровый банк. Ставьте только если памяти не жалко."
-          }
-        }
-      }
-    },
-    "Professional concert grand piano (piano only). Pick this if your main instrument is grand piano.": {
-      "localizations": {
-        "ru": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Профессиональный концертный рояль (только пианино). Берите если основной инструмент — рояль."
-          }
-        }
-      }
-    },
-    "~30 MB": {
-      "localizations": {
-        "ru": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "~30 МБ"
-          }
-        }
-      }
-    },
-    "~141 MB": {
-      "localizations": {
-        "ru": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "~141 МБ"
-          }
-        }
-      }
-    },
-    "~208 MB (.sf2) / 36 MB (.sf3)": {
-      "localizations": {
-        "ru": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "~208 МБ (.sf2) / 36 МБ (.sf3)"
-          }
-        }
-      }
-    },
-    "~503 MB": {
-      "localizations": {
-        "ru": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "~503 МБ"
-          }
-        }
-      }
-    },
-    "~200 MB": {
-      "localizations": {
-        "ru": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "~200 МБ"
-          }
-        }
-      }
-    },
-    "Measure overflow: %@ beats instead of %@": {
-      "localizations": {
-        "ru": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Такт переполнен: %@ долей вместо %@"
-          }
-        }
-      }
-    },
-    "Measure not full: %@ of %@ beats": {
-      "localizations": {
-        "ru": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Такт не полный: %@ из %@ долей"
-          }
-        }
-      }
-    },
-    "Note %@ (MIDI %lld) out of range for %@: %@…%@": {
-      "localizations": {
-        "ru": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Нота %@ (MIDI %lld) вне диапазона %@: %@…%@"
-          }
-        }
-      }
-    },
-    "Voice %@: two notes on the same beat (%@)": {
-      "localizations": {
-        "ru": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Голос %@: две ноты на одной доле (%@)"
-          }
-        }
-      }
-    },
-    "Technique %@ is usually not applicable to %@": {
-      "localizations": {
-        "ru": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Техника %@ обычно неприменима к %@"
-          }
-        }
-      }
-    },
-    "Information": {
-      "localizations": {
-        "ru": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Информация"
-          }
-        }
-      }
-    },
-    "Licenses": {
-      "localizations": {
-        "ru": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Лицензии"
-          }
-        }
-      }
-    },
-    "Contact developer": {
-      "localizations": {
-        "ru": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Связаться с автором"
-          }
-        }
-      }
-    },
-    "Links": {
-      "localizations": {
-        "ru": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Ссылки"
-          }
-        }
-      }
-    },
-    "Website": {
-      "localizations": {
-        "ru": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Сайт"
-          }
-        }
-      }
-    },
-    "About app": {
-      "localizations": {
-        "ru": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "О приложении"
-          }
-        }
-      }
-    },
-    "Done": {
-      "localizations": {
-        "ru": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Готово"
-          }
-        }
-      }
-    },
-    "Version": {
-      "localizations": {
-        "ru": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Версия"
-          }
-        }
-      }
-    },
-    "This app uses third-party resources distributed under open licenses. Authors and license terms are listed below.": {
-      "localizations": {
-        "ru": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Приложение использует ресурсы сторонних авторов на условиях открытых лицензий. Авторы и условия лицензий перечислены ниже."
-          }
-        }
-      }
-    },
-    "SoundFonts (built-in)": {
-      "localizations": {
-        "ru": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Звуковые банки (встроенные)"
-          }
-        }
-      }
-    },
-    "SoundFonts (available for download)": {
-      "localizations": {
-        "ru": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Звуковые банки (доступны для скачивания)"
-          }
-        }
-      }
-    },
-    "Fonts": {
-      "localizations": {
-        "ru": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Шрифты"
-          }
-        }
-      }
-    },
-    "Compact General MIDI SoundFont (~6 MB), historical default of the app.": {
-      "localizations": {
-        "ru": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Компактный звуковой банк General MIDI (~6 МБ), исторический банк по умолчанию."
-          }
-        }
-      }
-    },
-    "Stable open-source GM SoundFont (~141 MB).": {
-      "localizations": {
-        "ru": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Стабильный open-source звуковой банк GM (~141 МБ)."
-          }
-        }
-      }
-    },
-    "Compact universal GM SoundFont (~30 MB).": {
-      "localizations": {
-        "ru": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Компактный универсальный звуковой банк GM (~30 МБ)."
-          }
-        }
-      }
-    },
-    "Default SoundFont used in MuseScore 4 (~208 MB).": {
-      "localizations": {
-        "ru": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Звуковой банк по умолчанию в MuseScore 4 (~208 МБ)."
-          }
-        }
-      }
-    },
-    "Orchestral SoundFont (~530 MB).": {
-      "localizations": {
-        "ru": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Оркестровый звуковой банк (~530 МБ)."
-          }
-        }
-      }
-    },
-    "Concert grand piano sampled from Yamaha C5 (~350 MB).": {
-      "localizations": {
-        "ru": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Концертный рояль, оцифрованный с Yamaha C5 (~350 МБ)."
-          }
-        }
-      }
-    },
-    "SMuFL-compliant music notation font.": {
-      "localizations": {
-        "ru": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Музыкальный шрифт, совместимый со стандартом SMuFL."
-          }
-        }
-      }
-    },
-    "Source": {
-      "localizations": {
-        "ru": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Источник"
-          }
-        }
-      }
-    },
-    "If you have a question, suggestion, or want to report an issue, please contact the developer.": {
-      "localizations": {
-        "ru": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Если у вас есть вопрос, предложение или вы хотите сообщить о проблеме — напишите автору."
-          }
-        }
-      }
-    },
-    "When writing, please mention your iPhone model and iOS version. A short description of what you were doing when the issue happened helps a lot.": {
-      "localizations": {
-        "ru": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "При обращении укажите модель iPhone и версию iOS. Краткое описание того, что вы делали в момент возникновения проблемы, очень поможет."
-          }
-        }
-      }
-    },
-    "Write an email": {
-      "localizations": {
-        "ru": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Написать на email"
-          }
-        }
-      }
-    },
-    "Write on Telegram": {
-      "localizations": {
-        "ru": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Написать в Telegram"
-          }
-        }
-      }
-    },
-    "Email is not configured yet": {
-      "localizations": {
-        "ru": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Email пока не настроен"
-          }
-        }
-      }
-    },
-    "OK": {
-      "localizations": {
-        "ru": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "OK"
-          }
-        }
-      }
-    },
-    "The developer hasn't set up an email address yet. Please try writing via Telegram, or check back after an update.": {
-      "localizations": {
-        "ru": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Автор пока не указал email для обратной связи. Попробуйте написать в Telegram или проверьте после обновления приложения."
-          }
-        }
-      }
-    },
-    "Telegram is not configured yet": {
-      "localizations": {
-        "ru": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Telegram пока не настроен"
-          }
-        }
-      }
-    },
-    "The developer hasn't set up a Telegram account yet. Please try writing via email, or check back after an update.": {
-      "localizations": {
-        "ru": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Автор пока не указал Telegram для обратной связи. Попробуйте написать на email или проверьте после обновления приложения."
-          }
-        }
-      }
-    },
-    "Could not open email app": {
-      "localizations": {
-        "ru": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Не удалось открыть почтовое приложение"
-          }
-        }
-      }
-    },
-    "No email app is configured on this device. Set up Mail (or another email app) in Settings, then try again.": {
-      "localizations": {
-        "ru": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "На устройстве нет настроенного почтового приложения. Настройте Почту (или другое приложение) в Настройках и попробуйте снова."
-          }
-        }
-      }
-    },
-    "Composer's Notebook — question": {
-      "localizations": {
-        "ru": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Composer's Notebook — вопрос"
-          }
-        }
-      }
-    },
-    "Auto-generated diagnostics:": {
-      "localizations": {
-        "ru": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Технические данные (автоматически):"
-          }
-        }
-      }
-    },
-    "Device:": {
-      "localizations": {
-        "ru": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Устройство:"
-          }
-        }
-      }
-    },
-    "iOS:": {
-      "localizations": {
-        "ru": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "iOS:"
-          }
-        }
-      }
-    },
-    "App version:": {
-      "localizations": {
-        "ru": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Версия приложения:"
-          }
-        }
-      }
-    },
-    "Date:": {
-      "localizations": {
-        "ru": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Дата:"
-          }
-        }
-      }
-    },
-    "No measure selected": {
-      "localizations": {
-        "ru": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Такт не выбран"
-          }
-        }
-      }
-    },
-    "Tap a measure in the score to select it, then reopen this menu.": {
-      "localizations": {
-        "ru": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Коснитесь такта в партитуре, чтобы выбрать его, и откройте это меню заново."
-          }
-        }
-      }
-    },
-    "Measure Properties": {
-      "localizations": {
-        "ru": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Свойства такта"
-          }
-        }
-      }
-    },
-    "Measure": {
-      "localizations": {
-        "ru": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Такт"
-          }
-        }
-      }
-    },
-    "Part": {
-      "localizations": {
-        "ru": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Партия"
-          }
-        }
-      }
-    },
-    "Ending barline": {
-      "localizations": {
-        "ru": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Тактовая черта (в конце)"
-          }
-        }
-      }
-    },
-    "Type": {
-      "localizations": {
-        "ru": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Тип"
-          }
-        }
-      }
-    },
-    "Regular": {
-      "localizations": {
-        "ru": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Обычная"
-          }
-        }
-      }
-    },
-    "Double": {
-      "localizations": {
-        "ru": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Двойная"
-          }
-        }
-      }
-    },
-    "Final": {
-      "localizations": {
-        "ru": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Финальная"
-          }
-        }
-      }
-    },
-    "Repeat start": {
-      "localizations": {
-        "ru": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Начало репризы"
-          }
-        }
-      }
-    },
-    "Repeat end": {
-      "localizations": {
-        "ru": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Конец репризы"
-          }
-        }
-      }
-    },
-    "Repeat both": {
-      "localizations": {
-        "ru": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Реприза с обеих сторон"
-          }
-        }
-      }
-    },
-    "Volta (ending bracket)": {
-      "localizations": {
-        "ru": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Вольта (окончание)"
-          }
-        }
-      }
-    },
-    "Has volta": {
-      "localizations": {
-        "ru": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Есть вольта"
-          }
-        }
-      }
-    },
-    "Volta number: %d": {
-      "localizations": {
-        "ru": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Номер вольты: %d"
-          }
-        }
-      }
-    },
-    "Rehearsal mark": {
-      "localizations": {
-        "ru": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Маркер репетиции"
-          }
-        }
-      }
-    },
-    "Has rehearsal mark": {
-      "localizations": {
-        "ru": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Есть маркер репетиции"
-          }
-        }
-      }
-    },
-    "Text (A, B, 1, ...)": {
-      "localizations": {
-        "ru": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Текст (A, B, 1, ...)"
-          }
-        }
-      }
-    },
-    "Style": {
-      "localizations": {
-        "ru": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Стиль"
-          }
-        }
-      }
-    },
-    "Boxed": {
-      "localizations": {
-        "ru": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "В рамке"
-          }
-        }
-      }
-    },
-    "Bold": {
-      "localizations": {
-        "ru": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Жирный"
-          }
-        }
-      }
-    },
-    "Plain": {
-      "localizations": {
-        "ru": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Обычный"
-          }
-        }
-      }
-    },
-    "Navigation mark": {
-      "localizations": {
-        "ru": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Знак навигации"
-          }
-        }
-      }
-    },
-    "Mark": {
-      "localizations": {
-        "ru": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Знак"
-          }
-        }
-      }
-    },
-    "None": {
-      "localizations": {
-        "ru": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Нет"
-          }
-        }
-      }
-    },
-    "Crescendo / Diminuendo (hairpins)": {
-      "localizations": {
-        "ru": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Крещендо / диминуэндо (вилки)"
-          }
-        }
-      }
-    },
-    "Add hairpin": {
-      "localizations": {
-        "ru": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Добавить вилку"
-          }
-        }
-      }
-    },
-    "Octave shift (8va / 8vb / 15ma / 15mb)": {
-      "localizations": {
-        "ru": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Октавный знак (8va / 8vb / 15ma / 15mb)"
-          }
-        }
-      }
-    },
-    "Add octave shift": {
-      "localizations": {
-        "ru": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Добавить октавный знак"
-          }
-        }
-      }
-    },
-    "Tempo change (accel / rit)": {
-      "localizations": {
-        "ru": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Изменение темпа (accel / rit)"
-          }
-        }
-      }
-    },
-    "Has tempo change": {
-      "localizations": {
-        "ru": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Есть изменение темпа"
-          }
-        }
-      }
-    },
-    "Kind": {
-      "localizations": {
-        "ru": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Вид"
-          }
-        }
-      }
-    },
-    "Target BPM": {
-      "localizations": {
-        "ru": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Целевой BPM"
-          }
-        }
-      }
-    },
-    "Expression texts (espressivo, dolce, ...)": {
-      "localizations": {
-        "ru": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Экспрессивные тексты (espressivo, dolce, ...)"
-          }
-        }
-      }
-    },
-    "Custom text...": {
-      "localizations": {
-        "ru": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Свой текст..."
-          }
-        }
-      }
-    },
-    "Add expression text": {
-      "localizations": {
-        "ru": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Добавить экспрессивный текст"
-          }
-        }
-      }
-    },
-    "Multi-measure rest": {
-      "localizations": {
-        "ru": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Многотактовая пауза"
-          }
-        }
-      }
-    },
-    "Combine into %d-bar rest": {
-      "localizations": {
-        "ru": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Объединить в паузу на %d тактов"
+            "value": "-1 полутон ↓"
           }
         }
       }
@@ -2381,342 +51,22 @@
         }
       }
     },
-    "Crescendo (<)": {
+    "About app": {
       "localizations": {
         "ru": {
           "stringUnit": {
             "state": "translated",
-            "value": "Крещендо (<)"
+            "value": "О приложении"
           }
         }
       }
     },
-    "Diminuendo (>)": {
+    "Add Instrument": {
       "localizations": {
         "ru": {
           "stringUnit": {
             "state": "translated",
-            "value": "Диминуэндо (>)"
-          }
-        }
-      }
-    },
-    "Start beat": {
-      "localizations": {
-        "ru": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Начальная доля"
-          }
-        }
-      }
-    },
-    "End beat": {
-      "localizations": {
-        "ru": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Конечная доля"
-          }
-        }
-      }
-    },
-    "Direction": {
-      "localizations": {
-        "ru": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Направление"
-          }
-        }
-      }
-    },
-    "Italian (italic)": {
-      "localizations": {
-        "ru": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Итальянский (курсив)"
-          }
-        }
-      }
-    },
-    "Attach to beat": {
-      "localizations": {
-        "ru": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Привязка к доле"
-          }
-        }
-      }
-    },
-    "espressivo, dolce, ...": {
-      "localizations": {
-        "ru": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "espressivo, dolce, ..."
-          }
-        }
-      }
-    },
-    "Score Validation": {
-      "localizations": {
-        "ru": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Проверка партитуры"
-          }
-        }
-      }
-    },
-    "Validate Score": {
-      "localizations": {
-        "ru": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Проверить партитуру"
-          }
-        }
-      }
-    },
-    "Re-check": {
-      "localizations": {
-        "ru": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Перепроверить"
-          }
-        }
-      }
-    },
-    "No issues found": {
-      "localizations": {
-        "ru": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Проблем не найдено"
-          }
-        }
-      }
-    },
-    "The score passes all built-in checks: instrument ranges, measure timing, voice conflicts, and playback techniques.": {
-      "localizations": {
-        "ru": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Партитура прошла все встроенные проверки: диапазоны инструментов, длительности тактов, конфликты голосов и техники исполнения."
-          }
-        }
-      }
-    },
-    "Errors": {
-      "localizations": {
-        "ru": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Ошибки"
-          }
-        }
-      }
-    },
-    "Warnings": {
-      "localizations": {
-        "ru": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Предупреждения"
-          }
-        }
-      }
-    },
-    "Notes": {
-      "localizations": {
-        "ru": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Заметки"
-          }
-        }
-      }
-    },
-    "Part %d": {
-      "localizations": {
-        "ru": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Партия %d"
-          }
-        }
-      }
-    },
-    "measure %d": {
-      "localizations": {
-        "ru": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "такт %d"
-          }
-        }
-      }
-    },
-    "note %d": {
-      "localizations": {
-        "ru": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "нота %d"
-          }
-        }
-      }
-    },
-    "Triplet (3:2)": {
-      "localizations": {
-        "ru": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Триоль (3:2)"
-          }
-        }
-      }
-    },
-    "Quintuplet (5:4)": {
-      "localizations": {
-        "ru": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Квинтоль (5:4)"
-          }
-        }
-      }
-    },
-    "Sextuplet (6:4)": {
-      "localizations": {
-        "ru": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Секстоль (6:4)"
-          }
-        }
-      }
-    },
-    "Septuplet (7:4)": {
-      "localizations": {
-        "ru": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Септоль (7:4)"
-          }
-        }
-      }
-    },
-    "Nonuplet (9:8)": {
-      "localizations": {
-        "ru": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Девятоль (9:8)"
-          }
-        }
-      }
-    },
-    "Remove tuplet group": {
-      "localizations": {
-        "ru": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Снять группу триоли"
-          }
-        }
-      }
-    },
-    "Remove fingering": {
-      "localizations": {
-        "ru": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Убрать аппликатуру"
-          }
-        }
-      }
-    },
-    "Chord Symbol": {
-      "localizations": {
-        "ru": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Аккордовый символ"
-          }
-        }
-      }
-    },
-    "Could not parse chord symbol. Examples: C, Am, G7, Cmaj7, C/E": {
-      "localizations": {
-        "ru": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Не удалось распознать аккорд. Примеры: C, Am, G7, Cmaj7, C/E"
-          }
-        }
-      }
-    },
-    "Quick presets": {
-      "localizations": {
-        "ru": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Быстрые варианты"
-          }
-        }
-      }
-    },
-    "Remove chord symbol": {
-      "localizations": {
-        "ru": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Убрать аккорд"
-          }
-        }
-      }
-    },
-    "Dynamics span": {
-      "localizations": {
-        "ru": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Динамическая вилка"
-          }
-        }
-      }
-    },
-    "Octave shift": {
-      "localizations": {
-        "ru": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Октавный знак"
-          }
-        }
-      }
-    },
-    "Barline": {
-      "localizations": {
-        "ru": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Тактовая черта"
-          }
-        }
-      }
-    },
-    "Texts": {
-      "localizations": {
-        "ru": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Тексты"
+            "value": "Добавить инструмент"
           }
         }
       }
@@ -2741,6 +91,36 @@
         }
       }
     },
+    "Add expression text": {
+      "localizations": {
+        "ru": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Добавить экспрессивный текст"
+          }
+        }
+      }
+    },
+    "Add hairpin": {
+      "localizations": {
+        "ru": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Добавить вилку"
+          }
+        }
+      }
+    },
+    "Add octave shift": {
+      "localizations": {
+        "ru": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Добавить октавный знак"
+          }
+        }
+      }
+    },
     "Add rehearsal mark": {
       "localizations": {
         "ru": {
@@ -2751,112 +131,22 @@
         }
       }
     },
-    "SoundFont": {
+    "Advanced Settings": {
       "localizations": {
         "ru": {
           "stringUnit": {
             "state": "translated",
-            "value": "Звуковой банк"
+            "value": "Детальные настройки"
           }
         }
       }
     },
-    "Choose which SoundFont to use for playback. Built-in fonts come with the app; you can download more from the recommended list or import your own .sf2 file.": {
+    "Air Amount": {
       "localizations": {
         "ru": {
           "stringUnit": {
             "state": "translated",
-            "value": "Выберите звуковой банк для воспроизведения. Встроенные банки идут с приложением; дополнительные можно скачать из рекомендованного списка или импортировать свой .sf2 файл."
-          }
-        }
-      }
-    },
-    "No built-in SoundFonts found in the app bundle.": {
-      "localizations": {
-        "ru": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "В bundle приложения нет встроенных банков."
-          }
-        }
-      }
-    },
-    "Downloaded": {
-      "localizations": {
-        "ru": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Скачанные мной"
-          }
-        }
-      }
-    },
-    "Available for download": {
-      "localizations": {
-        "ru": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Доступны для скачивания"
-          }
-        }
-      }
-    },
-    "My imported": {
-      "localizations": {
-        "ru": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Импортированные мной"
-          }
-        }
-      }
-    },
-    "Import my own .sf2 file": {
-      "localizations": {
-        "ru": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Импортировать свой .sf2"
-          }
-        }
-      }
-    },
-    "Pick a .sf2 file from Files. The app validates it and copies into its own storage.": {
-      "localizations": {
-        "ru": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Выберите .sf2 файл из Files. Приложение проверит формат и скопирует в своё хранилище."
-          }
-        }
-      }
-    },
-    "Import error": {
-      "localizations": {
-        "ru": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Ошибка импорта"
-          }
-        }
-      }
-    },
-    "Open author site": {
-      "localizations": {
-        "ru": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Открыть сайт автора"
-          }
-        }
-      }
-    },
-    "Downloading... %d%%": {
-      "localizations": {
-        "ru": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Скачивание... %d%%"
+            "value": "Количество воздуха"
           }
         }
       }
@@ -2871,6 +161,626 @@
         }
       }
     },
+    "App version:": {
+      "localizations": {
+        "ru": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Версия приложения:"
+          }
+        }
+      }
+    },
+    "Apply": {
+      "localizations": {
+        "ru": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Применить"
+          }
+        }
+      }
+    },
+    "Attach to beat": {
+      "localizations": {
+        "ru": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Привязка к доле"
+          }
+        }
+      }
+    },
+    "Attack": {
+      "localizations": {
+        "ru": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Атака"
+          }
+        }
+      }
+    },
+    "Auto-generated diagnostics:": {
+      "localizations": {
+        "ru": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Технические данные (автоматически):"
+          }
+        }
+      }
+    },
+    "Available for download": {
+      "localizations": {
+        "ru": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Доступны для скачивания"
+          }
+        }
+      }
+    },
+    "Balanced GM/GS bank: 259 presets, 11 drum kits. Recommended as a universal replacement for the bundled TimGM6mb.": {
+      "localizations": {
+        "ru": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Сбалансированный GM/GS банк: 259 пресетов, 11 ударных. Рекомендуется как универсальная замена встроенному TimGM6mb."
+          }
+        }
+      }
+    },
+    "Barline": {
+      "localizations": {
+        "ru": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Тактовая черта"
+          }
+        }
+      }
+    },
+    "Baroque": {
+      "localizations": {
+        "ru": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Барочный"
+          }
+        }
+      }
+    },
+    "Bold": {
+      "localizations": {
+        "ru": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Жирный"
+          }
+        }
+      }
+    },
+    "Bow Type": {
+      "localizations": {
+        "ru": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Тип смычка"
+          }
+        }
+      }
+    },
+    "Boxed": {
+      "localizations": {
+        "ru": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "В рамке"
+          }
+        }
+      }
+    },
+    "Brass-specific settings": {
+      "localizations": {
+        "ru": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Настройки медных духовых"
+          }
+        }
+      }
+    },
+    "Bright": {
+      "localizations": {
+        "ru": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Яркий"
+          }
+        }
+      }
+    },
+    "Brightness": {
+      "localizations": {
+        "ru": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Яркость"
+          }
+        }
+      }
+    },
+    "Brilliant": {
+      "localizations": {
+        "ru": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Блестяще"
+          }
+        }
+      }
+    },
+    "Brushes": {
+      "localizations": {
+        "ru": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Щётки"
+          }
+        }
+      }
+    },
+    "Built-in": {
+      "localizations": {
+        "ru": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Встроенный"
+          }
+        }
+      }
+    },
+    "Cancel": {
+      "localizations": {
+        "ru": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Отмена"
+          }
+        }
+      }
+    },
+    "Chamber Music": {
+      "localizations": {
+        "ru": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Камерная музыка"
+          }
+        }
+      }
+    },
+    "Change Key": {
+      "localizations": {
+        "ru": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Сменить тональность"
+          }
+        }
+      }
+    },
+    "Change Tempo": {
+      "localizations": {
+        "ru": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Сменить темп"
+          }
+        }
+      }
+    },
+    "Change Time Signature": {
+      "localizations": {
+        "ru": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Сменить размер"
+          }
+        }
+      }
+    },
+    "Change key from measure %lld": {
+      "localizations": {
+        "ru": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Сменить тональность с такта %lld"
+          }
+        }
+      }
+    },
+    "Change tempo from measure %lld": {
+      "localizations": {
+        "ru": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Сменить темп с такта %lld"
+          }
+        }
+      }
+    },
+    "Change time signature from measure %lld": {
+      "localizations": {
+        "ru": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Сменить размер с такта %lld"
+          }
+        }
+      }
+    },
+    "Choose which SoundFont to use for playback. Built-in fonts come with the app; you can download more from the recommended list or import your own .sf2 file.": {
+      "localizations": {
+        "ru": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Выберите звуковой банк для воспроизведения. Встроенные банки идут с приложением; дополнительные можно скачать из рекомендованного списка или импортировать свой .sf2 файл."
+          }
+        }
+      }
+    },
+    "Chord Symbol": {
+      "localizations": {
+        "ru": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Аккордовый символ"
+          }
+        }
+      }
+    },
+    "Classical": {
+      "localizations": {
+        "ru": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Классический"
+          }
+        }
+      }
+    },
+    "Close": {
+      "localizations": {
+        "ru": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Закрыть"
+          }
+        }
+      }
+    },
+    "Closed": {
+      "localizations": {
+        "ru": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Закрыта"
+          }
+        }
+      }
+    },
+    "Combine into %d-bar rest": {
+      "localizations": {
+        "ru": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Объединить в паузу на %d тактов"
+          }
+        }
+      }
+    },
+    "Compact General MIDI SoundFont (~6 MB), historical default of the app.": {
+      "localizations": {
+        "ru": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Компактный звуковой банк General MIDI (~6 МБ), исторический банк по умолчанию."
+          }
+        }
+      }
+    },
+    "Compact universal GM SoundFont (~30 MB).": {
+      "localizations": {
+        "ru": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Компактный универсальный звуковой банк GM (~30 МБ)."
+          }
+        }
+      }
+    },
+    "Composer": {
+      "localizations": {
+        "ru": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Композитор"
+          }
+        }
+      }
+    },
+    "Composer's Notebook — question": {
+      "localizations": {
+        "ru": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Composer's Notebook — вопрос"
+          }
+        }
+      }
+    },
+    "Composer's Sketchbook": {
+      "localizations": {
+        "ru": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Блокнот композитора"
+          }
+        }
+      }
+    },
+    "Concert grand piano sampled from Yamaha C5 (~350 MB).": {
+      "localizations": {
+        "ru": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Концертный рояль, оцифрованный с Yamaha C5 (~350 МБ)."
+          }
+        }
+      }
+    },
+    "Contact developer": {
+      "localizations": {
+        "ru": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Связаться с автором"
+          }
+        }
+      }
+    },
+    "Copy": {
+      "localizations": {
+        "ru": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Копировать"
+          }
+        }
+      }
+    },
+    "Copy Measure": {
+      "localizations": {
+        "ru": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Копировать такт"
+          }
+        }
+      }
+    },
+    "Could not open email app": {
+      "localizations": {
+        "ru": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Не удалось открыть почтовое приложение"
+          }
+        }
+      }
+    },
+    "Could not parse chord symbol. Examples: C, Am, G7, Cmaj7, C/E": {
+      "localizations": {
+        "ru": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Не удалось распознать аккорд. Примеры: C, Am, G7, Cmaj7, C/E"
+          }
+        }
+      }
+    },
+    "Create": {
+      "localizations": {
+        "ru": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Создать"
+          }
+        }
+      }
+    },
+    "Crescendo (<)": {
+      "localizations": {
+        "ru": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Крещендо (<)"
+          }
+        }
+      }
+    },
+    "Crescendo / Diminuendo (hairpins)": {
+      "localizations": {
+        "ru": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Крещендо / диминуэндо (вилки)"
+          }
+        }
+      }
+    },
+    "Cup": {
+      "localizations": {
+        "ru": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Чашка"
+          }
+        }
+      }
+    },
+    "Custom": {
+      "localizations": {
+        "ru": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Свой"
+          }
+        }
+      }
+    },
+    "Custom Setup": {
+      "localizations": {
+        "ru": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Свой состав"
+          }
+        }
+      }
+    },
+    "Custom text...": {
+      "localizations": {
+        "ru": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Свой текст..."
+          }
+        }
+      }
+    },
+    "Dampening": {
+      "localizations": {
+        "ru": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Демпфирование"
+          }
+        }
+      }
+    },
+    "Dark": {
+      "localizations": {
+        "ru": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Тёмный"
+          }
+        }
+      }
+    },
+    "Date:": {
+      "localizations": {
+        "ru": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Дата:"
+          }
+        }
+      }
+    },
+    "Decay": {
+      "localizations": {
+        "ru": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Затухание"
+          }
+        }
+      }
+    },
+    "Default SoundFont used in MuseScore 4 (~208 MB).": {
+      "localizations": {
+        "ru": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Звуковой банк по умолчанию в MuseScore 4 (~208 МБ)."
+          }
+        }
+      }
+    },
+    "Delete": {
+      "localizations": {
+        "ru": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Удалить"
+          }
+        }
+      }
+    },
+    "Delete Measure": {
+      "localizations": {
+        "ru": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Удалить такт"
+          }
+        }
+      }
+    },
+    "Device:": {
+      "localizations": {
+        "ru": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Устройство:"
+          }
+        }
+      }
+    },
+    "Diminuendo (>)": {
+      "localizations": {
+        "ru": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Диминуэндо (>)"
+          }
+        }
+      }
+    },
+    "Direction": {
+      "localizations": {
+        "ru": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Направление"
+          }
+        }
+      }
+    },
+    "Done": {
+      "localizations": {
+        "ru": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Готово"
+          }
+        }
+      }
+    },
+    "Double": {
+      "localizations": {
+        "ru": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Двойная"
+          }
+        }
+      }
+    },
     "Download": {
       "localizations": {
         "ru": {
@@ -2881,42 +791,202 @@
         }
       }
     },
-    "This font has no auto-download. Open the author site, download the .sf2 manually, then import via the button below.": {
+    "Downloaded": {
       "localizations": {
         "ru": {
           "stringUnit": {
             "state": "translated",
-            "value": "У этого банка нет авто-скачивания. Откройте сайт автора, скачайте .sf2 вручную, потом импортируйте через кнопку ниже."
+            "value": "Скачанные мной"
           }
         }
       }
     },
-    "License": {
+    "Downloading... %d%%": {
       "localizations": {
         "ru": {
           "stringUnit": {
             "state": "translated",
-            "value": "Лицензия"
+            "value": "Скачивание... %d%%"
           }
         }
       }
     },
-    "How to install manually:": {
+    "Dry": {
       "localizations": {
         "ru": {
           "stringUnit": {
             "state": "translated",
-            "value": "Как установить вручную:"
+            "value": "Сухо"
           }
         }
       }
     },
-    "Tap «Open in Safari» below.": {
+    "Dynamics span": {
       "localizations": {
         "ru": {
           "stringUnit": {
             "state": "translated",
-            "value": "Нажмите «Открыть в Safari» ниже."
+            "value": "Динамическая вилка"
+          }
+        }
+      }
+    },
+    "Edit": {
+      "localizations": {
+        "ru": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Ред."
+          }
+        }
+      }
+    },
+    "Email is not configured yet": {
+      "localizations": {
+        "ru": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Email пока не настроен"
+          }
+        }
+      }
+    },
+    "End beat": {
+      "localizations": {
+        "ru": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Конечная доля"
+          }
+        }
+      }
+    },
+    "Ending barline": {
+      "localizations": {
+        "ru": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Тактовая черта (в конце)"
+          }
+        }
+      }
+    },
+    "Ensemble Width": {
+      "localizations": {
+        "ru": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Ширина ансамбля"
+          }
+        }
+      }
+    },
+    "Errors": {
+      "localizations": {
+        "ru": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Ошибки"
+          }
+        }
+      }
+    },
+    "Export": {
+      "localizations": {
+        "ru": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Экспорт"
+          }
+        }
+      }
+    },
+    "Export as CNB": {
+      "localizations": {
+        "ru": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Экспорт CNB"
+          }
+        }
+      }
+    },
+    "Export as MIDI": {
+      "localizations": {
+        "ru": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Экспорт MIDI"
+          }
+        }
+      }
+    },
+    "Export as MusicXML": {
+      "localizations": {
+        "ru": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Экспорт MusicXML"
+          }
+        }
+      }
+    },
+    "Export as PDF": {
+      "localizations": {
+        "ru": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Экспорт PDF"
+          }
+        }
+      }
+    },
+    "Expression texts (espressivo, dolce, ...)": {
+      "localizations": {
+        "ru": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Экспрессивные тексты (espressivo, dolce, ...)"
+          }
+        }
+      }
+    },
+    "Failed to load image": {
+      "localizations": {
+        "ru": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Не удалось загрузить изображение"
+          }
+        }
+      }
+    },
+    "Fast": {
+      "localizations": {
+        "ru": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Быстро"
+          }
+        }
+      }
+    },
+    "File is not a valid SoundFont (.sf2)": {
+      "localizations": {
+        "ru": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Файл не является корректным SoundFont (.sf2)"
+          }
+        }
+      }
+    },
+    "Final": {
+      "localizations": {
+        "ru": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Финальная"
           }
         }
       }
@@ -2931,12 +1001,132 @@
         }
       }
     },
-    "Save to Files.": {
+    "Fonts": {
       "localizations": {
         "ru": {
           "stringUnit": {
             "state": "translated",
-            "value": "Сохраните в Files."
+            "value": "Шрифты"
+          }
+        }
+      }
+    },
+    "Full Open": {
+      "localizations": {
+        "ru": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Полностью открыта"
+          }
+        }
+      }
+    },
+    "General": {
+      "localizations": {
+        "ru": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Основное"
+          }
+        }
+      }
+    },
+    "Half Open": {
+      "localizations": {
+        "ru": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Полуоткрыта"
+          }
+        }
+      }
+    },
+    "Hall": {
+      "localizations": {
+        "ru": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Зал"
+          }
+        }
+      }
+    },
+    "Hammer Hardness": {
+      "localizations": {
+        "ru": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Жёсткость молоточка"
+          }
+        }
+      }
+    },
+    "Hard": {
+      "localizations": {
+        "ru": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Жёстко"
+          }
+        }
+      }
+    },
+    "Harmon": {
+      "localizations": {
+        "ru": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Хармон"
+          }
+        }
+      }
+    },
+    "Has rehearsal mark": {
+      "localizations": {
+        "ru": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Есть маркер репетиции"
+          }
+        }
+      }
+    },
+    "Has tempo change": {
+      "localizations": {
+        "ru": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Есть изменение темпа"
+          }
+        }
+      }
+    },
+    "Has volta": {
+      "localizations": {
+        "ru": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Есть вольта"
+          }
+        }
+      }
+    },
+    "Heavy-duty orchestral bank. Install only if memory is not a concern.": {
+      "localizations": {
+        "ru": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Серьёзный оркестровый банк. Ставьте только если памяти не жалко."
+          }
+        }
+      }
+    },
+    "How to install manually:": {
+      "localizations": {
+        "ru": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Как установить вручную:"
           }
         }
       }
@@ -2951,22 +1141,222 @@
         }
       }
     },
-    "Return to Composer's Notebook → SoundFont menu → \"Import my own .sf2 file\".": {
+    "If you have a question, suggestion, or want to report an issue, please contact the developer.": {
       "localizations": {
         "ru": {
           "stringUnit": {
             "state": "translated",
-            "value": "Вернитесь в Composer's Notebook → меню SoundFont → «Импортировать свой .sf2»."
+            "value": "Если у вас есть вопрос, предложение или вы хотите сообщить о проблеме — напишите автору."
           }
         }
       }
     },
-    "Open in Safari": {
+    "Import File": {
       "localizations": {
         "ru": {
           "stringUnit": {
             "state": "translated",
-            "value": "Открыть в Safari"
+            "value": "Импорт файла"
+          }
+        }
+      }
+    },
+    "Import SoundFont": {
+      "localizations": {
+        "ru": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Импорт SoundFont"
+          }
+        }
+      }
+    },
+    "Import error": {
+      "localizations": {
+        "ru": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Ошибка импорта"
+          }
+        }
+      }
+    },
+    "Import my own .sf2 file": {
+      "localizations": {
+        "ru": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Импортировать свой .sf2"
+          }
+        }
+      }
+    },
+    "Information": {
+      "localizations": {
+        "ru": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Информация"
+          }
+        }
+      }
+    },
+    "Insert Measure After": {
+      "localizations": {
+        "ru": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Вставить такт после"
+          }
+        }
+      }
+    },
+    "Insert Measure Before": {
+      "localizations": {
+        "ru": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Вставить такт до"
+          }
+        }
+      }
+    },
+    "Italian (italic)": {
+      "localizations": {
+        "ru": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Итальянский (курсив)"
+          }
+        }
+      }
+    },
+    "Key": {
+      "localizations": {
+        "ru": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Знаки"
+          }
+        }
+      }
+    },
+    "Key Signature": {
+      "localizations": {
+        "ru": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Тональность"
+          }
+        }
+      }
+    },
+    "Kind": {
+      "localizations": {
+        "ru": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Вид"
+          }
+        }
+      }
+    },
+    "Large GM bank known from FluidSynth/MuseScore. Sounds better for orchestral parts.": {
+      "localizations": {
+        "ru": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Большой GM-банк, известный по FluidSynth/MuseScore. Лучше звучит для оркестровых партий."
+          }
+        }
+      }
+    },
+    "Less": {
+      "localizations": {
+        "ru": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Меньше"
+          }
+        }
+      }
+    },
+    "Letter Input": {
+      "localizations": {
+        "ru": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Буквы"
+          }
+        }
+      }
+    },
+    "License": {
+      "localizations": {
+        "ru": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Лицензия"
+          }
+        }
+      }
+    },
+    "Licenses": {
+      "localizations": {
+        "ru": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Лицензии"
+          }
+        }
+      }
+    },
+    "Lid Position": {
+      "localizations": {
+        "ru": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Положение крышки"
+          }
+        }
+      }
+    },
+    "Links": {
+      "localizations": {
+        "ru": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Ссылки"
+          }
+        }
+      }
+    },
+    "Long": {
+      "localizations": {
+        "ru": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Длинно"
+          }
+        }
+      }
+    },
+    "Major": {
+      "localizations": {
+        "ru": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Мажор"
+          }
+        }
+      }
+    },
+    "Mallets": {
+      "localizations": {
+        "ru": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Маллеты"
           }
         }
       }
@@ -2981,12 +1371,1633 @@
         }
       }
     },
-    "Close": {
+    "Mark": {
       "localizations": {
         "ru": {
           "stringUnit": {
             "state": "translated",
-            "value": "Закрыть"
+            "value": "Знак"
+          }
+        }
+      }
+    },
+    "Measure": {
+      "localizations": {
+        "ru": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Такт"
+          }
+        }
+      }
+    },
+    "Measure %lld/%lld": {
+      "localizations": {
+        "ru": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Такт %lld/%lld"
+          }
+        }
+      }
+    },
+    "Measure Properties": {
+      "localizations": {
+        "ru": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Свойства такта"
+          }
+        }
+      }
+    },
+    "Measure not full: %@ of %@ beats": {
+      "localizations": {
+        "ru": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Такт не полный: %@ из %@ долей"
+          }
+        }
+      }
+    },
+    "Measure overflow: %@ beats instead of %@": {
+      "localizations": {
+        "ru": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Такт переполнен: %@ долей вместо %@"
+          }
+        }
+      }
+    },
+    "Mellow": {
+      "localizations": {
+        "ru": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Мягко"
+          }
+        }
+      }
+    },
+    "Minor": {
+      "localizations": {
+        "ru": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Минор"
+          }
+        }
+      }
+    },
+    "Mode": {
+      "localizations": {
+        "ru": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Лад"
+          }
+        }
+      }
+    },
+    "More": {
+      "localizations": {
+        "ru": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Больше"
+          }
+        }
+      }
+    },
+    "Multi-measure rest": {
+      "localizations": {
+        "ru": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Многотактовая пауза"
+          }
+        }
+      }
+    },
+    "MuseScore standard. AVAudioUnitSampler accepts only .sf2 — take the 208 MB version; .sf3 will not load.": {
+      "localizations": {
+        "ru": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Стандарт MuseScore. AVAudioUnitSampler понимает только .sf2 — берите 208 МБ версию, .sf3 не загрузится."
+          }
+        }
+      }
+    },
+    "Mute Type": {
+      "localizations": {
+        "ru": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Тип сурдины"
+          }
+        }
+      }
+    },
+    "My Presets": {
+      "localizations": {
+        "ru": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Мои пресеты"
+          }
+        }
+      }
+    },
+    "My imported": {
+      "localizations": {
+        "ru": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Импортированные мной"
+          }
+        }
+      }
+    },
+    "Navigation mark": {
+      "localizations": {
+        "ru": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Знак навигации"
+          }
+        }
+      }
+    },
+    "New Score": {
+      "localizations": {
+        "ru": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Новая партитура"
+          }
+        }
+      }
+    },
+    "No built-in SoundFonts found in the app bundle.": {
+      "localizations": {
+        "ru": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "В bundle приложения нет встроенных банков."
+          }
+        }
+      }
+    },
+    "No email app is configured on this device. Set up Mail (or another email app) in Settings, then try again.": {
+      "localizations": {
+        "ru": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "На устройстве нет настроенного почтового приложения. Настройте Почту (или другое приложение) в Настройках и попробуйте снова."
+          }
+        }
+      }
+    },
+    "No issues found": {
+      "localizations": {
+        "ru": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Проблем не найдено"
+          }
+        }
+      }
+    },
+    "No measure selected": {
+      "localizations": {
+        "ru": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Такт не выбран"
+          }
+        }
+      }
+    },
+    "No music notation detected": {
+      "localizations": {
+        "ru": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Нотная запись не обнаружена"
+          }
+        }
+      }
+    },
+    "None": {
+      "localizations": {
+        "ru": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Нет"
+          }
+        }
+      }
+    },
+    "Nonuplet (9:8)": {
+      "localizations": {
+        "ru": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Девятоль (9:8)"
+          }
+        }
+      }
+    },
+    "Note %@ (MIDI %lld) out of range for %@: %@…%@": {
+      "localizations": {
+        "ru": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Нота %@ (MIDI %lld) вне диапазона %@: %@…%@"
+          }
+        }
+      }
+    },
+    "Notes": {
+      "localizations": {
+        "ru": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Заметки"
+          }
+        }
+      }
+    },
+    "OK": {
+      "localizations": {
+        "ru": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "OK"
+          }
+        }
+      }
+    },
+    "OMR error: %@": {
+      "localizations": {
+        "ru": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Ошибка OMR: %@"
+          }
+        }
+      }
+    },
+    "Octave %lld": {
+      "localizations": {
+        "ru": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Октава %lld"
+          }
+        }
+      }
+    },
+    "Octave shift": {
+      "localizations": {
+        "ru": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Октавный знак"
+          }
+        }
+      }
+    },
+    "Octave shift (8va / 8vb / 15ma / 15mb)": {
+      "localizations": {
+        "ru": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Октавный знак (8va / 8vb / 15ma / 15mb)"
+          }
+        }
+      }
+    },
+    "Open": {
+      "localizations": {
+        "ru": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Открыто"
+          }
+        }
+      }
+    },
+    "Open File": {
+      "localizations": {
+        "ru": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Открыть файл"
+          }
+        }
+      }
+    },
+    "Open author site": {
+      "localizations": {
+        "ru": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Открыть сайт автора"
+          }
+        }
+      }
+    },
+    "Open in Safari": {
+      "localizations": {
+        "ru": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Открыть в Safari"
+          }
+        }
+      }
+    },
+    "Orchestra": {
+      "localizations": {
+        "ru": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Оркестр"
+          }
+        }
+      }
+    },
+    "Orchestral SoundFont (~530 MB).": {
+      "localizations": {
+        "ru": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Оркестровый звуковой банк (~530 МБ)."
+          }
+        }
+      }
+    },
+    "Pan": {
+      "localizations": {
+        "ru": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Панорама"
+          }
+        }
+      }
+    },
+    "Part": {
+      "localizations": {
+        "ru": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Партия"
+          }
+        }
+      }
+    },
+    "Part %d": {
+      "localizations": {
+        "ru": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Партия %d"
+          }
+        }
+      }
+    },
+    "Paste": {
+      "localizations": {
+        "ru": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Вставить"
+          }
+        }
+      }
+    },
+    "Pedal Resonance": {
+      "localizations": {
+        "ru": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Резонанс педали"
+          }
+        }
+      }
+    },
+    "Percussion-specific settings": {
+      "localizations": {
+        "ru": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Настройки ударных"
+          }
+        }
+      }
+    },
+    "Piano Keyboard": {
+      "localizations": {
+        "ru": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Пианино"
+          }
+        }
+      }
+    },
+    "Piano-specific settings": {
+      "localizations": {
+        "ru": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Настройки пианино"
+          }
+        }
+      }
+    },
+    "Pick a .sf2 file from Files. The app validates it and copies into its own storage.": {
+      "localizations": {
+        "ru": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Выберите .sf2 файл из Files. Приложение проверит формат и скопирует в своё хранилище."
+          }
+        }
+      }
+    },
+    "Plain": {
+      "localizations": {
+        "ru": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Обычный"
+          }
+        }
+      }
+    },
+    "Plugin": {
+      "localizations": {
+        "ru": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Плагин"
+          }
+        }
+      }
+    },
+    "Plunger": {
+      "localizations": {
+        "ru": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Плунжер"
+          }
+        }
+      }
+    },
+    "Preset name": {
+      "localizations": {
+        "ru": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Название пресета"
+          }
+        }
+      }
+    },
+    "Preview Sound": {
+      "localizations": {
+        "ru": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Прослушать"
+          }
+        }
+      }
+    },
+    "Professional concert grand piano (piano only). Pick this if your main instrument is grand piano.": {
+      "localizations": {
+        "ru": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Профессиональный концертный рояль (только пианино). Берите если основной инструмент — рояль."
+          }
+        }
+      }
+    },
+    "Quick Note": {
+      "localizations": {
+        "ru": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Быстрая заметка"
+          }
+        }
+      }
+    },
+    "Quick presets": {
+      "localizations": {
+        "ru": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Быстрые варианты"
+          }
+        }
+      }
+    },
+    "Quintuplet (5:4)": {
+      "localizations": {
+        "ru": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Квинтоль (5:4)"
+          }
+        }
+      }
+    },
+    "Re-check": {
+      "localizations": {
+        "ru": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Перепроверить"
+          }
+        }
+      }
+    },
+    "Recent": {
+      "localizations": {
+        "ru": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Недавние"
+          }
+        }
+      }
+    },
+    "Regular": {
+      "localizations": {
+        "ru": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Обычная"
+          }
+        }
+      }
+    },
+    "Rehearsal mark": {
+      "localizations": {
+        "ru": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Маркер репетиции"
+          }
+        }
+      }
+    },
+    "Release": {
+      "localizations": {
+        "ru": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Релиз"
+          }
+        }
+      }
+    },
+    "Remove Current Part": {
+      "localizations": {
+        "ru": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Удалить текущую партию"
+          }
+        }
+      }
+    },
+    "Remove chord symbol": {
+      "localizations": {
+        "ru": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Убрать аккорд"
+          }
+        }
+      }
+    },
+    "Remove fingering": {
+      "localizations": {
+        "ru": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Убрать аппликатуру"
+          }
+        }
+      }
+    },
+    "Remove tuplet group": {
+      "localizations": {
+        "ru": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Снять группу триоли"
+          }
+        }
+      }
+    },
+    "Repeat both": {
+      "localizations": {
+        "ru": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Реприза с обеих сторон"
+          }
+        }
+      }
+    },
+    "Repeat end": {
+      "localizations": {
+        "ru": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Конец репризы"
+          }
+        }
+      }
+    },
+    "Repeat start": {
+      "localizations": {
+        "ru": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Начало репризы"
+          }
+        }
+      }
+    },
+    "Reset to Default": {
+      "localizations": {
+        "ru": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Вернуть к стандартным"
+          }
+        }
+      }
+    },
+    "Return to Composer's Notebook → SoundFont menu → \"Import my own .sf2 file\".": {
+      "localizations": {
+        "ru": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Вернитесь в Composer's Notebook → меню SoundFont → «Импортировать свой .sf2»."
+          }
+        }
+      }
+    },
+    "Reverb": {
+      "localizations": {
+        "ru": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Реверберация"
+          }
+        }
+      }
+    },
+    "Rich": {
+      "localizations": {
+        "ru": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Насыщенно"
+          }
+        }
+      }
+    },
+    "Ring": {
+      "localizations": {
+        "ru": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Звон"
+          }
+        }
+      }
+    },
+    "SMuFL-compliant music notation font.": {
+      "localizations": {
+        "ru": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Музыкальный шрифт, совместимый со стандартом SMuFL."
+          }
+        }
+      }
+    },
+    "Save": {
+      "localizations": {
+        "ru": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Сохранить"
+          }
+        }
+      }
+    },
+    "Save Preset": {
+      "localizations": {
+        "ru": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Сохранить пресет"
+          }
+        }
+      }
+    },
+    "Save as Preset": {
+      "localizations": {
+        "ru": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Сохранить как пресет"
+          }
+        }
+      }
+    },
+    "Save to Files.": {
+      "localizations": {
+        "ru": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Сохраните в Files."
+          }
+        }
+      }
+    },
+    "Score Validation": {
+      "localizations": {
+        "ru": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Проверка партитуры"
+          }
+        }
+      }
+    },
+    "Section": {
+      "localizations": {
+        "ru": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Секция"
+          }
+        }
+      }
+    },
+    "Septuplet (7:4)": {
+      "localizations": {
+        "ru": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Септоль (7:4)"
+          }
+        }
+      }
+    },
+    "Sextuplet (6:4)": {
+      "localizations": {
+        "ru": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Секстоль (6:4)"
+          }
+        }
+      }
+    },
+    "Short": {
+      "localizations": {
+        "ru": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Коротко"
+          }
+        }
+      }
+    },
+    "Slow": {
+      "localizations": {
+        "ru": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Медленно"
+          }
+        }
+      }
+    },
+    "Soft": {
+      "localizations": {
+        "ru": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Мягкий"
+          }
+        }
+      }
+    },
+    "Solo": {
+      "localizations": {
+        "ru": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Соло"
+          }
+        }
+      }
+    },
+    "Sound Character": {
+      "localizations": {
+        "ru": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Характер звука"
+          }
+        }
+      }
+    },
+    "Sound Preset": {
+      "localizations": {
+        "ru": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Пресет звучания"
+          }
+        }
+      }
+    },
+    "Sound Settings": {
+      "localizations": {
+        "ru": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Настройки звука"
+          }
+        }
+      }
+    },
+    "Sound Source": {
+      "localizations": {
+        "ru": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Источник звука"
+          }
+        }
+      }
+    },
+    "SoundFont": {
+      "localizations": {
+        "ru": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Звуковой банк"
+          }
+        }
+      }
+    },
+    "SoundFonts (available for download)": {
+      "localizations": {
+        "ru": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Звуковые банки (доступны для скачивания)"
+          }
+        }
+      }
+    },
+    "SoundFonts (built-in)": {
+      "localizations": {
+        "ru": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Звуковые банки (встроенные)"
+          }
+        }
+      }
+    },
+    "Source": {
+      "localizations": {
+        "ru": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Источник"
+          }
+        }
+      }
+    },
+    "Stable open-source GM SoundFont (~141 MB).": {
+      "localizations": {
+        "ru": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Стабильный open-source звуковой банк GM (~141 МБ)."
+          }
+        }
+      }
+    },
+    "Standard": {
+      "localizations": {
+        "ru": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Стандартный"
+          }
+        }
+      }
+    },
+    "Start beat": {
+      "localizations": {
+        "ru": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Начальная доля"
+          }
+        }
+      }
+    },
+    "Stick Type": {
+      "localizations": {
+        "ru": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Тип палочек"
+          }
+        }
+      }
+    },
+    "Sticks": {
+      "localizations": {
+        "ru": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Палочки"
+          }
+        }
+      }
+    },
+    "Straight": {
+      "localizations": {
+        "ru": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Прямая"
+          }
+        }
+      }
+    },
+    "String-specific settings": {
+      "localizations": {
+        "ru": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Настройки струнных"
+          }
+        }
+      }
+    },
+    "Style": {
+      "localizations": {
+        "ru": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Стиль"
+          }
+        }
+      }
+    },
+    "Subtle": {
+      "localizations": {
+        "ru": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Тонко"
+          }
+        }
+      }
+    },
+    "Sustain": {
+      "localizations": {
+        "ru": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Сустейн"
+          }
+        }
+      }
+    },
+    "Tap a measure in the score to select it, then reopen this menu.": {
+      "localizations": {
+        "ru": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Коснитесь такта в партитуре, чтобы выбрать его, и откройте это меню заново."
+          }
+        }
+      }
+    },
+    "Tap «Open in Safari» below.": {
+      "localizations": {
+        "ru": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Нажмите «Открыть в Safari» ниже."
+          }
+        }
+      }
+    },
+    "Target BPM": {
+      "localizations": {
+        "ru": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Целевой BPM"
+          }
+        }
+      }
+    },
+    "Technique %@ is usually not applicable to %@": {
+      "localizations": {
+        "ru": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Техника %@ обычно неприменима к %@"
+          }
+        }
+      }
+    },
+    "Telegram is not configured yet": {
+      "localizations": {
+        "ru": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Telegram пока не настроен"
+          }
+        }
+      }
+    },
+    "Tempo": {
+      "localizations": {
+        "ru": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Темп"
+          }
+        }
+      }
+    },
+    "Tempo change (accel / rit)": {
+      "localizations": {
+        "ru": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Изменение темпа (accel / rit)"
+          }
+        }
+      }
+    },
+    "Text (A, B, 1, ...)": {
+      "localizations": {
+        "ru": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Текст (A, B, 1, ...)"
+          }
+        }
+      }
+    },
+    "Texts": {
+      "localizations": {
+        "ru": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Тексты"
+          }
+        }
+      }
+    },
+    "The developer hasn't set up a Telegram account yet. Please try writing via email, or check back after an update.": {
+      "localizations": {
+        "ru": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Автор пока не указал Telegram для обратной связи. Попробуйте написать на email или проверьте после обновления приложения."
+          }
+        }
+      }
+    },
+    "The developer hasn't set up an email address yet. Please try writing via Telegram, or check back after an update.": {
+      "localizations": {
+        "ru": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Автор пока не указал email для обратной связи. Попробуйте написать в Telegram или проверьте после обновления приложения."
+          }
+        }
+      }
+    },
+    "The score passes all built-in checks: instrument ranges, measure timing, voice conflicts, and playback techniques.": {
+      "localizations": {
+        "ru": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Партитура прошла все встроенные проверки: диапазоны инструментов, длительности тактов, конфликты голосов и техники исполнения."
+          }
+        }
+      }
+    },
+    "Theme": {
+      "localizations": {
+        "ru": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Тема оформления"
+          }
+        }
+      }
+    },
+    "This app uses third-party resources distributed under open licenses. Authors and license terms are listed below.": {
+      "localizations": {
+        "ru": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Приложение использует ресурсы сторонних авторов на условиях открытых лицензий. Авторы и условия лицензий перечислены ниже."
+          }
+        }
+      }
+    },
+    "This font has no auto-download. Open the author site, download the .sf2 manually, then import via the button below.": {
+      "localizations": {
+        "ru": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "У этого банка нет авто-скачивания. Откройте сайт автора, скачайте .sf2 вручную, потом импортируйте через кнопку ниже."
+          }
+        }
+      }
+    },
+    "Tight": {
+      "localizations": {
+        "ru": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Сухо"
+          }
+        }
+      }
+    },
+    "Time Signature": {
+      "localizations": {
+        "ru": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Размер"
+          }
+        }
+      }
+    },
+    "Title": {
+      "localizations": {
+        "ru": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Название"
+          }
+        }
+      }
+    },
+    "Tone Brightness": {
+      "localizations": {
+        "ru": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Яркость тона"
+          }
+        }
+      }
+    },
+    "Transpose Measure": {
+      "localizations": {
+        "ru": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Транспозиция такта"
+          }
+        }
+      }
+    },
+    "Triplet (3:2)": {
+      "localizations": {
+        "ru": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Триоль (3:2)"
+          }
+        }
+      }
+    },
+    "Type": {
+      "localizations": {
+        "ru": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Тип"
+          }
+        }
+      }
+    },
+    "Unsaved Drafts": {
+      "extractionState": "manual",
+      "localizations": {
+        "ru": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Несохранённые черновики"
+          }
+        }
+      }
+    },
+    "Untitled": {
+      "localizations": {
+        "ru": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Без названия"
+          }
+        }
+      }
+    },
+    "Validate Score": {
+      "localizations": {
+        "ru": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Проверить партитуру"
+          }
+        }
+      }
+    },
+    "Version": {
+      "localizations": {
+        "ru": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Версия"
+          }
+        }
+      }
+    },
+    "Vibrato Depth": {
+      "localizations": {
+        "ru": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Глубина вибрато"
+          }
+        }
+      }
+    },
+    "Vibrato Speed": {
+      "localizations": {
+        "ru": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Скорость вибрато"
+          }
+        }
+      }
+    },
+    "Vocal": {
+      "localizations": {
+        "ru": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Вокал"
+          }
+        }
+      }
+    },
+    "Voice %@: two notes on the same beat (%@)": {
+      "localizations": {
+        "ru": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Голос %@: две ноты на одной доле (%@)"
+          }
+        }
+      }
+    },
+    "Voice-specific settings": {
+      "localizations": {
+        "ru": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Настройки вокала"
+          }
+        }
+      }
+    },
+    "Volta (ending bracket)": {
+      "localizations": {
+        "ru": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Вольта (окончание)"
+          }
+        }
+      }
+    },
+    "Volta number: %d": {
+      "localizations": {
+        "ru": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Номер вольты: %d"
+          }
+        }
+      }
+    },
+    "Volume": {
+      "localizations": {
+        "ru": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Громкость"
+          }
+        }
+      }
+    },
+    "Vowel": {
+      "localizations": {
+        "ru": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Гласная"
+          }
+        }
+      }
+    },
+    "Warm": {
+      "localizations": {
+        "ru": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Тёплый"
+          }
+        }
+      }
+    },
+    "Warnings": {
+      "localizations": {
+        "ru": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Предупреждения"
+          }
+        }
+      }
+    },
+    "Website": {
+      "localizations": {
+        "ru": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Сайт"
+          }
+        }
+      }
+    },
+    "When writing, please mention your iPhone model and iOS version. A short description of what you were doing when the issue happened helps a lot.": {
+      "localizations": {
+        "ru": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "При обращении укажите модель iPhone и версию iOS. Краткое описание того, что вы делали в момент возникновения проблемы, очень поможет."
+          }
+        }
+      }
+    },
+    "Wide": {
+      "localizations": {
+        "ru": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Широко"
+          }
+        }
+      }
+    },
+    "Woodwind-specific settings": {
+      "localizations": {
+        "ru": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Настройки деревянных духовых"
+          }
+        }
+      }
+    },
+    "Write an email": {
+      "localizations": {
+        "ru": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Написать на email"
+          }
+        }
+      }
+    },
+    "Write on Telegram": {
+      "localizations": {
+        "ru": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Написать в Telegram"
+          }
+        }
+      }
+    },
+    "espressivo, dolce, ...": {
+      "localizations": {
+        "ru": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "espressivo, dolce, ..."
+          }
+        }
+      }
+    },
+    "iOS:": {
+      "localizations": {
+        "ru": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "iOS:"
+          }
+        }
+      }
+    },
+    "measure %d": {
+      "localizations": {
+        "ru": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "такт %d"
+          }
+        }
+      }
+    },
+    "note %d": {
+      "localizations": {
+        "ru": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "нота %d"
+          }
+        }
+      }
+    },
+    "~141 MB": {
+      "localizations": {
+        "ru": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "~141 МБ"
+          }
+        }
+      }
+    },
+    "~200 MB": {
+      "localizations": {
+        "ru": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "~200 МБ"
+          }
+        }
+      }
+    },
+    "~208 MB (.sf2) / 36 MB (.sf3)": {
+      "localizations": {
+        "ru": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "~208 МБ (.sf2) / 36 МБ (.sf3)"
+          }
+        }
+      }
+    },
+    "~30 MB": {
+      "localizations": {
+        "ru": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "~30 МБ"
+          }
+        }
+      }
+    },
+    "~503 MB": {
+      "localizations": {
+        "ru": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "~503 МБ"
+          }
+        }
+      }
+    },
+    "Встроенные темы": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Built-in Themes"
+          }
+        }
+      }
+    },
+    "Пергамент": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Parchment"
+          }
+        }
+      }
+    },
+    "Полночь": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Midnight"
+          }
+        }
+      }
+    },
+    "Пользовательские": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Custom"
+          }
+        }
+      }
+    },
+    "Светлая": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Light"
+          }
+        }
+      }
+    },
+    "Сепия": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Sepia"
+          }
+        }
+      }
+    },
+    "Системная": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "System"
+          }
+        }
+      }
+    },
+    "Тёмная": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Dark"
           }
         }
       }

@@ -162,6 +162,56 @@ class CNBFileManager {
         return container.metadata
     }
 
+    // MARK: - Autosave Recovery
+    //
+    // ScoreViewModel пишет черновик `autosave_<id>.json` (голый Score, дефолтный
+    // JSONEncoder) каждые 30 сек. Раньше он нигде не читался при запуске —
+    // после закрытия Quick Note без экспорта в .cnb (или после краша) работа
+    // становилась невидимой и терялась. Эти хелперы делают черновик восстановимым.
+
+    private static let autosavePrefix = "autosave_"
+
+    /// Декодер под дефолтный энкодер автосейва (дата как Double, без iso8601).
+    private let plainDecoder = JSONDecoder()
+
+    /// URL черновика для данного score id.
+    func autosaveURL(for scoreID: UUID) -> URL {
+        documentsDirectory.appendingPathComponent("\(Self.autosavePrefix)\(scoreID.uuidString).json")
+    }
+
+    /// Список всех черновиков автосейва, свежие сверху.
+    func listAutosaves() -> [URL] {
+        guard let files = try? FileManager.default.contentsOfDirectory(
+            at: documentsDirectory,
+            includingPropertiesForKeys: [.contentModificationDateKey],
+            options: .skipsHiddenFiles
+        ) else { return [] }
+
+        return files
+            .filter { $0.lastPathComponent.hasPrefix(Self.autosavePrefix) && $0.pathExtension == "json" }
+            .sorted { url1, url2 in
+                let d1 = (try? url1.resourceValues(forKeys: [.contentModificationDateKey]))?.contentModificationDate ?? .distantPast
+                let d2 = (try? url2.resourceValues(forKeys: [.contentModificationDateKey]))?.contentModificationDate ?? .distantPast
+                return d1 > d2
+            }
+    }
+
+    /// Декодировать черновик автосейва в Score.
+    func loadAutosave(from url: URL) throws -> Score {
+        let data = try Data(contentsOf: url)
+        return try plainDecoder.decode(Score.self, from: data)
+    }
+
+    /// Удалить черновик по score id (после явного сохранения в .cnb).
+    func deleteAutosave(for scoreID: UUID) {
+        try? FileManager.default.removeItem(at: autosaveURL(for: scoreID))
+    }
+
+    /// Удалить черновик по URL (отклонение пользователем из списка восстановления).
+    func deleteAutosave(at url: URL) {
+        try? FileManager.default.removeItem(at: url)
+    }
+
     // MARK: - Compression (zlib via NSData)
 
     private func compress(_ data: Data) throws -> Data {

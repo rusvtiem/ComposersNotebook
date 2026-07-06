@@ -25,6 +25,13 @@ struct HomeView: View {
     @State private var showThemeSettings = false
     @State private var showAbout = false
     @State private var recentFiles: [URL] = []
+    @State private var drafts: [DraftItem] = []
+
+    struct DraftItem: Identifiable {
+        let id: URL
+        let title: String
+        let date: Date
+    }
 
     var body: some View {
         VStack(spacing: 16) {
@@ -82,6 +89,47 @@ struct HomeView: View {
                 }
             }
             .padding(.horizontal, 32)
+
+            // Unsaved drafts (crash / back-without-save recovery)
+            if !drafts.isEmpty {
+                VStack(alignment: .leading, spacing: 8) {
+                    Text(String(localized: "Unsaved Drafts"))
+                        .font(.headline)
+                        .padding(.horizontal, 32)
+
+                    ForEach(drafts) { draft in
+                        HStack {
+                            Button {
+                                restoreDraft(draft)
+                            } label: {
+                                HStack {
+                                    Image(systemName: "clock.arrow.circlepath")
+                                        .foregroundColor(.orange)
+                                    VStack(alignment: .leading) {
+                                        Text(draft.title)
+                                            .font(.body)
+                                        Text(relativeDate(draft.date))
+                                            .font(.caption)
+                                            .foregroundStyle(.secondary)
+                                    }
+                                    Spacer()
+                                }
+                            }
+                            .buttonStyle(.plain)
+
+                            Button {
+                                discardDraft(draft)
+                            } label: {
+                                Image(systemName: "trash")
+                                    .foregroundStyle(.secondary)
+                            }
+                            .buttonStyle(.plain)
+                        }
+                        .padding(.horizontal, 32)
+                        .padding(.vertical, 4)
+                    }
+                }
+            }
 
             // Recent files
             if !recentFiles.isEmpty {
@@ -145,6 +193,7 @@ struct HomeView: View {
         }
         .onAppear {
             recentFiles = CNBFileManager.shared.listFiles()
+            loadDrafts()
         }
         .sheet(isPresented: $showNewScoreSheet) {
             NewScoreSheet { score in
@@ -212,9 +261,34 @@ struct HomeView: View {
         guard let date = (try? url.resourceValues(forKeys: [.contentModificationDateKey]))?.contentModificationDate else {
             return ""
         }
+        return relativeDate(date)
+    }
+
+    private func relativeDate(_ date: Date) -> String {
         let formatter = RelativeDateTimeFormatter()
         formatter.unitsStyle = .short
         return formatter.localizedString(for: date, relativeTo: Date())
+    }
+
+    private func loadDrafts() {
+        drafts = CNBFileManager.shared.listAutosaves().compactMap { url in
+            guard let score = try? CNBFileManager.shared.loadAutosave(from: url) else { return nil }
+            let date = (try? url.resourceValues(forKeys: [.contentModificationDateKey]))?.contentModificationDate ?? Date()
+            let title = score.title.isEmpty ? String(localized: "Untitled") : score.title
+            return DraftItem(id: url, title: title, date: date)
+        }
+    }
+
+    private func restoreDraft(_ draft: DraftItem) {
+        guard let score = try? CNBFileManager.shared.loadAutosave(from: draft.id) else { return }
+        appState.currentScore = score
+        HapticManager.success()
+    }
+
+    private func discardDraft(_ draft: DraftItem) {
+        CNBFileManager.shared.deleteAutosave(at: draft.id)
+        drafts.removeAll { $0.id == draft.id }
+        HapticManager.buttonTap()
     }
 }
 
