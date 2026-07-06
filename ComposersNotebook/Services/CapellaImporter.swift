@@ -1,4 +1,21 @@
 import Foundation
+import Compression
+
+/// Распаковывает «сырой» DEFLATE (RFC 1951). ZIP хранит метод 8 именно так —
+/// без zlib-обёртки, и Apple `COMPRESSION_ZLIB` — это ровно RFC 1951. Размер
+/// распакованного берётся из ZIP-заголовка; при 0 (случай data descriptor)
+/// вернём nil — вызывающий уйдёт в fallback, а не покажет пустой успех.
+private func inflateRawDeflate(_ data: Data, expandedSize: Int) -> Data? {
+    guard expandedSize > 0, !data.isEmpty else { return nil }
+    return data.withUnsafeBytes { (srcRaw: UnsafeRawBufferPointer) -> Data? in
+        guard let srcBase = srcRaw.bindMemory(to: UInt8.self).baseAddress else { return nil }
+        let dst = UnsafeMutablePointer<UInt8>.allocate(capacity: expandedSize)
+        defer { dst.deallocate() }
+        let written = compression_decode_buffer(dst, expandedSize, srcBase, data.count, nil, COMPRESSION_ZLIB)
+        guard written > 0 else { return nil }
+        return Data(bytes: dst, count: written)
+    }
+}
 
 // MARK: - Capella Importer
 // Supports .capx format (Capella XML — ZIP archive containing score.xml)
@@ -75,7 +92,14 @@ class CapellaImporter {
                 if compMethod == 0 {
                     return Data(fileData) // stored (no compression)
                 }
-                // Deflate — would need zlib, return nil for fallback
+                if compMethod == 8 {
+                    // Несжатый размер — offset+22..25 в локальном заголовке ZIP.
+                    // Реальные .capx хранят score.xml именно deflate'ом: раньше
+                    // здесь был безусловный nil → любой настоящий .capx не импортился.
+                    let uncompSize = Int(UInt32(zipData[offset+22]) | (UInt32(zipData[offset+23]) << 8) |
+                                        (UInt32(zipData[offset+24]) << 16) | (UInt32(zipData[offset+25]) << 24))
+                    return inflateRawDeflate(Data(fileData), expandedSize: uncompSize)
+                }
                 return nil
             }
 
