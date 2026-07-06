@@ -98,76 +98,95 @@ class MIDIExporter {
         return encodeTrackEvents(events)
     }
 
+    /// Одно MIDI-событие в абсолютном времени. Дельты кодируются в самом конце
+    /// как разности между соседними тиками — это единственный корректный способ:
+    /// прошлая реализация вела бегущий `lastTick` и клампила отрицательные дельты
+    /// в 0 (`max(0, delta)`), из-за чего перекрывающиеся/полифонические ноты
+    /// «съезжали» по времени.
+    private struct AbsMIDIEvent {
+        var tick: Int
+        var isNoteOff: Bool   // при равном tick note-off идёт раньше note-on
+        var bytes: [UInt8]
+    }
+
     private static func buildPartTrack(part: Part, score: Score, tpq: UInt16) -> Data {
-        var events: [(delta: Int, bytes: [UInt8])] = []
         let channel: UInt8 = 0
+        let tpqD = Double(tpq)
+        let transposition = part.instrument.transposition
 
-        // Track name
-        let name = part.instrument.name
-        let nameBytes = Array(name.utf8)
-        events.append((delta: 0, bytes: [0xFF, 0x03] + variableLength(nameBytes.count) + nameBytes))
+        var abs: [AbsMIDIEvent] = []
 
-        // Program change
-        events.append((delta: 0, bytes: [0xC0 | channel, UInt8(part.effectiveMidiProgram)]))
-
-        var currentTick = 0
-        var pendingNoteOffs: [(tick: Int, note: UInt8)] = []
-
-        for (_, measure) in part.measures.enumerated() {
+        for measure in part.measures {
             let ts = measure.timeSignature ?? score.timeSignature
             var beatPosition: Double = 0
+            let measureStartTick = measureStartTicks(part: part, upToMeasure: measure, score: score, tpq: tpq)
 
             for event in measure.events {
-                let eventTick = currentTick + Int(beatPosition * Double(tpq))
+                // actualBeats — учитывает tuplet timing (иначе триоли врут).
+                let beats = event.actualBeats
+                let startTick = measureStartTick + Int(beatPosition * tpqD)
+                let endTick = startTick + Int(beats * tpqD)
 
-                // Flush note-offs that should happen before this event
-                pendingNoteOffs.sort { $0.tick < $1.tick }
-                var lastTick = events.isEmpty ? 0 : sumDeltas(events)
-
-                for noteOff in pendingNoteOffs.filter({ $0.tick <= eventTick }) {
-                    let delta = noteOff.tick - lastTick
-                    events.append((delta: max(0, delta), bytes: [0x80 | channel, noteOff.note, 0x40]))
-                    lastTick = noteOff.tick
-                }
-                pendingNoteOffs.removeAll { $0.tick <= eventTick }
-
-                // Add note-on events
                 if !event.isRest {
-                    let velocity = UInt8(event.velocity)
-                    let durationTicks = Int(event.duration.beats * Double(tpq))
-                    let delta = eventTick - lastTick
-
-                    for (pIdx, pitch) in event.pitches.enumerated() {
-                        let midiNote = UInt8(clamping: pitch.midiNote)
-                        let d = pIdx == 0 ? max(0, delta) : 0
-                        events.append((delta: d, bytes: [0x90 | channel, midiNote, velocity]))
-
+                    let velocity = UInt8(clamping: event.velocity)
+                    for pitch in event.pitches {
+                        // Строй инструмента (концертная высота) + кламп 0…127.
+                        let note = UInt8(clamping: min(127, max(0, pitch.midiNote + transposition)))
+                        abs.append(AbsMIDIEvent(tick: startTick, isNoteOff: false,
+                                                bytes: [0x90 | channel, note, velocity]))
+                        // Лига (tiedToNext) продлевает звучание: note-off не ставим,
+                        // следующая нота той же высоты продолжит (как в прежней логике).
                         if !event.tiedToNext {
-                            pendingNoteOffs.append((tick: eventTick + durationTicks, note: midiNote))
+                            abs.append(AbsMIDIEvent(tick: endTick, isNoteOff: true,
+                                                    bytes: [0x80 | channel, note, 0x40]))
                         }
                     }
                 }
 
-                beatPosition += event.duration.beats
+                beatPosition += beats
             }
-
-            // Advance to next measure
-            currentTick += Int(ts.totalBeats * Double(tpq))
         }
 
-        // Flush remaining note-offs
-        pendingNoteOffs.sort { $0.tick < $1.tick }
-        var lastTick = sumDeltas(events)
-        for noteOff in pendingNoteOffs {
-            let delta = noteOff.tick - lastTick
-            events.append((delta: max(0, delta), bytes: [0x80 | channel, noteOff.note, 0x40]))
-            lastTick = noteOff.tick
+        // Сортировка по абсолютному тику; при равенстве note-off раньше note-on,
+        // чтобы затухание не обрезало новую атаку той же высоты.
+        abs.sort { a, b in
+            if a.tick != b.tick { return a.tick < b.tick }
+            return a.isNoteOff && !b.isNoteOff
+        }
+
+        var events: [(delta: Int, bytes: [UInt8])] = []
+
+        // Track name
+        let nameBytes = Array(part.instrument.name.utf8)
+        events.append((delta: 0, bytes: [0xFF, 0x03] + variableLength(nameBytes.count) + nameBytes))
+        // Program change
+        events.append((delta: 0, bytes: [0xC0 | channel, UInt8(part.effectiveMidiProgram)]))
+
+        // Дельты как разности абсолютных тиков (неотрицательны по построению —
+        // список отсортирован).
+        var lastTick = 0
+        for ev in abs {
+            let delta = ev.tick - lastTick
+            events.append((delta: max(0, delta), bytes: ev.bytes))
+            lastTick = ev.tick
         }
 
         // End of track
         events.append((delta: 0, bytes: [0xFF, 0x2F, 0x00]))
 
         return encodeTrackEvents(events)
+    }
+
+    /// Абсолютный tick начала указанного такта в партии (сумма длин предыдущих
+    /// тактов с учётом их размеров).
+    private static func measureStartTicks(part: Part, upToMeasure target: Measure, score: Score, tpq: UInt16) -> Int {
+        var tick = 0
+        for measure in part.measures {
+            if measure.id == target.id { break }
+            let ts = measure.timeSignature ?? score.timeSignature
+            tick += Int(ts.totalBeats * Double(tpq))
+        }
+        return tick
     }
 
     // MARK: - MIDI Meta Events
@@ -223,10 +242,6 @@ class MIDIExporter {
             v >>= 7
         }
         return result
-    }
-
-    private static func sumDeltas(_ events: [(delta: Int, bytes: [UInt8])]) -> Int {
-        events.reduce(0) { $0 + $1.delta }
     }
 }
 
