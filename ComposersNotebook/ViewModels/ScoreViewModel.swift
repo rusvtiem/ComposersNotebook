@@ -197,8 +197,7 @@ class ScoreViewModel: ObservableObject {
     }
 
     private func insertEvent(_ event: NoteEvent) {
-        guard selectedPartIndex < score.parts.count,
-              selectedMeasureIndex < score.parts[selectedPartIndex].measures.count else { return }
+        guard isCurrentMeasurePathValid else { return }
 
         // Clear placeholder whole rest when user starts entering notes
         clearPlaceholderRest()
@@ -223,6 +222,7 @@ class ScoreViewModel: ObservableObject {
 
     /// Remove the default whole rest placeholder if that's the only event in the measure
     private func clearPlaceholderRest() {
+        guard isCurrentMeasurePathValid else { return }
         let measure = score.parts[selectedPartIndex].staves[selectedStaffIndex].measures[selectedMeasureIndex]
         if measure.events.count == 1,
            measure.events[0].isRest,
@@ -258,168 +258,94 @@ class ScoreViewModel: ObservableObject {
 
     /// Remove a specific pitch from a chord; if only one remains, convert back to single note
     func removePitchFromChord(at pitchIndex: Int) {
-        guard let idx = selectedEventIndex,
-              selectedPartIndex < score.parts.count,
-              selectedMeasureIndex < score.parts[selectedPartIndex].measures.count,
-              idx < score.parts[selectedPartIndex].staves[selectedStaffIndex].measures[selectedMeasureIndex].events.count else { return }
-        saveUndoState()
-        var event = score.parts[selectedPartIndex].staves[selectedStaffIndex].measures[selectedMeasureIndex].events[idx]
-        switch event.type {
-        case .chord(var pitches):
-            guard pitchIndex < pitches.count, pitches.count > 1 else { return }
+        mutateSelectedEvent { event in
+            guard case .chord(var pitches) = event.type,
+                  pitchIndex < pitches.count, pitches.count > 1 else { return }
             pitches.remove(at: pitchIndex)
-            if pitches.count == 1 {
-                event.type = .note(pitch: pitches[0])
-            } else {
-                event.type = .chord(pitches: pitches)
-            }
-            score.parts[selectedPartIndex].staves[selectedStaffIndex].measures[selectedMeasureIndex].events[idx] = event
-            selectedPitchIndex = nil
-            score.touch()
-        default:
-            break
+            event.type = pitches.count == 1 ? .note(pitch: pitches[0]) : .chord(pitches: pitches)
+            self.selectedPitchIndex = nil
         }
     }
 
     /// Replace a specific pitch within a chord
     func replacePitchInChord(at pitchIndex: Int, with newPitch: Pitch) {
-        guard let idx = selectedEventIndex,
-              selectedPartIndex < score.parts.count,
-              selectedMeasureIndex < score.parts[selectedPartIndex].measures.count,
-              idx < score.parts[selectedPartIndex].staves[selectedStaffIndex].measures[selectedMeasureIndex].events.count else { return }
-        saveUndoState()
-        var event = score.parts[selectedPartIndex].staves[selectedStaffIndex].measures[selectedMeasureIndex].events[idx]
-        switch event.type {
-        case .chord(var pitches):
-            guard pitchIndex < pitches.count else { return }
-            pitches[pitchIndex] = newPitch
-            pitches.sort { $0.staffPosition > $1.staffPosition }
-            event.type = .chord(pitches: pitches)
-            score.parts[selectedPartIndex].staves[selectedStaffIndex].measures[selectedMeasureIndex].events[idx] = event
-            score.touch()
-        case .note:
-            event.type = .note(pitch: newPitch)
-            score.parts[selectedPartIndex].staves[selectedStaffIndex].measures[selectedMeasureIndex].events[idx] = event
-            score.touch()
-        default:
-            break
+        mutateSelectedEvent { event in
+            switch event.type {
+            case .chord(var pitches):
+                guard pitchIndex < pitches.count else { return }
+                pitches[pitchIndex] = newPitch
+                pitches.sort { $0.staffPosition > $1.staffPosition }
+                event.type = .chord(pitches: pitches)
+            case .note:
+                event.type = .note(pitch: newPitch)
+            case .rest:
+                break
+            }
         }
     }
 
     func updateSelectedEventPitch(_ pitch: Pitch) {
-        guard let idx = selectedEventIndex,
-              selectedPartIndex < score.parts.count,
-              selectedMeasureIndex < score.parts[selectedPartIndex].measures.count,
-              idx < score.parts[selectedPartIndex].staves[selectedStaffIndex].measures[selectedMeasureIndex].events.count else { return }
-        saveUndoState()
-        score.parts[selectedPartIndex].staves[selectedStaffIndex].measures[selectedMeasureIndex].events[idx].type = .note(pitch: pitch)
-        score.touch()
+        mutateSelectedEvent { $0.type = .note(pitch: pitch) }
     }
 
     func updateSelectedEventDuration(_ duration: DurationValue) {
-        guard let idx = selectedEventIndex,
-              selectedPartIndex < score.parts.count,
-              selectedMeasureIndex < score.parts[selectedPartIndex].measures.count,
-              idx < score.parts[selectedPartIndex].staves[selectedStaffIndex].measures[selectedMeasureIndex].events.count else { return }
-        saveUndoState()
-        score.parts[selectedPartIndex].staves[selectedStaffIndex].measures[selectedMeasureIndex].events[idx].duration.value = duration
-        score.touch()
+        mutateSelectedEvent { $0.duration.value = duration }
     }
 
     func updateSelectedEventAccidental(_ accidental: Accidental) {
-        guard let idx = selectedEventIndex,
-              selectedPartIndex < score.parts.count,
-              selectedMeasureIndex < score.parts[selectedPartIndex].measures.count,
-              idx < score.parts[selectedPartIndex].staves[selectedStaffIndex].measures[selectedMeasureIndex].events.count else { return }
-        saveUndoState()
-        var event = score.parts[selectedPartIndex].staves[selectedStaffIndex].measures[selectedMeasureIndex].events[idx]
-        event.showNatural = (accidental == .natural)
-        switch event.type {
-        case .note(var pitch):
-            pitch.accidental = accidental
-            event.type = .note(pitch: pitch)
-        case .chord(var pitches):
-            for i in pitches.indices { pitches[i].accidental = accidental }
-            event.type = .chord(pitches: pitches)
-        case .rest: break
+        mutateSelectedEvent { event in
+            event.showNatural = (accidental == .natural)
+            switch event.type {
+            case .note(var pitch):
+                pitch.accidental = accidental
+                event.type = .note(pitch: pitch)
+            case .chord(var pitches):
+                for i in pitches.indices { pitches[i].accidental = accidental }
+                event.type = .chord(pitches: pitches)
+            case .rest: break
+            }
         }
-        score.parts[selectedPartIndex].staves[selectedStaffIndex].measures[selectedMeasureIndex].events[idx] = event
-        score.touch()
     }
 
     func updateSelectedEventArticulation(_ articulation: Articulation?) {
-        guard let idx = selectedEventIndex,
-              selectedPartIndex < score.parts.count,
-              selectedMeasureIndex < score.parts[selectedPartIndex].measures.count,
-              idx < score.parts[selectedPartIndex].staves[selectedStaffIndex].measures[selectedMeasureIndex].events.count else { return }
-        saveUndoState()
-        if let art = articulation {
-            if score.parts[selectedPartIndex].staves[selectedStaffIndex].measures[selectedMeasureIndex].events[idx].articulations.contains(art) {
-                score.parts[selectedPartIndex].staves[selectedStaffIndex].measures[selectedMeasureIndex].events[idx].articulations.removeAll { $0 == art }
-            } else {
-                score.parts[selectedPartIndex].staves[selectedStaffIndex].measures[selectedMeasureIndex].events[idx].articulations.append(art)
+        mutateSelectedEvent { event in
+            guard let art = articulation else {
+                event.articulations.removeAll()
+                return
             }
-        } else {
-            score.parts[selectedPartIndex].staves[selectedStaffIndex].measures[selectedMeasureIndex].events[idx].articulations.removeAll()
+            if event.articulations.contains(art) {
+                event.articulations.removeAll { $0 == art }
+            } else {
+                event.articulations.append(art)
+            }
         }
-        score.touch()
     }
 
     func updateSelectedEventDynamic(_ dynamic: DynamicMarking) {
-        guard let idx = selectedEventIndex,
-              selectedPartIndex < score.parts.count,
-              selectedMeasureIndex < score.parts[selectedPartIndex].measures.count,
-              idx < score.parts[selectedPartIndex].staves[selectedStaffIndex].measures[selectedMeasureIndex].events.count else { return }
-        saveUndoState()
-        let current = score.parts[selectedPartIndex].staves[selectedStaffIndex].measures[selectedMeasureIndex].events[idx].dynamic
-        score.parts[selectedPartIndex].staves[selectedStaffIndex].measures[selectedMeasureIndex].events[idx].dynamic = (current == dynamic) ? nil : dynamic
-        score.touch()
+        mutateSelectedEvent { $0.dynamic = ($0.dynamic == dynamic) ? nil : dynamic }
     }
 
     func toggleSelectedEventTie() {
-        guard let idx = selectedEventIndex,
-              selectedPartIndex < score.parts.count,
-              selectedMeasureIndex < score.parts[selectedPartIndex].measures.count,
-              idx < score.parts[selectedPartIndex].staves[selectedStaffIndex].measures[selectedMeasureIndex].events.count else { return }
-        saveUndoState()
-        score.parts[selectedPartIndex].staves[selectedStaffIndex].measures[selectedMeasureIndex].events[idx].tiedToNext.toggle()
-        score.touch()
+        mutateSelectedEvent { $0.tiedToNext.toggle() }
     }
 
     func toggleSelectedEventSlur() {
-        guard let idx = selectedEventIndex,
-              selectedPartIndex < score.parts.count,
-              selectedMeasureIndex < score.parts[selectedPartIndex].measures.count,
-              idx < score.parts[selectedPartIndex].staves[selectedStaffIndex].measures[selectedMeasureIndex].events.count else { return }
-        saveUndoState()
-        score.parts[selectedPartIndex].staves[selectedStaffIndex].measures[selectedMeasureIndex].events[idx].slurStart.toggle()
-        score.touch()
+        mutateSelectedEvent { $0.slurStart.toggle() }
     }
 
     func updateSelectedEventStemDirection(_ direction: StemDirection) {
-        guard let idx = selectedEventIndex,
-              selectedPartIndex < score.parts.count,
-              selectedMeasureIndex < score.parts[selectedPartIndex].measures.count,
-              idx < score.parts[selectedPartIndex].staves[selectedStaffIndex].measures[selectedMeasureIndex].events.count else { return }
-        saveUndoState()
-        score.parts[selectedPartIndex].staves[selectedStaffIndex].measures[selectedMeasureIndex].events[idx].stemDirection = direction
-        score.touch()
+        mutateSelectedEvent { $0.stemDirection = direction }
     }
 
     func deleteSelectedEvent() {
-        guard let idx = selectedEventIndex,
-              selectedPartIndex < score.parts.count,
-              selectedMeasureIndex < score.parts[selectedPartIndex].measures.count,
-              idx < score.parts[selectedPartIndex].staves[selectedStaffIndex].measures[selectedMeasureIndex].events.count else { return }
-        saveUndoState()
         // Replace note/chord with rest of same duration (don't shift other notes)
-        let event = score.parts[selectedPartIndex].staves[selectedStaffIndex].measures[selectedMeasureIndex].events[idx]
-        var restEvent = NoteEvent(type: .rest, duration: event.duration)
-        restEvent.duration.dotted = event.duration.dotted
-        restEvent.duration.doubleDotted = event.duration.doubleDotted
-        score.parts[selectedPartIndex].staves[selectedStaffIndex].measures[selectedMeasureIndex].events[idx] = restEvent
+        mutateSelectedEvent { event in
+            var restEvent = NoteEvent(type: .rest, duration: event.duration)
+            restEvent.duration.dotted = event.duration.dotted
+            restEvent.duration.doubleDotted = event.duration.doubleDotted
+            event = restEvent
+        }
         selectedEventIndex = nil
-        score.touch()
     }
 
     func moveSelectedEvent(toPitch pitch: Pitch) {
@@ -428,30 +354,24 @@ class ScoreViewModel: ObservableObject {
 
     /// Add a pitch to the selected event, converting a note to a chord if needed
     func addPitchToSelectedEvent(_ pitch: Pitch) {
-        guard let idx = selectedEventIndex,
-              selectedPartIndex < score.parts.count,
-              selectedMeasureIndex < score.parts[selectedPartIndex].measures.count,
-              idx < score.parts[selectedPartIndex].staves[selectedStaffIndex].measures[selectedMeasureIndex].events.count else { return }
-        saveUndoState()
-        var event = score.parts[selectedPartIndex].staves[selectedStaffIndex].measures[selectedMeasureIndex].events[idx]
-        switch event.type {
-        case .note(let existing):
-            // Convert note to chord
-            if existing != pitch {
-                event.type = .chord(pitches: [existing, pitch])
+        mutateSelectedEvent { event in
+            switch event.type {
+            case .note(let existing):
+                // Convert note to chord
+                if existing != pitch {
+                    event.type = .chord(pitches: [existing, pitch])
+                }
+            case .chord(var pitches):
+                // Add pitch to chord if not already present
+                if !pitches.contains(where: { $0.name == pitch.name && $0.octave == pitch.octave }) {
+                    pitches.append(pitch)
+                    pitches.sort { $0.staffPosition > $1.staffPosition } // low to high on staff
+                    event.type = .chord(pitches: pitches)
+                }
+            case .rest:
+                break
             }
-        case .chord(var pitches):
-            // Add pitch to chord if not already present
-            if !pitches.contains(where: { $0.name == pitch.name && $0.octave == pitch.octave }) {
-                pitches.append(pitch)
-                pitches.sort { $0.staffPosition > $1.staffPosition } // low to high on staff
-                event.type = .chord(pitches: pitches)
-            }
-        case .rest:
-            break
         }
-        score.parts[selectedPartIndex].staves[selectedStaffIndex].measures[selectedMeasureIndex].events[idx] = event
-        score.touch()
     }
 
     // MARK: - Copy / Cut / Paste
@@ -478,7 +398,7 @@ class ScoreViewModel: ObservableObject {
 
     /// Paste clipboard contents at cursor position
     func paste() {
-        guard !clipboard.isEmpty else { return }
+        guard !clipboard.isEmpty, isCurrentMeasurePathValid else { return }
         saveUndoState()
         clearPlaceholderRest()
 
@@ -504,36 +424,29 @@ class ScoreViewModel: ObservableObject {
 
     /// Transpose the selected event by a number of semitones
     func transposeSelectedEvent(semitones: Int) {
-        guard let idx = selectedEventIndex,
-              selectedPartIndex < score.parts.count,
-              selectedMeasureIndex < score.parts[selectedPartIndex].measures.count,
-              idx < score.parts[selectedPartIndex].staves[selectedStaffIndex].measures[selectedMeasureIndex].events.count else { return }
-        saveUndoState()
-        var event = score.parts[selectedPartIndex].staves[selectedStaffIndex].measures[selectedMeasureIndex].events[idx]
-        switch event.type {
-        case .note(let pitch):
-            let newMidi = pitch.midiNote + semitones
-            guard newMidi >= 0, newMidi <= 127 else { return }
-            event.type = .note(pitch: Pitch.fromMIDI(newMidi))
-        case .chord(let pitches):
-            let transposed = pitches.compactMap { p -> Pitch? in
-                let newMidi = p.midiNote + semitones
-                guard newMidi >= 0, newMidi <= 127 else { return nil }
-                return Pitch.fromMIDI(newMidi)
+        mutateSelectedEvent { event in
+            switch event.type {
+            case .note(let pitch):
+                let newMidi = pitch.midiNote + semitones
+                guard newMidi >= 0, newMidi <= 127 else { return }
+                event.type = .note(pitch: Pitch.fromMIDI(newMidi))
+            case .chord(let pitches):
+                let transposed = pitches.compactMap { p -> Pitch? in
+                    let newMidi = p.midiNote + semitones
+                    guard newMidi >= 0, newMidi <= 127 else { return nil }
+                    return Pitch.fromMIDI(newMidi)
+                }
+                guard transposed.count == pitches.count else { return }
+                event.type = .chord(pitches: transposed)
+            case .rest:
+                return
             }
-            guard transposed.count == pitches.count else { return }
-            event.type = .chord(pitches: transposed)
-        case .rest:
-            return
         }
-        score.parts[selectedPartIndex].staves[selectedStaffIndex].measures[selectedMeasureIndex].events[idx] = event
-        score.touch()
     }
 
     /// Transpose all events in the current measure by semitones
     func transposeMeasure(semitones: Int) {
-        guard selectedPartIndex < score.parts.count,
-              selectedMeasureIndex < score.parts[selectedPartIndex].measures.count else { return }
+        guard isCurrentMeasurePathValid else { return }
         saveUndoState()
         let events = score.parts[selectedPartIndex].staves[selectedStaffIndex].measures[selectedMeasureIndex].events
         for (i, event) in events.enumerated() {
@@ -572,8 +485,7 @@ class ScoreViewModel: ObservableObject {
     // MARK: - Delete
 
     func deleteLastEvent() {
-        guard selectedPartIndex < score.parts.count,
-              selectedMeasureIndex < score.parts[selectedPartIndex].measures.count else { return }
+        guard isCurrentMeasurePathValid else { return }
 
         let events = score.parts[selectedPartIndex].staves[selectedStaffIndex].measures[selectedMeasureIndex].events
         guard !events.isEmpty else { return }
@@ -628,6 +540,12 @@ class ScoreViewModel: ObservableObject {
         if selectedPartIndex >= score.parts.count {
             selectedPartIndex = score.parts.count - 1
         }
+        // Сбросить выбор стана: удалённая grand-staff партия могла оставить
+        // selectedStaffIndex = 1, а новая выбранная партия одностанная → краш.
+        selectedStaffIndex = 0
+        selectedEventIndex = nil
+        let maxMeasure = max(0, score.parts[selectedPartIndex].measureCount - 1)
+        if selectedMeasureIndex > maxMeasure { selectedMeasureIndex = maxMeasure }
         score.touch()
     }
 
@@ -728,39 +646,27 @@ class ScoreViewModel: ObservableObject {
     // MARK: - Score metadata
 
     func setTimeSignature(_ ts: TimeSignature) {
-        saveUndoState()
-        score.parts[selectedPartIndex].staves[selectedStaffIndex].measures[selectedMeasureIndex].timeSignature = ts
-        score.touch()
+        mutateCurrentMeasure { $0.timeSignature = ts }
     }
 
     func setKeySignature(_ ks: KeySignature) {
-        saveUndoState()
-        score.parts[selectedPartIndex].staves[selectedStaffIndex].measures[selectedMeasureIndex].keySignature = ks
-        score.touch()
+        mutateCurrentMeasure { $0.keySignature = ks }
     }
 
     func setClef(_ clef: Clef) {
-        saveUndoState()
-        score.parts[selectedPartIndex].staves[selectedStaffIndex].measures[selectedMeasureIndex].clefChange = clef
-        score.touch()
+        mutateCurrentMeasure { $0.clefChange = clef }
     }
 
     func setTempo(_ tempo: TempoMarking) {
-        saveUndoState()
-        score.parts[selectedPartIndex].staves[selectedStaffIndex].measures[selectedMeasureIndex].tempoMarking = tempo
-        score.touch()
+        mutateCurrentMeasure { $0.tempoMarking = tempo }
     }
 
     func setBarline(_ barline: BarlineType) {
-        saveUndoState()
-        score.parts[selectedPartIndex].staves[selectedStaffIndex].measures[selectedMeasureIndex].barlineEnd = barline
-        score.touch()
+        mutateCurrentMeasure { $0.barlineEnd = barline }
     }
 
     func setNavigationMark(_ mark: NavigationMark?) {
-        saveUndoState()
-        score.parts[selectedPartIndex].staves[selectedStaffIndex].measures[selectedMeasureIndex].navigationMark = mark
-        score.touch()
+        mutateCurrentMeasure { $0.navigationMark = mark }
     }
 
     // MARK: - Measure properties (Phase 2c spanner/text editing)
@@ -768,14 +674,34 @@ class ScoreViewModel: ObservableObject {
     // Общий мутирующий хелпер: позволяет UI редактировать текущий такт
     // через одну точку входа с автоматическим saveUndoState + score.touch().
 
+    /// Валиден ли путь part→staff→measure для текущего выбора.
+    /// Ключевая защита от grand-staff краша: `selectedStaffIndex` может «протухнуть»
+    /// (напр. после удаления партии фортепиано/органа selectedStaffIndex остаётся 1,
+    /// а новая выбранная партия одностанная) — обращение к staves[1] иначе вылетает.
+    var isCurrentMeasurePathValid: Bool {
+        selectedPartIndex < score.parts.count &&
+        selectedStaffIndex < score.parts[selectedPartIndex].staves.count &&
+        selectedMeasureIndex < score.parts[selectedPartIndex].staves[selectedStaffIndex].measures.count
+    }
+
     /// Применяет мутацию к текущему выбранному такту с undo/touch.
-    /// Если выбранный такт вне диапазона — ничего не делает.
+    /// Если путь выбора вне диапазона — ничего не делает.
     func mutateCurrentMeasure(_ mutate: (inout Measure) -> Void) {
-        guard selectedPartIndex < score.parts.count,
-              selectedStaffIndex < score.parts[selectedPartIndex].staves.count,
-              selectedMeasureIndex < score.parts[selectedPartIndex].staves[selectedStaffIndex].measures.count else { return }
+        guard isCurrentMeasurePathValid else { return }
         saveUndoState()
         mutate(&score.parts[selectedPartIndex].staves[selectedStaffIndex].measures[selectedMeasureIndex])
+        score.touch()
+    }
+
+    /// Применяет мутацию к выбранному событию (selectedEventIndex) в текущем такте
+    /// с проверкой всего пути part→staff→measure→event + undo/touch.
+    /// Единая безопасная точка входа для всех событийных мутаторов.
+    func mutateSelectedEvent(_ mutate: (inout NoteEvent) -> Void) {
+        guard let idx = selectedEventIndex,
+              isCurrentMeasurePathValid,
+              idx < score.parts[selectedPartIndex].staves[selectedStaffIndex].measures[selectedMeasureIndex].events.count else { return }
+        saveUndoState()
+        mutate(&score.parts[selectedPartIndex].staves[selectedStaffIndex].measures[selectedMeasureIndex].events[idx])
         score.touch()
     }
 
@@ -931,25 +857,13 @@ class ScoreViewModel: ObservableObject {
     }
 
     func updateSelectedEventVoice(_ voice: VoiceLayer) {
-        guard let idx = selectedEventIndex,
-              selectedPartIndex < score.parts.count,
-              selectedMeasureIndex < score.parts[selectedPartIndex].measures.count,
-              idx < score.parts[selectedPartIndex].staves[selectedStaffIndex].measures[selectedMeasureIndex].events.count else { return }
-        saveUndoState()
-        score.parts[selectedPartIndex].staves[selectedStaffIndex].measures[selectedMeasureIndex].events[idx].voice = voice
-        score.touch()
+        mutateSelectedEvent { $0.voice = voice }
     }
 
     // MARK: - Lyrics
 
     func setLyricForSelectedEvent(_ text: String) {
-        guard let idx = selectedEventIndex,
-              selectedPartIndex < score.parts.count,
-              selectedMeasureIndex < score.parts[selectedPartIndex].measures.count,
-              idx < score.parts[selectedPartIndex].staves[selectedStaffIndex].measures[selectedMeasureIndex].events.count else { return }
-        saveUndoState()
-        score.parts[selectedPartIndex].staves[selectedStaffIndex].measures[selectedMeasureIndex].events[idx].lyric = text.isEmpty ? nil : text
-        score.touch()
+        mutateSelectedEvent { $0.lyric = text.isEmpty ? nil : text }
     }
 
     func startLyricEditing() {
@@ -967,22 +881,10 @@ class ScoreViewModel: ObservableObject {
     // MARK: - Playback Techniques
 
     func updateSelectedEventTechnique(_ technique: PlaybackTechnique?) {
-        guard let idx = selectedEventIndex,
-              selectedPartIndex < score.parts.count,
-              selectedMeasureIndex < score.parts[selectedPartIndex].measures.count,
-              idx < score.parts[selectedPartIndex].staves[selectedStaffIndex].measures[selectedMeasureIndex].events.count else { return }
-        saveUndoState()
-        score.parts[selectedPartIndex].staves[selectedStaffIndex].measures[selectedMeasureIndex].events[idx].technique = technique
-        score.touch()
+        mutateSelectedEvent { $0.technique = technique }
     }
 
     func setStrumPattern(_ pattern: StrumPattern) {
-        guard let idx = selectedEventIndex,
-              selectedPartIndex < score.parts.count,
-              selectedMeasureIndex < score.parts[selectedPartIndex].measures.count,
-              idx < score.parts[selectedPartIndex].staves[selectedStaffIndex].measures[selectedMeasureIndex].events.count else { return }
-        saveUndoState()
-        score.parts[selectedPartIndex].staves[selectedStaffIndex].measures[selectedMeasureIndex].events[idx].strumPattern = pattern
-        score.touch()
+        mutateSelectedEvent { $0.strumPattern = pattern }
     }
 }
