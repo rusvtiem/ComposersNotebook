@@ -605,16 +605,38 @@ class ScoreViewModel: ObservableObject {
         guard let previous = undoStack.popLast() else { return }
         redoStack.append(score)
         score = previous
+        clampSelection()
     }
 
     func redo() {
         guard let next = redoStack.popLast() else { return }
         undoStack.append(score)
         score = next
+        clampSelection()
     }
 
     var canUndo: Bool { !undoStack.isEmpty }
     var canRedo: Bool { !redoStack.isEmpty }
+
+    /// Приводит индексы выбора в валидный диапазон относительно текущего score.
+    /// После undo/redo восстановленная партитура может иметь меньше партий/тактов,
+    /// чем было при выборе — устаревшие индексы дали бы пустой/неверный выбор.
+    /// Выделенное событие снимается: оно почти наверняка уже не то, что было.
+    private func clampSelection() {
+        guard !score.parts.isEmpty else {
+            selectedPartIndex = 0; selectedStaffIndex = 0; selectedMeasureIndex = 0
+            selectedEventIndex = nil; selectedPitchIndex = nil; cursorPosition = 0
+            return
+        }
+        selectedPartIndex = min(selectedPartIndex, score.parts.count - 1)
+        let staves = score.parts[selectedPartIndex].staves
+        selectedStaffIndex = staves.isEmpty ? 0 : min(selectedStaffIndex, staves.count - 1)
+        let measureCount = staves.isEmpty ? 0 : staves[selectedStaffIndex].measures.count
+        selectedMeasureIndex = measureCount == 0 ? 0 : min(selectedMeasureIndex, measureCount - 1)
+        selectedEventIndex = nil
+        selectedPitchIndex = nil
+        cursorPosition = 0
+    }
 
     // MARK: - Auto-save
 
