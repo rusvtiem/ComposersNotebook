@@ -352,10 +352,13 @@ class MIDIEngine: ObservableObject {
                 }
                 let secPerBeat = 60.0 / currentBPM
 
-                // Collect all events across parts for this measure
+                // Collect all events across parts for this measure — все партии
+                // играются ПАРАЛЛЕЛЬНО (каждая своей Task), ждём один раз в конце.
+                var measureTimeSig = score.timeSignature
                 for part in score.parts {
                     guard measureIndex < part.measures.count else { continue }
                     let measure = part.measures[measureIndex]
+                    if let ts = measure.timeSignature { measureTimeSig = ts }
 
                     Task {
                         setInstrument(midiProgram: part.effectiveMidiProgram)
@@ -393,12 +396,11 @@ class MIDIEngine: ObservableObject {
                             }
                         }
                     }
-
-                    // Wait for the full measure duration
-                    let ts = measure.timeSignature ?? score.timeSignature
-                    let measureDuration = ts.totalBeats * secPerBeat
-                    try? await Task.sleep(for: .seconds(measureDuration))
                 }
+
+                // Ждём длительность такта ОДИН раз (не N раз на каждую партию).
+                let measureDuration = measureTimeSig.totalBeats * secPerBeat
+                try? await Task.sleep(for: .seconds(measureDuration))
             }
 
             isPlaying = false
