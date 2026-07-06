@@ -79,19 +79,40 @@ struct Measure: Codable, Equatable, Identifiable {
         self.multiMeasureRestCount = try c.decodeIfPresent(Int.self, forKey: .multiMeasureRestCount) ?? 0
     }
 
+    /// Такт содержит только один целый rest — плейсхолдер «пустой такт»
+    /// (полнотактовая пауза). Рисуется как целая пауза в любом размере.
+    var isFullMeasureRest: Bool {
+        events.count == 1
+            && events[0].isRest
+            && events[0].duration.value == .whole
+            && !events[0].duration.dotted
+            && !events[0].duration.doubleDotted
+            && !events[0].duration.triplet
+    }
+
     /// Total beats used in this measure (учитывает tuplet'ы).
+    /// Внимание: полнотактовая пауза здесь считается фиксированными 4 долями
+    /// (целая нота). Для проверок вместимости используй `usedBeats(timeSignature:)`.
     var usedBeats: Double {
         events.reduce(0) { $0 + $1.actualBeats }
     }
 
+    /// Занятые доли с учётом размера: полнотактовая пауза = длина такта,
+    /// а не фиксированные 4 доли. Иначе в не-4/4 (3/4, 6/8, …) пустой такт
+    /// давал ложное переполнение (4 доли против 3).
+    func usedBeats(timeSignature ts: TimeSignature) -> Double {
+        if isFullMeasureRest { return ts.totalBeats }
+        return usedBeats
+    }
+
     /// Check if measure is full (no more room for notes)
     func isFull(timeSignature ts: TimeSignature) -> Bool {
-        return usedBeats >= ts.totalBeats
+        return usedBeats(timeSignature: ts) >= ts.totalBeats
     }
 
     /// Remaining beats in measure
     func remainingBeats(timeSignature ts: TimeSignature) -> Double {
-        return max(0, ts.totalBeats - usedBeats)
+        return max(0, ts.totalBeats - usedBeats(timeSignature: ts))
     }
 
     /// Create an empty measure

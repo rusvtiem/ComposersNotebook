@@ -48,7 +48,7 @@ enum ScoreValidator {
     ) -> [Issue] {
         var issues: [Issue] = []
         let ts = measure.timeSignature ?? score.timeSignature
-        let used = measure.usedBeats
+        let used = measure.usedBeats(timeSignature: ts)
         let total = ts.totalBeats
 
         // 1. Overflow/Underflow
