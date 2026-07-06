@@ -98,6 +98,7 @@ struct ScoreEditorView: View {
         .toolbar {
             ToolbarItemGroup(placement: .topBarLeading) {
                 Button {
+                    viewModel.finalizeOnClose()
                     appState.currentScore = nil
                 } label: {
                     Image(systemName: "chevron.left")
@@ -501,6 +502,7 @@ struct ScoreEditorView: View {
         let url = fileManager.fileURL(for: viewModel.score)
         do {
             try fileManager.save(score: viewModel.score, to: url)
+            viewModel.markSavedToCNB()
         } catch {
             showError("Save failed: \(error.localizedDescription)")
         }
@@ -513,6 +515,7 @@ struct ScoreEditorView: View {
         let url = fileManager.fileURL(for: viewModel.score)
         do {
             try fileManager.save(score: viewModel.score, to: url)
+            viewModel.markSavedToCNB()
             shareFile(url)
         } catch {
             showError("Export failed: \(error.localizedDescription)")

@@ -65,6 +65,9 @@ class ScoreViewModel: ObservableObject {
     // Auto-save
     private var autoSaveTimer: Timer?
     private var autoSaveURL: URL?
+    /// true, если текущее состояние партитуры уже сохранено в .cnb и с тех пор
+    /// не редактировалось. Тогда черновик автосейва избыточен и чистится при закрытии.
+    private var savedToCNB = false
 
     init(score: Score) {
         self.score = score
@@ -599,6 +602,7 @@ class ScoreViewModel: ObservableObject {
             undoStack.removeFirst()
         }
         redoStack.removeAll()
+        savedToCNB = false
     }
 
     func undo() {
@@ -663,6 +667,21 @@ class ScoreViewModel: ObservableObject {
 
     func save() {
         autoSave()
+    }
+
+    /// Вызывается после явного сохранения в .cnb: черновик автосейва стал избыточным.
+    func markSavedToCNB() {
+        savedToCNB = true
+    }
+
+    /// Вызывается при закрытии редактора. Если работа уже в .cnb и с тех пор не
+    /// менялась — удаляем черновик, чтобы он не копился в списке восстановления.
+    /// Иначе черновик сохраняется: это несохранённые правки, их нельзя терять.
+    func finalizeOnClose() {
+        autoSaveTimer?.invalidate()
+        autoSaveTimer = nil
+        guard savedToCNB, let url = autoSaveURL else { return }
+        try? FileManager.default.removeItem(at: url)
     }
 
     // MARK: - Score metadata
