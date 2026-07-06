@@ -4,6 +4,12 @@ import Foundation
 
 class MusicXMLExporter {
 
+    /// Делений на четверть в экспортируемом MusicXML. 480 = 2⁵·3·5 — все простые
+    /// длительности до 32-й с двойной точкой И триоли/квинтоли выражаются целым
+    /// числом делений. Со старым значением 4 тридцать вторая давала duration=0
+    /// (нота исчезала в стороннем редакторе), точки и триоли округлялись в мусор.
+    private let divisionsPerQuarter = 480
+
     func export(score: Score) -> String {
         var xml = """
         <?xml version="1.0" encoding="UTF-8"?>
@@ -72,7 +78,7 @@ class MusicXMLExporter {
             xml += "\n      <attributes>"
 
             if index == 0 {
-                xml += "\n        <divisions>4</divisions>"  // quarter note = 4 divisions
+                xml += "\n        <divisions>\(divisionsPerQuarter)</divisions>"
             }
 
             if let ks = measure.keySignature ?? (index == 0 ? score.keySignature : nil) {
@@ -321,7 +327,7 @@ class MusicXMLExporter {
         case .rest:
             xml += "\n      <note>"
             xml += "\n        <rest/>"
-            xml += exportDuration(event.duration)
+            xml += exportDuration(event)
             xml += "\n      </note>"
         }
 
@@ -345,7 +351,7 @@ class MusicXMLExporter {
         xml += "\n        </pitch>"
 
         // Duration
-        xml += exportDuration(duration)
+        xml += exportDuration(event)
 
         // Tuplet time-modification (3:2, 5:4, etc.)
         if let tuplet = event.tuplet {
@@ -442,11 +448,15 @@ class MusicXMLExporter {
 
     // MARK: - Duration
 
-    private func exportDuration(_ duration: Duration) -> String {
-        // Divisions: quarter = 4
-        let divisions = Int(duration.beats * 4)
+    private func exportDuration(_ event: NoteEvent) -> String {
+        // <duration> — звучащая длительность в делениях, с учётом tuplet
+        // (event.actualBeats — единый источник тайминга, как в плейбеке). Раньше
+        // бралось duration.beats × 4: tuplet игнорировался (триоль занимала полную
+        // долю → переполнение такта у стороннего читателя), а 32-я × 4 = 0 → нота
+        // пропадала. max(1) — страховка, чтобы duration никогда не был нулевым.
+        let divisions = max(1, Int((event.actualBeats * Double(divisionsPerQuarter)).rounded()))
         let typeName: String
-        switch duration.value {
+        switch event.duration.value {
         case .whole: typeName = "whole"
         case .half: typeName = "half"
         case .quarter: typeName = "quarter"
@@ -458,11 +468,12 @@ class MusicXMLExporter {
         var xml = "\n        <duration>\(divisions)</duration>"
         xml += "\n        <type>\(typeName)</type>"
 
-        if duration.dotted {
+        // doubleDotted проверяется раньше dotted (как в Duration.beats): импортёры
+        // на двойную точку ставят ОБА флага — иначе экспорт дал бы три <dot/>.
+        if event.duration.doubleDotted {
             xml += "\n        <dot/>"
-        }
-        if duration.doubleDotted {
             xml += "\n        <dot/>"
+        } else if event.duration.dotted {
             xml += "\n        <dot/>"
         }
 
