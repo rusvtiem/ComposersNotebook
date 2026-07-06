@@ -616,36 +616,77 @@ class SoundFontManager: ObservableObject {
 
 // MARK: - URLSession download with progress
 
+/// Качает файл через `URLSessionDownloadTask` (система пишет блоками) с прогрессом.
+/// Раньше здесь был `for try await byte in bytes(from:)` — обход потока ПОБАЙТОВО:
+/// для .sf2 в сотни МБ это сотни миллионов await-итераций, загрузка ползла «по
+/// байту» и практически висла. Теперь скачивание идёт нормальными блоками силами
+/// системы, а прогресс приходит из `didWriteData`.
+///
+/// `@unchecked Sendable`: `continuation` трогается только на серийной delegate-
+/// очереди сессии (устанавливается до `resume()`, читается в колбэках) — гонки нет.
+private final class SoundFontDownloader: NSObject, URLSessionDownloadDelegate, @unchecked Sendable {
+    private let onProgress: @Sendable (Double) -> Void
+    /// Стабильный temp-путь, который переживёт возврат из `didFinishDownloadingTo`
+    /// (системный temp-файл удаляется сразу) и дождётся `moveItem` у вызывающего.
+    private let stableURL: URL
+    private var continuation: CheckedContinuation<(URL, URLResponse), Error>?
+
+    init(onProgress: @escaping @Sendable (Double) -> Void) {
+        self.onProgress = onProgress
+        self.stableURL = URL(fileURLWithPath: NSTemporaryDirectory())
+            .appendingPathComponent(UUID().uuidString + ".sf2")
+    }
+
+    func run(url: URL) async throws -> (URL, URLResponse) {
+        try await withCheckedThrowingContinuation { cont in
+            self.continuation = cont            // выставить ДО resume()
+            // Своя сессия: делегат можно задать только при её создании.
+            let session = URLSession(configuration: .default, delegate: self, delegateQueue: nil)
+            session.downloadTask(with: url).resume()
+        }
+    }
+
+    func urlSession(_ session: URLSession, downloadTask: URLSessionDownloadTask,
+                    didWriteData bytesWritten: Int64, totalBytesWritten: Int64,
+                    totalBytesExpectedToWrite: Int64) {
+        guard totalBytesExpectedToWrite > 0 else { return }
+        onProgress(Double(totalBytesWritten) / Double(totalBytesExpectedToWrite))
+    }
+
+    func urlSession(_ session: URLSession, downloadTask: URLSessionDownloadTask,
+                    didFinishDownloadingTo location: URL) {
+        // Переносим синхронно здесь: систему удаляет `location`, как только метод
+        // вернёт управление. HTTP-статус вернём в response — 4xx разбирает вызывающий.
+        let response = downloadTask.response ?? URLResponse()
+        do {
+            if FileManager.default.fileExists(atPath: stableURL.path) {
+                try FileManager.default.removeItem(at: stableURL)
+            }
+            try FileManager.default.moveItem(at: location, to: stableURL)
+            onProgress(1.0)
+            continuation?.resume(returning: (stableURL, response))
+        } catch {
+            continuation?.resume(throwing: error)
+        }
+        continuation = nil
+        session.finishTasksAndInvalidate()
+    }
+
+    func urlSession(_ session: URLSession, task: URLSessionTask, didCompleteWithError error: Error?) {
+        // При успехе приходит после didFinishDownloadingTo (continuation уже nil → no-op);
+        // при сетевой ошибке didFinish не вызывается — пробрасываем ошибку.
+        guard let error = error, continuation != nil else { return }
+        continuation?.resume(throwing: error)
+        continuation = nil
+        session.finishTasksAndInvalidate()
+    }
+}
+
 private extension URLSession {
     func download(from url: URL, onProgress: @escaping @Sendable (Double) -> Void) async throws -> (URL, URLResponse) {
-        let (asyncBytes, response) = try await bytes(from: url)
-        let total = response.expectedContentLength
-        let tempURL = URL(fileURLWithPath: NSTemporaryDirectory()).appendingPathComponent(UUID().uuidString + ".sf2")
-
-        FileManager.default.createFile(atPath: tempURL.path, contents: nil)
-        let handle = try FileHandle(forWritingTo: tempURL)
-        defer { try? handle.close() }
-
-        var bytesReceived: Int64 = 0
-        var buffer: [UInt8] = []
-        buffer.reserveCapacity(65536)
-
-        for try await byte in asyncBytes {
-            buffer.append(byte)
-            bytesReceived += 1
-            if buffer.count >= 65536 {
-                try handle.write(contentsOf: Data(buffer))
-                buffer.removeAll(keepingCapacity: true)
-                if total > 0 {
-                    onProgress(Double(bytesReceived) / Double(total))
-                }
-            }
-        }
-        if !buffer.isEmpty {
-            try handle.write(contentsOf: Data(buffer))
-        }
-        onProgress(1.0)
-        return (tempURL, response)
+        // Приёмник (`URLSession.shared`) не используется: делегат-загрузчик заводит
+        // собственную сессию. Сигнатура сохранена, чтобы не трогать место вызова.
+        try await SoundFontDownloader(onProgress: onProgress).run(url: url)
     }
 }
 
