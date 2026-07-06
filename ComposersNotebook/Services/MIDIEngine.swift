@@ -22,6 +22,18 @@ class MIDIEngine: ObservableObject {
         reverbNode = AVAudioUnitReverb()
         eqNode = AVAudioUnitEQ(numberOfBands: 3)
 
+        wireAudioGraph()
+        startEngine()
+        setupAudioSession()
+        loadActiveSoundFont()
+        subscribeToSoundFontChanges()
+        subscribeToAudioInterruptions()
+    }
+
+    /// Attach + connect nodes и выставить дефолтные пресеты reverb/EQ на текущих
+    /// `audioEngine`/`sampler`/`eqNode`/`reverbNode`. Вынесено из init, чтобы
+    /// `rebuildAudioGraph()` мог пересобрать граф после mediaServicesWereReset.
+    private func wireAudioGraph() {
         // Audio chain: sampler -> EQ -> reverb -> mixer
         audioEngine.attach(sampler)
         audioEngine.attach(eqNode)
@@ -52,16 +64,14 @@ class MIDIEngine: ObservableObject {
             eqNode.bands[2].gain = 0
             eqNode.bands[2].bypass = false
         }
+    }
 
+    private func startEngine() {
         do {
             try audioEngine.start()
         } catch {
             print("MIDI Engine ошибка запуска: \(error)")
         }
-
-        setupAudioSession()
-        loadActiveSoundFont()
-        subscribeToSoundFontChanges()
     }
 
     /// Подписка на смену активного SoundFont (через NotificationCenter).
@@ -86,6 +96,66 @@ class MIDIEngine: ObservableObject {
         } catch {
             print("Audio Session ошибка: \(error)")
         }
+    }
+
+    /// Прерывания аудио (звонок, Siri, будильник) и сброс медиасервера.
+    /// Без этого после телефонного звонка ноты «висят», а движок остаётся
+    /// остановленным — звук пропадает навсегда до перезапуска приложения.
+    private func subscribeToAudioInterruptions() {
+        let nc = NotificationCenter.default
+        nc.addObserver(
+            forName: AVAudioSession.interruptionNotification,
+            object: nil,
+            queue: .main
+        ) { [weak self] note in
+            Task { @MainActor in self?.handleInterruption(note) }
+        }
+        nc.addObserver(
+            forName: AVAudioSession.mediaServicesWereResetNotification,
+            object: nil,
+            queue: .main
+        ) { [weak self] _ in
+            Task { @MainActor in self?.handleMediaServicesReset() }
+        }
+    }
+
+    private func handleInterruption(_ note: Notification) {
+        guard let info = note.userInfo,
+              let raw = info[AVAudioSessionInterruptionTypeKey] as? UInt,
+              let type = AVAudioSession.InterruptionType(rawValue: raw) else { return }
+
+        switch type {
+        case .began:
+            // Система остановила движок. Гасим плейбек и ноты, иначе по возврату
+            // из звонка они звучат мусором.
+            stop()
+        case .ended:
+            // Реактивируем сессию и движок; без этого звук не вернётся.
+            try? AVAudioSession.sharedInstance().setActive(true)
+            if !audioEngine.isRunning { startEngine() }
+        @unknown default:
+            break
+        }
+    }
+
+    private func handleMediaServicesReset() {
+        // Media server рухнул: sampler и весь граф инвалидны. Пересобираем с нуля —
+        // иначе движок молчит навсегда (Директива №0: авто-восстановление).
+        stop()
+        isSoundFontLoaded = false
+        rebuildAudioGraph()
+    }
+
+    private func rebuildAudioGraph() {
+        audioEngine.stop()
+        audioEngine = AVAudioEngine()
+        sampler = AVAudioUnitSampler()
+        eqNode = AVAudioUnitEQ(numberOfBands: 3)
+        reverbNode = AVAudioUnitReverb()
+        wireAudioGraph()
+        setupAudioSession()
+        startEngine()
+        loadActiveSoundFont()
     }
 
     // MARK: - SoundFont Loading
