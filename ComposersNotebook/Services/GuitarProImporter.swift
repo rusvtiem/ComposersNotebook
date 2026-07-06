@@ -66,9 +66,12 @@ class GuitarProImporter {
         _ = try readIntString(data: data, offset: &offset) // tab
         _ = try readIntString(data: data, offset: &offset) // instructions
 
-        // Notice lines
+        // Notice lines. На битом файле readInt32 может вернуть мусор: отрицательное
+        // значение роняло `0..<noticeLines` фатальным крашем Range, а огромное —
+        // гоняло цикл вхолостую. Валидируем диапазон вместо доверия к данным.
         guard offset + 4 <= data.count else { throw GPError.invalidFile }
         let noticeLines = readInt32(data: data, offset: &offset)
+        guard noticeLines >= 0, noticeLines < 10_000 else { throw GPError.invalidFile }
         for _ in 0..<noticeLines {
             _ = try readIntString(data: data, offset: &offset)
         }
