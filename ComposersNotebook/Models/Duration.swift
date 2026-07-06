@@ -54,12 +54,16 @@ struct Duration: Codable, Equatable {
     }
 
     /// Actual duration in beats (quarter note = 1.0)
+    ///
+    /// doubleDotted проверяется раньше dotted: импортёры (Capella, MusicXML)
+    /// для двойной точки выставляют ОБА флага (dotted=true, doubleDotted=true).
+    /// При обратном порядке двойная точка ошибочно звучала как ×1.5 вместо ×1.75.
     var beats: Double {
         var result = value.beats
-        if dotted {
-            result *= 1.5
-        } else if doubleDotted {
+        if doubleDotted {
             result *= 1.75
+        } else if dotted {
+            result *= 1.5
         }
         if triplet {
             result *= 2.0 / 3.0
