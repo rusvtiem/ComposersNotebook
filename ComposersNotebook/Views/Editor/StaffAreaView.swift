@@ -1246,17 +1246,12 @@ struct MeasureView: View {
 
         stem.move(to: CGPoint(x: stemX, y: y))
         stem.addLine(to: CGPoint(x: stemX, y: stemEnd))
-        context.stroke(stem, with: .color(stemColor), lineWidth: 1)
+        // SMuFL stem thickness ≈ 0.12 staff-space; scales with zoom via staffLineSpacing.
+        context.stroke(stem, with: .color(stemColor), lineWidth: max(1.0, staffLineSpacing * 0.12))
     }
 
     private func drawFlags(context: GraphicsContext, x: CGFloat, y: CGFloat, radius: CGFloat, stemUp: Bool, duration: DurationValue, staffTop: CGFloat = 0) {
-        let flagCount: Int
-        switch duration {
-        case .eighth: flagCount = 1
-        case .sixteenth: flagCount = 2
-        case .thirtySecond: flagCount = 3
-        default: return
-        }
+        guard MusicSymbol.flag(for: duration, stemUp: stemUp) != nil else { return }
 
         let defaultStemLength = staffLineSpacing * 3.5
         let midStaff = staffTop + staffLineSpacing * 2
@@ -1264,9 +1259,31 @@ struct MeasureView: View {
         var stemEnd = stemUp ? y - defaultStemLength : y + defaultStemLength
         if stemUp { stemEnd = min(stemEnd, midStaff) }
         else { stemEnd = max(stemEnd, midStaff) }
+
+        // SMuFL flag glyphs anchor their origin on the stem line at the stem tip,
+        // extending toward the notehead (down for up-flags, up for down-flags).
+        // Render as vector path at the 4-staff-space em — same technique as clefs.
+        if let symbol = MusicSymbol.flag(for: duration, stemUp: stemUp) {
+            let ctFont = MusicFontManager.shared.uiMusicFont(size: smuflEm) as CTFont
+            if let flag = musicGlyphPath(symbol, ctFont: ctFont) {
+                var transform = CGAffineTransform(a: 1, b: 0, c: 0, d: -1, tx: stemX, ty: stemEnd)
+                if let placed = flag.path.copy(using: &transform) {
+                    context.fill(Path(placed), with: .color(theme.noteHead))
+                    return
+                }
+            }
+        }
+
+        // Fallback: hand-drawn hooks if the glyph is unavailable.
+        let flagCount: Int
+        switch duration {
+        case .eighth: flagCount = 1
+        case .sixteenth: flagCount = 2
+        case .thirtySecond: flagCount = 3
+        default: return
+        }
         let flagLength: CGFloat = staffLineSpacing * 1.5
         let flagSpacing: CGFloat = staffLineSpacing * 0.8
-
         for i in 0..<flagCount {
             let flagY = stemEnd + (stemUp ? CGFloat(i) * flagSpacing : -CGFloat(i) * flagSpacing)
             var flag = Path()
