@@ -375,7 +375,11 @@ struct StaffAreaView: View {
     // MARK: - Tap to place note
 
     private func pitchFromTap(y: CGFloat, clef: Clef) -> Pitch? {
-        let staffTop: CGFloat = 20 * viewModel.zoomScale
+        // Must match the staff origin used for drawing (MeasureView) and
+        // hit-testing (computeNotePositions) — both use `noteRoom`. Using a
+        // different value here maps a tap to the wrong pitch (note lands off
+        // the tapped line).
+        let staffTop: CGFloat = noteRoom
         let halfSpace = staffLineSpacing / 2
 
         // Calculate staff position offset from middle line
