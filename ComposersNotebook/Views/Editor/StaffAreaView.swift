@@ -485,6 +485,50 @@ struct MeasureView: View {
     /// scale. One size for all glyphs — no per-symbol magic numbers.
     private var smuflEm: CGFloat { staffLineSpacing * 4 }
 
+    /// Vector path + bounding box for a single SMuFL glyph at the 4-sp em.
+    /// nil when Bravura is missing the glyph so callers can fall back.
+    private func musicGlyphPath(_ symbol: String, ctFont: CTFont) -> (path: CGPath, bbox: CGRect)? {
+        var utf16 = Array(symbol.utf16)
+        var glyphs = [CGGlyph](repeating: 0, count: utf16.count)
+        guard CTFontGetGlyphsForCharacters(ctFont, &utf16, &glyphs, utf16.count),
+              let glyph = glyphs.first, glyph != 0,
+              let path = CTFontCreatePathForGlyph(ctFont, glyph, nil) else { return nil }
+        return (path, path.boundingBoxOfPath)
+    }
+
+    /// Draws a run of SMuFL glyphs (single like a flat, or combos like "ff"/"mf")
+    /// as vector paths at the 4-sp em. The run is centred horizontally on centerX;
+    /// each glyph's vertical centre sits on baselineY. Same technique as the clef —
+    /// one em for everything, no per-symbol point sizes. Returns true if drawn.
+    @discardableResult
+    private func drawGlyphRun(context: GraphicsContext, symbol: String,
+                              centerX: CGFloat, baselineY: CGFloat, color: Color) -> Bool {
+        let ctFont = MusicFontManager.shared.uiMusicFont(size: smuflEm) as CTFont
+        let gap = smuflEm * 0.03
+        var items: [(path: CGPath, bbox: CGRect)] = []
+        var total: CGFloat = 0
+        for scalar in symbol.unicodeScalars {
+            guard let item = musicGlyphPath(String(scalar), ctFont: ctFont) else { continue }
+            items.append(item)
+            total += item.bbox.width
+        }
+        guard !items.isEmpty else { return false }
+        total += gap * CGFloat(items.count - 1)
+        var cursor = centerX - total / 2
+        for item in items {
+            // Glyph space is y-up; flip to y-down. tx centres the glyph's left edge
+            // at the cursor; ty places the glyph's vertical centre on baselineY.
+            var transform = CGAffineTransform(a: 1, b: 0, c: 0, d: -1,
+                                              tx: cursor - item.bbox.minX,
+                                              ty: baselineY + item.bbox.midY)
+            if let placed = item.path.copy(using: &transform) {
+                context.fill(Path(placed), with: .color(color))
+            }
+            cursor += item.bbox.width + gap
+        }
+        return true
+    }
+
     var body: some View {
         Canvas { context, size in
             let startX: CGFloat = scaled(8)
@@ -594,7 +638,7 @@ struct MeasureView: View {
                     }
                     let isBeamable = event.duration.value == .eighth || event.duration.value == .sixteenth || event.duration.value == .thirtySecond
                     drawNoteHead(context: context, x: noteX, y: y, duration: event.duration.value, stemUp: stemUp, selected: isEventSelected, skipFlags: isBeamable, staffTop: staffTop)
-                    drawAugmentationDots(context: context, x: noteX, y: y, dotted: event.duration.dotted, doubleDotted: event.duration.doubleDotted)
+                    drawAugmentationDots(context: context, x: noteX, y: y, dotted: event.duration.dotted, doubleDotted: event.duration.doubleDotted, staffTop: staffTop)
                     drawLedgerLines(context: context, pitch: pitch, x: noteX, staffTop: staffTop)
                     drawAccidental(context: context, pitch: pitch, x: noteX, y: y, showNatural: event.showNatural)
                     notePositions.append(NotePosition(x: noteX, y: y, eventIndex: eventIndex))
@@ -618,7 +662,7 @@ struct MeasureView: View {
                             drawSelectionHighlight(context: context, x: noteX, y: y)
                         }
                         drawNoteHead(context: context, x: noteX, y: y, duration: event.duration.value, stemUp: stemUp, selected: isEventSelected, skipFlags: isBeamable, staffTop: staffTop)
-                        drawAugmentationDots(context: context, x: noteX, y: y, dotted: event.duration.dotted, doubleDotted: event.duration.doubleDotted)
+                        drawAugmentationDots(context: context, x: noteX, y: y, dotted: event.duration.dotted, doubleDotted: event.duration.doubleDotted, staffTop: staffTop)
                         drawLedgerLines(context: context, pitch: pitch, x: noteX, staffTop: staffTop)
                         drawAccidental(context: context, pitch: pitch, x: noteX, y: y, showNatural: event.showNatural)
                     }
@@ -641,20 +685,22 @@ struct MeasureView: View {
                     notePositions.append(NotePosition(x: restX, y: restY, eventIndex: eventIndex))
                 }
 
-                // Dynamic marking
+                // Dynamic marking — engraved Bravura glyphs one staff-space below
+                // the bottom line, centred under the note.
                 if let dynamic = event.dynamic {
                     let musicFont = MusicFontManager.shared
+                    let dynCenterX = currentX + eventWidth / 2
+                    let dynBaselineY = staffTop + 5 * staffLineSpacing
+                    var drawn = false
                     if musicFont.isBravuraAvailable {
-                        let dynSymbol = bravuraDynamic(dynamic)
-                        let dynText = Text(dynSymbol)
-                            .font(musicFont.musicFont(size: scaled(16)))
-                            .foregroundColor(theme.noteHead)
-                        context.draw(dynText, at: CGPoint(x: currentX + eventWidth / 2, y: staffTop + 5 * staffLineSpacing + scaled(5)))
-                    } else {
+                        drawn = drawGlyphRun(context: context, symbol: bravuraDynamic(dynamic),
+                                             centerX: dynCenterX, baselineY: dynBaselineY, color: theme.noteHead)
+                    }
+                    if !drawn {
                         let dynText = Text(dynamic.displayName)
                             .font(.system(size: scaled(9), design: .serif))
                             .italic()
-                        context.draw(dynText, at: CGPoint(x: currentX + eventWidth / 2, y: staffTop + 5 * staffLineSpacing + scaled(5)))
+                        context.draw(dynText, at: CGPoint(x: dynCenterX, y: dynBaselineY))
                     }
                 }
 
@@ -1113,16 +1159,38 @@ struct MeasureView: View {
             case .half: symbol = MusicSymbol.noteheadHalf
             default: symbol = MusicSymbol.noteheadBlack
             }
-            let noteText = Text(symbol)
-                .font(musicFont.musicFont(size: scaled(24)))
-                .foregroundColor(noteColor)
-            context.draw(noteText, at: CGPoint(x: x, y: y))
-
-            if duration == .half || (duration != .whole && !skipFlags) {
-                drawStem(context: context, x: x, y: y, radius: radius, stemUp: stemUp, color: noteColor, staffTop: staffTop)
-            }
-            if duration != .whole && duration != .half && !skipFlags {
-                drawFlags(context: context, x: x, y: y, radius: radius, stemUp: stemUp, duration: duration, staffTop: staffTop)
+            let ctFont = musicFont.uiMusicFont(size: smuflEm) as CTFont
+            if let head = musicGlyphPath(symbol, ctFont: ctFont) {
+                // Centre the notehead on (x, y) using its true glyph box (not the
+                // text line box), then hang the stem off its actual side edge.
+                var transform = CGAffineTransform(a: 1, b: 0, c: 0, d: -1,
+                                                  tx: x - head.bbox.midX,
+                                                  ty: y + head.bbox.midY)
+                if let placed = head.path.copy(using: &transform) {
+                    context.fill(Path(placed), with: .color(noteColor))
+                }
+                let headHalf = head.bbox.width / 2
+                if duration == .half || (duration != .whole && !skipFlags) {
+                    drawStem(context: context, x: x, y: y, radius: headHalf, stemUp: stemUp, color: noteColor, staffTop: staffTop)
+                }
+                if duration != .whole && duration != .half && !skipFlags {
+                    drawFlags(context: context, x: x, y: y, radius: headHalf, stemUp: stemUp, duration: duration, staffTop: staffTop)
+                }
+            } else {
+                // Glyph missing — fall back to the drawn ellipse below.
+                let rect = CGRect(x: x - radius, y: y - radius * 0.75, width: radius * 2, height: radius * 1.5)
+                let ellipse = Path(ellipseIn: rect)
+                if duration == .whole || duration == .half {
+                    context.stroke(ellipse, with: .color(noteColor), lineWidth: 1.5)
+                } else {
+                    context.fill(ellipse, with: .color(noteColor))
+                }
+                if duration != .whole {
+                    drawStem(context: context, x: x, y: y, radius: radius, stemUp: stemUp, color: noteColor, staffTop: staffTop)
+                    if duration != .half && !skipFlags {
+                        drawFlags(context: context, x: x, y: y, radius: radius, stemUp: stemUp, duration: duration, staffTop: staffTop)
+                    }
+                }
             }
         } else {
             let rect = CGRect(x: x - radius, y: y - radius * 0.75, width: radius * 2, height: radius * 1.5)
@@ -1146,7 +1214,9 @@ struct MeasureView: View {
 
     private func resolveStemDirection(_ direction: StemDirection, noteY: CGFloat, staffTop: CGFloat) -> Bool {
         switch direction {
-        case .auto: return noteY >= staffTop + staffLineSpacing * 2
+        // Gould: a note on the middle line takes a down stem, so strictly-below
+        // (larger y) gets an up stem; the middle line itself falls through to down.
+        case .auto: return noteY > staffTop + staffLineSpacing * 2
         case .up: return true
         case .down: return false
         }
@@ -1223,7 +1293,7 @@ struct MeasureView: View {
                 var path = Path()
                 path.move(to: CGPoint(x: x - width / 2, y: lineY))
                 path.addLine(to: CGPoint(x: x + width / 2, y: lineY))
-                context.stroke(path, with: .color(theme.staffLine.opacity(0.6)), lineWidth: 0.5)
+                context.stroke(path, with: .color(theme.staffLine.opacity(max(theme.staffLineOpacity, 0.7))), lineWidth: max(1.0, scaled(0.6)))
                 lineY -= staffLineSpacing
             }
         }
@@ -1235,7 +1305,7 @@ struct MeasureView: View {
                 var path = Path()
                 path.move(to: CGPoint(x: x - width / 2, y: lineY))
                 path.addLine(to: CGPoint(x: x + width / 2, y: lineY))
-                context.stroke(path, with: .color(theme.staffLine.opacity(0.6)), lineWidth: 0.5)
+                context.stroke(path, with: .color(theme.staffLine.opacity(max(theme.staffLineOpacity, 0.7))), lineWidth: max(1.0, scaled(0.6)))
                 lineY += staffLineSpacing
             }
         }
@@ -1244,33 +1314,39 @@ struct MeasureView: View {
     private func drawAccidental(context: GraphicsContext, pitch: Pitch, x: CGFloat, y: CGFloat, showNatural: Bool = false) {
         if pitch.accidental == .natural && !showNatural { return }
         let musicFont = MusicFontManager.shared
-        let symbol: String
-        let font: Font
-        if musicFont.isBravuraAvailable {
-            symbol = MusicSymbol.accidental(pitch.accidental)
-            font = musicFont.musicFont(size: scaled(18))
-        } else {
-            symbol = pitch.accidental.displaySymbol
-            font = .system(size: scaled(14), weight: .bold)
-        }
-        let accText = Text(symbol).font(font).foregroundColor(theme.noteHead)
-        // Standard engraving: accidental placed ~1 staff space left of notehead
+        // Standard engraving: accidental placed ~1.2 staff space left of notehead,
+        // vertically centred on the note's pitch line.
         let accOffset = staffLineSpacing * 1.2
+        if musicFont.isBravuraAvailable {
+            let symbol = MusicSymbol.accidental(pitch.accidental)
+            if drawGlyphRun(context: context, symbol: symbol,
+                            centerX: x - accOffset, baselineY: y, color: theme.noteHead) {
+                return
+            }
+        }
+        let symbol = pitch.accidental.displaySymbol
+        let accText = Text(symbol).font(.system(size: scaled(14), weight: .bold)).foregroundColor(theme.noteHead)
         context.draw(accText, at: CGPoint(x: x - accOffset, y: y))
     }
 
-    /// Draw augmentation dot(s) for dotted/double-dotted notes
-    private func drawAugmentationDots(context: GraphicsContext, x: CGFloat, y: CGFloat, dotted: Bool, doubleDotted: Bool) {
+    /// Draw augmentation dot(s) for dotted/double-dotted notes. Sizes are staff-space
+    /// relative (SMuFL: dot ≈ 0.2sp). A dot for a note sitting ON a line moves up into
+    /// the space above; a note in a space keeps the dot at its own height.
+    private func drawAugmentationDots(context: GraphicsContext, x: CGFloat, y: CGFloat, dotted: Bool, doubleDotted: Bool, staffTop: CGFloat) {
         guard dotted || doubleDotted else { return }
-        let radius: CGFloat = staffLineSpacing / 2 - 1
-        let dotRadius: CGFloat = scaled(1.8)
-        let dotX = x + radius + scaled(4)
-        // If note is on a line, shift dot up by half a space
-        let dotY = y
+        let sp = staffLineSpacing
+        let headHalf = sp / 2 - 1
+        let dotRadius: CGFloat = sp * 0.18
+        let dotX = x + headHalf + sp * 0.4
+        // On a line when the distance from the top line is a whole number of spaces.
+        let half = sp / 2
+        let steps = Int(((y - staffTop) / half).rounded())
+        let onLine = steps % 2 == 0
+        let dotY = onLine ? y - half : y
         let dot1 = Path(ellipseIn: CGRect(x: dotX - dotRadius, y: dotY - dotRadius, width: dotRadius * 2, height: dotRadius * 2))
         context.fill(dot1, with: .color(theme.noteHead))
         if doubleDotted {
-            let dot2X = dotX + scaled(4)
+            let dot2X = dotX + sp * 0.45
             let dot2 = Path(ellipseIn: CGRect(x: dot2X - dotRadius, y: dotY - dotRadius, width: dotRadius * 2, height: dotRadius * 2))
             context.fill(dot2, with: .color(theme.noteHead))
         }
@@ -1291,16 +1367,13 @@ struct MeasureView: View {
         let artY = baseY + direction * CGFloat(stackIndex) * stackSpacing
 
         let musicFont = MusicFontManager.shared
-        if musicFont.isBravuraAvailable, let art = articulation {
-            let bravuraSymbol = bravuraArticulation(art)
-            let artText = Text(bravuraSymbol)
-                .font(musicFont.musicFont(size: scaled(16)))
-                .foregroundColor(theme.noteHead)
-            context.draw(artText, at: CGPoint(x: x, y: artY))
-        } else {
-            let artText = Text(symbol).font(.system(size: scaled(10)))
-            context.draw(artText, at: CGPoint(x: x, y: artY))
+        if musicFont.isBravuraAvailable, let art = articulation,
+           drawGlyphRun(context: context, symbol: bravuraArticulation(art),
+                        centerX: x, baselineY: artY, color: theme.noteHead) {
+            return
         }
+        let artText = Text(symbol).font(.system(size: scaled(10)))
+        context.draw(artText, at: CGPoint(x: x, y: artY))
     }
 
     private func bravuraDynamic(_ dynamic: DynamicMarking) -> String {
