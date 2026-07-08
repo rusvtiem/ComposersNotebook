@@ -479,6 +479,12 @@ struct MeasureView: View {
 
     private func scaled(_ value: CGFloat) -> CGFloat { value * zoomScale }
 
+    /// SMuFL em: every music-font glyph is designed on a 4-staff-space em, so
+    /// rendering at this point size makes the glyph's internal staff match the
+    /// drawn staff and every symbol sits on its reference line at the right
+    /// scale. One size for all glyphs — no per-symbol magic numbers.
+    private var smuflEm: CGFloat { staffLineSpacing * 4 }
+
     var body: some View {
         Canvas { context, size in
             let startX: CGFloat = scaled(8)
@@ -1571,34 +1577,37 @@ struct MeasureView: View {
         let sp = staffLineSpacing
         let musicFont = MusicFontManager.shared
 
-        // Use Bravura SMuFL glyphs when available
+        // Use Bravura SMuFL glyphs when available, rendered as vector paths at the
+        // 4-staff-space em (same technique as the clef/time-signature). SMuFL rests
+        // are designed with their origin on the staff line they reference, so placing
+        // that origin on the correct line registers them precisely — no magic sizes
+        // or eyeballed offsets. Whole rest hangs from the 2nd line from the top;
+        // every other rest is centred on the middle line.
         if musicFont.isBravuraAvailable {
             let restSymbol = MusicSymbol.rest(for: duration)
-            let fontSize: CGFloat
-            let restY: CGFloat
+            let refLineY: CGFloat
             switch duration {
-            case .whole:
-                fontSize = scaled(28)
-                restY = staffTop + sp * 1.5
-            case .half:
-                fontSize = scaled(28)
-                restY = staffTop + sp * 2.0
-            case .quarter:
-                fontSize = scaled(28)
-                restY = staffTop + sp * 2.0
-            case .eighth:
-                fontSize = scaled(24)
-                restY = staffTop + sp * 2.0
-            case .sixteenth:
-                fontSize = scaled(24)
-                restY = staffTop + sp * 2.0
-            case .thirtySecond:
-                fontSize = scaled(22)
-                restY = staffTop + sp * 2.0
+            case .whole: refLineY = staffTop + sp          // hangs from 2nd line from top
+            case .half:  refLineY = staffTop + 2 * sp       // sits on the middle line
+            default:     refLineY = staffTop + 2 * sp       // centred on the middle line
             }
-            let text = Text(restSymbol).font(musicFont.musicFont(size: fontSize)).foregroundColor(theme.noteHead)
-            context.draw(context.resolve(text), at: CGPoint(x: x, y: restY), anchor: .center)
-            return
+            let ctFont = musicFont.uiMusicFont(size: smuflEm) as CTFont
+            var utf16 = Array(restSymbol.utf16)
+            var glyphs = [CGGlyph](repeating: 0, count: utf16.count)
+            if CTFontGetGlyphsForCharacters(ctFont, &utf16, &glyphs, utf16.count),
+               let glyph = glyphs.first, glyph != 0,
+               let glyphPath = CTFontCreatePathForGlyph(ctFont, glyph, nil) {
+                let bbox = glyphPath.boundingBoxOfPath
+                // Glyph space is y-up with the reference pitch on the baseline;
+                // flip to y-down and centre horizontally on x.
+                var transform = CGAffineTransform(a: 1, b: 0, c: 0, d: -1,
+                                                  tx: x - bbox.midX, ty: refLineY)
+                if let placed = glyphPath.copy(using: &transform) {
+                    context.fill(Path(placed), with: .color(theme.noteHead))
+                    return
+                }
+            }
+            // Glyph lookup failed — fall through to the path-based fallback below.
         }
 
         // Fallback: Path-based drawing when Bravura not available
