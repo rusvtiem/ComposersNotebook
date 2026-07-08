@@ -49,30 +49,34 @@ struct ScoreEditorView: View {
 
             Divider()
 
-            // Staff area (scrollable, pinch-to-zoom via adaptive rendering)
-            ScrollView([.horizontal, .vertical]) {
-                StaffAreaView(viewModel: viewModel)
-                    .padding()
-            }
-            .simultaneousGesture(
-                MagnifyGesture()
-                    .onChanged { value in
-                        let newScale = baseZoomScale * value.magnification
-                        viewModel.zoomScale = min(max(newScale, 0.5), 3.0)
-                    }
-                    .onEnded { _ in
-                        baseZoomScale = viewModel.zoomScale
-                    }
-            )
-            .onTapGesture(count: 2) {
-                // Double-tap: toggle between 100% and 150%
-                withAnimation(.easeInOut(duration: 0.25)) {
-                    if viewModel.zoomScale > 1.1 {
-                        viewModel.zoomScale = 1.0
-                        baseZoomScale = 1.0
-                    } else {
-                        viewModel.zoomScale = 1.5
-                        baseZoomScale = 1.5
+            // Staff area (scrollable, pinch-to-zoom via adaptive rendering).
+            // Width is measured OUTSIDE the ScrollView: a GeometryReader nested
+            // inside a ScrollView collapses to zero height and blanks the staff.
+            GeometryReader { geo in
+                ScrollView([.horizontal, .vertical]) {
+                    StaffAreaView(viewModel: viewModel, availableWidth: max(geo.size.width - 32, 300))
+                        .padding()
+                }
+                .simultaneousGesture(
+                    MagnifyGesture()
+                        .onChanged { value in
+                            let newScale = baseZoomScale * value.magnification
+                            viewModel.zoomScale = min(max(newScale, 0.5), 3.0)
+                        }
+                        .onEnded { _ in
+                            baseZoomScale = viewModel.zoomScale
+                        }
+                )
+                .onTapGesture(count: 2) {
+                    // Double-tap: toggle between 100% and 150%
+                    withAnimation(.easeInOut(duration: 0.25)) {
+                        if viewModel.zoomScale > 1.1 {
+                            viewModel.zoomScale = 1.0
+                            baseZoomScale = 1.0
+                        } else {
+                            viewModel.zoomScale = 1.5
+                            baseZoomScale = 1.5
+                        }
                     }
                 }
             }

@@ -34,12 +34,12 @@ struct HomeView: View {
     }
 
     var body: some View {
-        VStack(spacing: 16) {
-            Spacer()
-
+        ScrollView {
+            VStack(spacing: 16) {
             Image(systemName: "music.note.list")
                 .font(.system(size: 72))
                 .foregroundColor(.accentColor)
+                .padding(.top, 24)
 
             Text("Composer's Notebook")
                 .font(.largeTitle)
@@ -48,8 +48,7 @@ struct HomeView: View {
             Text(String(localized: "Composer's Sketchbook"))
                 .font(.title3)
                 .foregroundStyle(.secondary)
-
-            Spacer()
+                .padding(.bottom, 8)
 
             VStack(spacing: 12) {
                 Button {
@@ -164,7 +163,8 @@ struct HomeView: View {
                 }
             }
 
-            Spacer()
+            }
+            .padding(.bottom, 24)
         }
         .navigationTitle("")
         .toolbar {

@@ -96,6 +96,7 @@ targets:
         PRODUCT_BUNDLE_IDENTIFIER: com.timshega.composersnotebook
         PRODUCT_NAME: "Composer's Notebook"
         ASSETCATALOG_COMPILER_APPICON_NAME: AppIcon
+        DEVELOPMENT_TEAM: 65XX29Q6DL
         CODE_SIGN_STYLE: Automatic
         CODE_SIGNING_ALLOWED: "YES"
         CODE_SIGN_IDENTITY: "Apple Development"

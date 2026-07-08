@@ -1,4 +1,5 @@
 import SwiftUI
+import CoreText
 
 // MARK: - Note Hit Info
 
@@ -14,6 +15,10 @@ struct StaffAreaView: View {
     @ObservedObject var viewModel: ScoreViewModel
     @EnvironmentObject var themeManager: ThemeManager
 
+    // Width is measured by the parent (outside the ScrollView). A GeometryReader
+    // nested inside a ScrollView collapses to zero height and blanks the staff.
+    var availableWidth: CGFloat
+
     private var theme: AppTheme { themeManager.currentTheme }
 
     // Base sizes at 1.0x zoom
@@ -24,23 +29,33 @@ struct StaffAreaView: View {
     // Computed sizes based on zoom
     private var staffLineSpacing: CGFloat { baseStaffLineSpacing * viewModel.zoomScale }
     private var measureWidth: CGFloat { baseMeasureWidth * viewModel.zoomScale }
-    private var staffHeight: CGFloat { staffLineSpacing * 4 + 60 * viewModel.zoomScale }
+    private var staffHeight: CGFloat { staffLineSpacing * 4 + 40 * viewModel.zoomScale }
     private var partSpacing: CGFloat { basePartSpacing * viewModel.zoomScale }
     private var noteHitRadius: CGFloat { 14 * viewModel.zoomScale }
+
+    // MARK: Vertical metrics (staff-space based, per standard engraving)
+    // One staff-space (sp) = staffLineSpacing; a staff is 4 sp tall (5 lines).
+    // Room above/below a staff for note heads, stems and ledger lines.
+    private var noteRoom: CGFloat { 4 * staffLineSpacing }
+    // The five staff lines only.
+    private var staffLinesHeight: CGFloat { 4 * staffLineSpacing }
+    // Full per-measure drawing frame: staff plus note room on both sides.
+    private var measureFrameHeight: CGFloat { staffLinesHeight + noteRoom * 2 }
+    // Gap between the bottom line of one staff and the top line of the next in a
+    // piano grand staff. Fixed at 2 sp by pitch continuity: treble bottom line is
+    // E4, bass top line is A3, four diatonic steps apart (E4-D4-C4-B3-A3) = 2 sp,
+    // so middle C (C4) lands on a single ledger line centred between the staves.
+    // This is NOT a free constant — a larger gap breaks pitch continuity.
+    private var grandStaffGap: CGFloat { 2 * staffLineSpacing }
 
     private var systemAvailableWidth: CGFloat {
         max(UIScreen.main.bounds.width - 40, 300) * viewModel.zoomScale
     }
 
     var body: some View {
-        GeometryReader { geo in
-            let availW = geo.size.width
-            ScrollView([.horizontal, .vertical]) {
-                VStack(alignment: .leading, spacing: 0) {
-                    ForEach(Array(viewModel.score.parts.enumerated()), id: \.offset) { partIndex, part in
-                        partRow(part: part, partIndex: partIndex, availableWidth: availW)
-                    }
-                }
+        VStack(alignment: .leading, spacing: 0) {
+            ForEach(Array(viewModel.score.parts.enumerated()), id: \.offset) { partIndex, part in
+                partRow(part: part, partIndex: partIndex, availableWidth: availableWidth)
             }
         }
     }
@@ -100,7 +115,9 @@ struct StaffAreaView: View {
 
     // MARK: - Multi-Staff Row (grand staff: 2+ staves with brace)
 
-    private var grandStaffSpacing: CGFloat { 10 * viewModel.zoomScale }
+    // Each measure frame carries `noteRoom` below the top staff and above the
+    // bottom staff, so pull the frames together to leave exactly grandStaffGap.
+    private var grandStaffSpacing: CGFloat { grandStaffGap - 2 * noteRoom }
 
     private func grandStaffSystem(part: Part, partIndex: Int, measureRange: Range<Int>, measureWidths: [CGFloat]) -> some View {
         let stavesCount = part.staves.count
@@ -118,9 +135,23 @@ struct StaffAreaView: View {
                             part: part, partIndex: partIndex, staffIndex: staffIndex,
                             measure: measure, measureIndex: measureIndex,
                             isCurrentMeasure: isCurrent,
-                            overrideWidth: w
+                            overrideWidth: w,
+                            drawSelectionBox: false
                         )
                     }
+                }
+                // Selection highlight spans the whole grand-staff system (both
+                // staves + the gap), not a single staff — a piano measure is one
+                // column. Hugs the staff lines: from the top line of the first
+                // staff to the bottom line of the last.
+                .overlay(alignment: .top) {
+                    let systemSelected = partIndex == viewModel.selectedPartIndex
+                        && measureIndex == viewModel.selectedMeasureIndex
+                    let totalH = staffLinesHeight * CGFloat(stavesCount) + grandStaffGap * CGFloat(stavesCount - 1)
+                    RoundedRectangle(cornerRadius: 2)
+                        .stroke(systemSelected ? theme.accent : Color.clear, lineWidth: 2)
+                        .frame(height: totalH + 6 * viewModel.zoomScale)
+                        .padding(.top, noteRoom - 3 * viewModel.zoomScale)
                 }
                 .overlay(alignment: .leading) {
                     if measureIndex == measureRange.lowerBound {
@@ -128,8 +159,9 @@ struct StaffAreaView: View {
                     }
                 }
                 .overlay(alignment: .leading) {
-                    let singleStaffH = staffHeight + 40 * viewModel.zoomScale
-                    let totalH = singleStaffH * CGFloat(stavesCount) + grandStaffSpacing * CGFloat(stavesCount - 1)
+                    // Span from the top line of the first staff to the bottom
+                    // line of the last — centred, matching the symmetric frames.
+                    let totalH = staffLinesHeight * CGFloat(stavesCount) + grandStaffGap * CGFloat(stavesCount - 1)
                     Rectangle()
                         .fill(theme.staffLine)
                         .frame(width: 1, height: totalH)
@@ -140,13 +172,34 @@ struct StaffAreaView: View {
     }
 
     private func braceView(stavesCount: Int) -> some View {
-        let singleStaffH = staffHeight + 40 * viewModel.zoomScale
-        let totalH = singleStaffH * CGFloat(stavesCount) + grandStaffSpacing * CGFloat(stavesCount - 1)
-        return Text("{")
-            .font(.system(size: totalH * 0.8, weight: .ultraLight))
-            .foregroundStyle(theme.staffLine)
-            .frame(height: totalH)
-            .offset(x: -12 * viewModel.zoomScale)
+        let totalH = staffLinesHeight * CGFloat(stavesCount) + grandStaffGap * CGFloat(stavesCount - 1)
+        let braceWidth = totalH * 0.14
+        return Canvas { context, size in
+            let musicFont = MusicFontManager.shared
+            guard musicFont.isBravuraAvailable else {
+                let fallback = Text("{")
+                    .font(.system(size: totalH * 0.8, weight: .ultraLight))
+                    .foregroundColor(theme.staffLine)
+                context.draw(fallback, at: CGPoint(x: size.width / 2, y: size.height / 2))
+                return
+            }
+            // SMuFL brace (U+E000) is ~1 em tall; scale vertically to span the
+            // whole system. y-up glyph is un-mirrored with d:-sy in y-down space.
+            let ctFont = musicFont.uiMusicFont(size: totalH) as CTFont
+            var utf16 = Array("\u{E000}".utf16)
+            var glyphs = [CGGlyph](repeating: 0, count: utf16.count)
+            guard CTFontGetGlyphsForCharacters(ctFont, &utf16, &glyphs, utf16.count),
+                  let glyph = glyphs.first, glyph != 0,
+                  let path = CTFontCreatePathForGlyph(ctFont, glyph, nil) else { return }
+            let bbox = path.boundingBoxOfPath
+            let sy = totalH / bbox.height
+            var transform = CGAffineTransform(a: 1, b: 0, c: 0, d: -sy, tx: size.width - bbox.width, ty: totalH)
+            if let placed = path.copy(using: &transform) {
+                context.fill(Path(placed), with: .color(theme.staffLine))
+            }
+        }
+        .frame(width: braceWidth, height: totalH)
+        .offset(x: -(braceWidth + 3 * viewModel.zoomScale))
     }
 
     // MARK: - Staff Measure View (shared between single/grand)
@@ -155,7 +208,8 @@ struct StaffAreaView: View {
         part: Part, partIndex: Int, staffIndex: Int,
         measure: Measure, measureIndex: Int,
         isCurrentMeasure: Bool,
-        overrideWidth: CGFloat? = nil
+        overrideWidth: CGFloat? = nil,
+        drawSelectionBox: Bool = true
     ) -> some View {
         let clef = effectiveClef(partIndex: partIndex, staffIndex: staffIndex, measureIndex: measureIndex)
         let ts = effectiveTimeSignature(partIndex: partIndex, staffIndex: staffIndex, measureIndex: measureIndex)
@@ -173,7 +227,7 @@ struct StaffAreaView: View {
             zoomScale: viewModel.zoomScale,
             theme: theme
         )
-        .frame(width: overrideWidth ?? measureWidth, height: staffHeight + 40 * viewModel.zoomScale)
+        .frame(width: overrideWidth ?? measureWidth, height: measureFrameHeight)
         .contentShape(Rectangle())
         .gesture(
             SpatialTapGesture()
@@ -232,13 +286,17 @@ struct StaffAreaView: View {
                     }
                 }
         )
-        .overlay(
+        // Selection highlight hugs the staff itself, not the padded note-room
+        // frame (staff sits `noteRoom` from the top, is `staffLinesHeight` tall).
+        .overlay(alignment: .top) {
             RoundedRectangle(cornerRadius: 2)
                 .stroke(
-                    isCurrentMeasure ? theme.accent : Color.clear,
+                    (drawSelectionBox && isCurrentMeasure) ? theme.accent : Color.clear,
                     lineWidth: 2
                 )
-        )
+                .frame(height: staffLinesHeight + 6 * viewModel.zoomScale)
+                .padding(.top, noteRoom - 3 * viewModel.zoomScale)
+        }
     }
 
     // MARK: - Note Hit Testing
@@ -246,7 +304,7 @@ struct StaffAreaView: View {
     private func computeNotePositions(measure: Measure, measureIndex: Int, clef: Clef, timeSignature: TimeSignature, width: CGFloat? = nil) -> [NoteHitInfo] {
         let z = viewModel.zoomScale
         let startX: CGFloat = 8 * z
-        let staffTop: CGFloat = 20 * z
+        let staffTop: CGFloat = noteRoom
         let noteStartX: CGFloat = measureIndex == 0 ? startX + 45 * z : startX + 15 * z
         let effectiveWidth = width ?? measureWidth
         let availableWidth = effectiveWidth - noteStartX - 10 * z
@@ -424,7 +482,9 @@ struct MeasureView: View {
     var body: some View {
         Canvas { context, size in
             let startX: CGFloat = scaled(8)
-            let staffTop: CGFloat = scaled(20)
+            // Staff sits `noteRoom` (4 sp) below the frame top, matching the
+            // frame height and the hit-test in StaffAreaView.
+            let staffTop: CGFloat = staffLineSpacing * 4
 
             // Draw 5 staff lines.
             // Visibility guarantee: clamp the theme's staffLineOpacity to a
@@ -456,24 +516,17 @@ struct MeasureView: View {
             context.draw(measureNum, at: CGPoint(x: startX + scaled(4), y: staffTop - scaled(6)),
                         anchor: .leading)
 
-            // Draw clef symbol at start of first measure
+            // Draw clef at start of first measure; the time signature begins clear
+            // of its real right ink edge so they never collide.
+            var headerEndX: CGFloat = startX
             if measureIndex == 0 {
-                let musicFont = MusicFontManager.shared
-                let clefSymbol = musicFont.isBravuraAvailable ? MusicSymbol.clef(clef) : clef.symbol
-                let clefFont: Font = musicFont.isBravuraAvailable ? musicFont.musicFont(size: scaled(32)) : .system(size: scaled(28))
-                let clefText = Text(clefSymbol).font(clefFont)
-                context.draw(clefText, at: CGPoint(x: startX + scaled(10), y: staffTop + 2 * staffLineSpacing))
+                headerEndX = drawClef(context: context, clef: clef, x: startX + scaled(8), staffTop: staffTop) + scaled(6)
             }
 
             // Draw time signature at start of first measure
-            var headerEndX: CGFloat = measureIndex == 0 ? startX + scaled(25) : startX
             if measureIndex == 0 || measure.timeSignature != nil {
-                let tsX: CGFloat = headerEndX + scaled(8)
-                let topNum = Text("\(timeSignature.beats)").font(.system(size: scaled(14), weight: .bold))
-                let botNum = Text("\(timeSignature.beatValue)").font(.system(size: scaled(14), weight: .bold))
-                context.draw(topNum, at: CGPoint(x: tsX, y: staffTop + staffLineSpacing))
-                context.draw(botNum, at: CGPoint(x: tsX, y: staffTop + 3 * staffLineSpacing))
-                headerEndX = tsX + scaled(10)
+                let tsX: CGFloat = headerEndX + scaled(6)
+                headerEndX = drawTimeSignature(context: context, beats: timeSignature.beats, beatValue: timeSignature.beatValue, x: tsX, staffTop: staffTop) + scaled(8)
             }
 
             // Draw key signature accidentals
@@ -920,6 +973,118 @@ struct MeasureView: View {
         let staffPos = pitch.staffPosition
         let offset = middleLinePosition - staffPos
         return staffTop + 2 * staffLineSpacing + CGFloat(offset) * (staffLineSpacing / 2)
+    }
+
+    // Draw a clef as a vector outline (CTFont glyph path) rather than centred
+    // text. SwiftUI's Text draw centres on the font's line box, which for Bravura
+    // is far larger than the glyph and shoves the clef off its reference line.
+    // Per SMuFL scoring metrics the glyph baseline (y=0) IS the clef's reference
+    // pitch, so we register that baseline onto the correct staff line:
+    //   G clef → G4 (2nd line from bottom), F clef → F3 (2nd line from top).
+    // Font size 4 sp: per SMuFL, 1 staff space = 0.25 em, so the em (font point
+    // size) equals the staff height = 4 staff spaces. (Was 5 sp = 25% oversized.)
+    /// Draws the clef and returns the x of its right ink edge so the caller can
+    /// place the time signature / notes clear of it (the glyph's real width).
+    @discardableResult
+    private func drawClef(context: GraphicsContext, clef: Clef, x: CGFloat, staffTop: CGFloat) -> CGFloat {
+        let musicFont = MusicFontManager.shared
+        guard musicFont.isBravuraAvailable else {
+            let clefText = Text(clef.symbol)
+                .font(.system(size: staffLineSpacing * 4))
+                .foregroundColor(theme.noteHead)
+            context.draw(clefText, at: CGPoint(x: x + staffLineSpacing, y: staffTop + 2 * staffLineSpacing))
+            return x + staffLineSpacing * 3
+        }
+        let em = staffLineSpacing * 4
+        let ctFont = musicFont.uiMusicFont(size: em) as CTFont
+        var utf16 = Array(MusicSymbol.clef(clef).utf16)
+        var glyphs = [CGGlyph](repeating: 0, count: utf16.count)
+        guard CTFontGetGlyphsForCharacters(ctFont, &utf16, &glyphs, utf16.count),
+              let glyph = glyphs.first, glyph != 0,
+              let glyphPath = CTFontCreatePathForGlyph(ctFont, glyph, nil) else { return x + staffLineSpacing * 3 }
+
+        let refLineY: CGFloat
+        switch clef {
+        case .treble: refLineY = staffTop + 3 * staffLineSpacing   // G4, 2nd line from bottom
+        case .bass:   refLineY = staffTop + 1 * staffLineSpacing   // F3, 2nd line from top
+        case .alto:   refLineY = staffTop + 2 * staffLineSpacing   // middle line
+        case .tenor:  refLineY = staffTop + 1 * staffLineSpacing   // 4th line from bottom
+        }
+        // Glyph space is y-up with the reference pitch on the baseline (y=0);
+        // screen space is y-down. Flip vertically and translate onto (x, refLineY).
+        var transform = CGAffineTransform(a: 1, b: 0, c: 0, d: -1, tx: x, ty: refLineY)
+        guard let placed = glyphPath.copy(using: &transform) else { return x + staffLineSpacing * 3 }
+        context.fill(Path(placed), with: .color(theme.noteHead))
+        return x + glyphPath.boundingBoxOfPath.maxX
+    }
+
+    // MARK: - Time signature (engraved Bravura digits)
+
+    /// Draws a stacked engraved time signature (numerator over denominator) using
+    /// Bravura's time-signature digit glyphs (U+E080–E089) via the same vector
+    /// technique as the clef. Returns the x of its right ink edge. Falls back to
+    /// bold system digits when Bravura is unavailable.
+    @discardableResult
+    private func drawTimeSignature(context: GraphicsContext, beats: Int, beatValue: Int, x: CGFloat, staffTop: CGFloat) -> CGFloat {
+        let numLine = staffTop + staffLineSpacing        // centre of upper half of staff
+        let denLine = staffTop + 3 * staffLineSpacing    // centre of lower half of staff
+        let musicFont = MusicFontManager.shared
+        guard musicFont.isBravuraAvailable else {
+            let topNum = Text("\(beats)").font(.system(size: staffLineSpacing * 2, weight: .bold)).foregroundColor(theme.noteHead)
+            let botNum = Text("\(beatValue)").font(.system(size: staffLineSpacing * 2, weight: .bold)).foregroundColor(theme.noteHead)
+            context.draw(topNum, at: CGPoint(x: x + staffLineSpacing, y: numLine))
+            context.draw(botNum, at: CGPoint(x: x + staffLineSpacing, y: denLine))
+            return x + staffLineSpacing * 2.5
+        }
+        // SMuFL em == staff height == 4 staff spaces (see drawClef).
+        let ctFont = musicFont.uiMusicFont(size: staffLineSpacing * 4) as CTFont
+        let numDigits = "\(beats)"
+        let denDigits = "\(beatValue)"
+        let groupWidth = max(timeSigGroupWidth(numDigits, ctFont: ctFont),
+                             timeSigGroupWidth(denDigits, ctFont: ctFont))
+        let centreX = x + groupWidth / 2
+        drawTimeSigGroup(context: context, digits: numDigits, centreX: centreX, centreY: numLine, ctFont: ctFont)
+        drawTimeSigGroup(context: context, digits: denDigits, centreX: centreX, centreY: denLine, ctFont: ctFont)
+        return x + groupWidth
+    }
+
+    private func timeSigGlyphPath(_ ch: Character, ctFont: CTFont) -> CGPath? {
+        guard let digit = ch.wholeNumberValue else { return nil }
+        var utf16 = Array(MusicSymbol.timeSigDigit(digit).utf16)
+        var glyphs = [CGGlyph](repeating: 0, count: utf16.count)
+        guard CTFontGetGlyphsForCharacters(ctFont, &utf16, &glyphs, utf16.count),
+              let glyph = glyphs.first, glyph != 0 else { return nil }
+        return CTFontCreatePathForGlyph(ctFont, glyph, nil)
+    }
+
+    private func timeSigGroupWidth(_ digits: String, ctFont: CTFont) -> CGFloat {
+        let gap = staffLineSpacing * 0.1
+        var width: CGFloat = 0
+        let chars = Array(digits)
+        for (i, ch) in chars.enumerated() {
+            guard let path = timeSigGlyphPath(ch, ctFont: ctFont) else { continue }
+            width += path.boundingBoxOfPath.width
+            if i < chars.count - 1 { width += gap }
+        }
+        return width
+    }
+
+    /// Draws one line of digits centred on (centreX, centreY). In y-down screen
+    /// space the y-up glyph is un-mirrored with d:-1; centreY places the glyph
+    /// bounding-box centre on the target line.
+    private func drawTimeSigGroup(context: GraphicsContext, digits: String, centreX: CGFloat, centreY: CGFloat, ctFont: CTFont) {
+        let gap = staffLineSpacing * 0.1
+        let totalWidth = timeSigGroupWidth(digits, ctFont: ctFont)
+        var cursor = centreX - totalWidth / 2
+        for ch in digits {
+            guard let path = timeSigGlyphPath(ch, ctFont: ctFont) else { continue }
+            let bbox = path.boundingBoxOfPath
+            var transform = CGAffineTransform(a: 1, b: 0, c: 0, d: -1, tx: cursor - bbox.minX, ty: centreY + bbox.midY)
+            if let placed = path.copy(using: &transform) {
+                context.fill(Path(placed), with: .color(theme.noteHead))
+            }
+            cursor += bbox.width + gap
+        }
     }
 
     private func drawSelectionHighlight(context: GraphicsContext, x: CGFloat, y: CGFloat) {

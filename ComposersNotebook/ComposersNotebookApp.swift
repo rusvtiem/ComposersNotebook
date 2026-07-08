@@ -53,5 +53,8 @@ class AppState: ObservableObject {
 
     init() {
         self.isDarkMode = UserDefaults.standard.bool(forKey: "isDarkMode")
+        if ProcessInfo.processInfo.environment["CNB_DEBUG_PIANO"] == "1" {
+            self.currentScore = Score.pianoSolo(title: "Debug Piano")
+        }
     }
 }
