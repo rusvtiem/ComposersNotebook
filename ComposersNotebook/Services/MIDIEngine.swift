@@ -355,44 +355,48 @@ class MIDIEngine: ObservableObject {
                 // Collect all events across parts for this measure — все партии
                 // играются ПАРАЛЛЕЛЬНО (каждая своей Task), ждём один раз в конце.
                 var measureTimeSig = score.timeSignature
+                // Обходим ВСЕ нотоносцы каждой партии (grand staff = 2 стана: treble+bass).
+                // Раньше брали part.measures (= staves[0]) и bass-стан фортепиано молчал.
                 for part in score.parts {
-                    guard measureIndex < part.measures.count else { continue }
-                    let measure = part.measures[measureIndex]
-                    if let ts = measure.timeSignature { measureTimeSig = ts }
+                    for staff in part.staves {
+                        guard measureIndex < staff.measures.count else { continue }
+                        let measure = staff.measures[measureIndex]
+                        if let ts = measure.timeSignature { measureTimeSig = ts }
 
-                    Task {
-                        setInstrument(midiProgram: part.effectiveMidiProgram)
-                        applySettingsForInstrument(part.instrument)
+                        Task {
+                            setInstrument(midiProgram: part.effectiveMidiProgram)
+                            applySettingsForInstrument(part.instrument)
 
-                        for event in measure.events {
-                            guard isPlaying else { return }
+                            for event in measure.events {
+                                guard isPlaying else { return }
 
-                            let durationSec = event.duration.beats * secPerBeat
+                                let durationSec = event.duration.beats * secPerBeat
 
-                            switch event.type {
-                            case .note(let pitch):
-                                let note = UInt8(clamping: pitch.midiNote)
-                                let vel = UInt8(clamping: event.velocity)
-                                sampler.startNote(note, withVelocity: vel, onChannel: 0)
-                                try? await Task.sleep(for: .seconds(durationSec))
-                                if !event.tiedToNext {
-                                    sampler.stopNote(note, onChannel: 0)
-                                }
-
-                            case .chord(let pitches):
-                                let vel = UInt8(clamping: event.velocity)
-                                for p in pitches {
-                                    sampler.startNote(UInt8(clamping: p.midiNote), withVelocity: vel, onChannel: 0)
-                                }
-                                try? await Task.sleep(for: .seconds(durationSec))
-                                if !event.tiedToNext {
-                                    for p in pitches {
-                                        sampler.stopNote(UInt8(clamping: p.midiNote), onChannel: 0)
+                                switch event.type {
+                                case .note(let pitch):
+                                    let note = UInt8(clamping: pitch.midiNote)
+                                    let vel = UInt8(clamping: event.velocity)
+                                    sampler.startNote(note, withVelocity: vel, onChannel: 0)
+                                    try? await Task.sleep(for: .seconds(durationSec))
+                                    if !event.tiedToNext {
+                                        sampler.stopNote(note, onChannel: 0)
                                     }
-                                }
 
-                            case .rest:
-                                try? await Task.sleep(for: .seconds(durationSec))
+                                case .chord(let pitches):
+                                    let vel = UInt8(clamping: event.velocity)
+                                    for p in pitches {
+                                        sampler.startNote(UInt8(clamping: p.midiNote), withVelocity: vel, onChannel: 0)
+                                    }
+                                    try? await Task.sleep(for: .seconds(durationSec))
+                                    if !event.tiedToNext {
+                                        for p in pitches {
+                                            sampler.stopNote(UInt8(clamping: p.midiNote), onChannel: 0)
+                                        }
+                                    }
+
+                                case .rest:
+                                    try? await Task.sleep(for: .seconds(durationSec))
+                                }
                             }
                         }
                     }
