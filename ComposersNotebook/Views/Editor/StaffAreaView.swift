@@ -229,65 +229,68 @@ struct StaffAreaView: View {
         )
         .frame(width: overrideWidth ?? measureWidth, height: measureFrameHeight)
         .contentShape(Rectangle())
-        .gesture(
-            SpatialTapGesture()
-                .onEnded { value in
-                    let wasDifferent = viewModel.selectedMeasureIndex != measureIndex
-                        || viewModel.selectedPartIndex != partIndex
-                        || viewModel.selectedStaffIndex != staffIndex
-                    viewModel.selectPart(at: partIndex)
-                    viewModel.selectedStaffIndex = staffIndex
-                    viewModel.selectedMeasureIndex = measureIndex
-                    if wasDifferent {
-                        viewModel.cursorPosition = currentMeasureBeats(measure: measure, ts: ts)
-                    }
-
-                    let positions = computeNotePositions(
-                        measure: measure, measureIndex: measureIndex,
-                        clef: clef, timeSignature: ts, width: overrideWidth
-                    )
-
-                    if let hitIndex = hitTestNote(at: value.location, positions: positions) {
-                        if viewModel.selectedEventIndex == hitIndex {
-                            viewModel.deselectEvent()
-                        } else {
-                            viewModel.selectEvent(at: hitIndex)
-                        }
-                        return
-                    }
-
-                    viewModel.deselectEvent()
-
-                    switch viewModel.inputMode {
-                    case .note:
-                        if let pitch = pitchFromTap(y: value.location.y, clef: clef) {
-                            viewModel.addNote(pitch: pitch)
-                        }
-                    case .rest:
-                        viewModel.addRest()
-                    case .navigate:
-                        viewModel.cursorPosition = 0
-                    }
-                }
-        )
-        // High priority: после удержания 0.3с вертикальный драг уходит на
-        // транспозицию выбранной ноты, а не на скролл окружающего ScrollView
-        // (иначе жест «съедается» прокруткой и транспозиция не срабатывает).
+        // Одно highPriorityGesture (чтобы вертикальный драг не съедался скроллом
+        // окружающего ScrollView) с ExclusiveGesture-арбитражем: сперва пробуется
+        // удержание 0.3с + драг (транспозиция выбранной ноты), а если это быстрый
+        // тап (<0.3с) — LongPress проваливается и срабатывает тап-добавление.
+        // Раздельные .gesture + .highPriorityGesture конфликтовали: highPriority
+        // глотал touch-down и обычный тап-добавление не срабатывал вовсе.
         .highPriorityGesture(
-            LongPressGesture(minimumDuration: 0.3)
-                .sequenced(before: DragGesture(minimumDistance: 0))
-                .onChanged { value in
-                    switch value {
-                    case .second(true, let drag):
-                        guard let drag = drag,
-                              isCurrentMeasure,
-                              viewModel.selectedEventIndex != nil else { return }
-                        if let pitch = pitchFromTap(y: drag.location.y, clef: clef) {
-                            viewModel.updateSelectedEventPitch(pitch)
+            ExclusiveGesture(
+                LongPressGesture(minimumDuration: 0.3)
+                    .sequenced(before: DragGesture(minimumDistance: 0))
+                    .onChanged { value in
+                        switch value {
+                        case .second(true, let drag):
+                            guard let drag = drag,
+                                  isCurrentMeasure,
+                                  viewModel.selectedEventIndex != nil else { return }
+                            if let pitch = pitchFromTap(y: drag.location.y, clef: clef) {
+                                viewModel.updateSelectedEventPitch(pitch)
+                            }
+                        default: break
                         }
-                    default: break
+                    },
+                SpatialTapGesture()
+                    .onEnded { value in
+                        let wasDifferent = viewModel.selectedMeasureIndex != measureIndex
+                            || viewModel.selectedPartIndex != partIndex
+                            || viewModel.selectedStaffIndex != staffIndex
+                        viewModel.selectPart(at: partIndex)
+                        viewModel.selectedStaffIndex = staffIndex
+                        viewModel.selectedMeasureIndex = measureIndex
+                        if wasDifferent {
+                            viewModel.cursorPosition = currentMeasureBeats(measure: measure, ts: ts)
+                        }
+
+                        let positions = computeNotePositions(
+                            measure: measure, measureIndex: measureIndex,
+                            clef: clef, timeSignature: ts, width: overrideWidth
+                        )
+
+                        if let hitIndex = hitTestNote(at: value.location, positions: positions) {
+                            if viewModel.selectedEventIndex == hitIndex {
+                                viewModel.deselectEvent()
+                            } else {
+                                viewModel.selectEvent(at: hitIndex)
+                            }
+                            return
+                        }
+
+                        viewModel.deselectEvent()
+
+                        switch viewModel.inputMode {
+                        case .note:
+                            if let pitch = pitchFromTap(y: value.location.y, clef: clef) {
+                                viewModel.addNote(pitch: pitch)
+                            }
+                        case .rest:
+                            viewModel.addRest()
+                        case .navigate:
+                            viewModel.cursorPosition = 0
+                        }
                     }
-                }
+            )
         )
         // Selection highlight hugs the staff itself, not the padded note-room
         // frame (staff sits `noteRoom` from the top, is `staffLinesHeight` tall).
