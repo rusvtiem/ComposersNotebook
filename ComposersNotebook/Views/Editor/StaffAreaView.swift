@@ -270,7 +270,10 @@ struct StaffAreaView: View {
                     }
                 }
         )
-        .simultaneousGesture(
+        // High priority: после удержания 0.3с вертикальный драг уходит на
+        // транспозицию выбранной ноты, а не на скролл окружающего ScrollView
+        // (иначе жест «съедается» прокруткой и транспозиция не срабатывает).
+        .highPriorityGesture(
             LongPressGesture(minimumDuration: 0.3)
                 .sequenced(before: DragGesture(minimumDistance: 0))
                 .onChanged { value in
