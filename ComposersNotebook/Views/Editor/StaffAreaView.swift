@@ -317,8 +317,7 @@ struct StaffAreaView: View {
         let totalBeats = measure.usedBeats
         guard totalBeats > 0 else { return [] }
 
-        // Mirror the spacing algorithm from MeasureView
-        let minNoteWidth: CGFloat = 18 * z
+        // Единый расчёт ширин из EngravingEngine (тот же, что для ширины такта и рендера).
         let hasAcc = measure.events.contains { event in
             switch event.type {
             case .note(let p): return p.accidental != .natural
@@ -326,13 +325,7 @@ struct StaffAreaView: View {
             case .rest: return false
             }
         }
-        let accPad: CGFloat = hasAcc ? 10 * z : 0
-        let refBeats = max(totalBeats, timeSignature.totalBeats)
-        var idealWidths: [CGFloat] = []
-        for event in measure.events {
-            let proportional = availableWidth * CGFloat(event.duration.beats / refBeats)
-            idealWidths.append(max(proportional, minNoteWidth + accPad))
-        }
+        let idealWidths = EngravingEngine.eventIdealWidths(events: measure.events, zoomScale: z, hasAccidentals: hasAcc)
         let totalIdeal = idealWidths.reduce(0, +)
         let sf = totalIdeal > availableWidth ? availableWidth / totalIdeal : 1.0
 
@@ -489,6 +482,20 @@ struct MeasureView: View {
 
     private func scaled(_ value: CGFloat) -> CGFloat { value * zoomScale }
 
+    // MARK: Толщины штрихов — Bravura engravingDefaults (доли staff space)
+    // Все толщины нотных элементов масштабируются от sp (staffLineSpacing), не от
+    // фиксированных пикселей и не от zoom напрямую — иначе пропорции уплывают от
+    // эталона при изменении масштаба. Числа — из bravura_metadata.json (SMuFL).
+    // floor = экранный минимум, чтобы тонкая линия не исчезала при малом zoom.
+    private func engravedThickness(_ spFraction: CGFloat, floor: CGFloat = 1.0) -> CGFloat {
+        max(floor, staffLineSpacing * spFraction)
+    }
+    private var staffLineThickness: CGFloat { engravedThickness(0.13) }
+    private var thinBarlineThickness: CGFloat { engravedThickness(0.16) }
+    private var thickBarlineThickness: CGFloat { engravedThickness(0.5, floor: 1.5) }
+    private var legerLineThickness: CGFloat { engravedThickness(0.16) }
+    private var tupletBracketThickness: CGFloat { engravedThickness(0.16) }
+
     /// SMuFL em: every music-font glyph is designed on a 4-staff-space em, so
     /// rendering at this point size makes the glyph's internal staff match the
     /// drawn staff and every symbol sits on its reference line at the right
@@ -554,7 +561,7 @@ struct MeasureView: View {
             // before this clamp the default dark theme used 40% white at
             // 0.5pt × 0.85 zoom ≈ 0.43pt — sub-pixel and visually empty.
             let staffLineVisibleOpacity = max(theme.staffLineOpacity, 0.7)
-            let staffLineWidth: CGFloat = max(1.0, scaled(0.6))
+            let staffLineWidth: CGFloat = staffLineThickness
             for line in 0..<5 {
                 let y = staffTop + CGFloat(line) * staffLineSpacing
                 var path = Path()
@@ -568,7 +575,7 @@ struct MeasureView: View {
             let barlineX = size.width - 1
             barline.move(to: CGPoint(x: barlineX, y: staffTop))
             barline.addLine(to: CGPoint(x: barlineX, y: staffTop + 4 * staffLineSpacing))
-            context.stroke(barline, with: .color(theme.barline.opacity(0.9)), lineWidth: max(1.0, scaled(1.0)))
+            context.stroke(barline, with: .color(theme.barline.opacity(0.9)), lineWidth: thinBarlineThickness)
 
             // Draw measure number above staff
             let measureNum = Text("\(measureIndex + 1)")
@@ -601,9 +608,8 @@ struct MeasureView: View {
             let totalBeats = measure.usedBeats
             guard totalBeats > 0 else { return }
 
-            // Calculate minimum widths per note based on engraving standards
-            // Shorter notes need proportionally more space than pure beat ratio
-            let minNoteWidth = scaled(18) // minimum space for any note
+            // Единый расчёт ширин из EngravingEngine (тот же, что для ширины такта и hit-test):
+            // лог-модель по actualBeats, затем один коэффициент под доступную ширину такта.
             let hasAccidentals = measure.events.contains { event in
                 switch event.type {
                 case .note(let p): return p.accidental != .natural
@@ -611,15 +617,7 @@ struct MeasureView: View {
                 case .rest: return false
                 }
             }
-            let accidentalPadding: CGFloat = hasAccidentals ? scaled(10) : 0
-
-            // Two-pass spacing: first compute ideal widths, then normalize
-            var idealWidths: [CGFloat] = []
-            let refBeats = max(totalBeats, timeSignature.totalBeats)
-            for event in measure.events {
-                let proportional = availableWidth * CGFloat(event.duration.beats / refBeats)
-                idealWidths.append(max(proportional, minNoteWidth + accidentalPadding))
-            }
+            let idealWidths = EngravingEngine.eventIdealWidths(events: measure.events, zoomScale: zoomScale, hasAccidentals: hasAccidentals)
             let totalIdeal = idealWidths.reduce(0, +)
             let scaleFactor = totalIdeal > availableWidth ? availableWidth / totalIdeal : 1.0
 
@@ -729,7 +727,9 @@ struct MeasureView: View {
                     context.draw(techText, at: CGPoint(x: currentX + eventWidth / 2, y: staffTop - scaled(4)))
                 }
 
-                cumulativeBeats += event.duration.beats
+                // actualBeats (не duration.beats): в триолях реальное время звучания, чтобы
+                // группировка бимов по долям и привязка спаннеров совпадали (E-3/M-3).
+                cumulativeBeats += event.actualBeats
                 currentX += eventWidth
             }
 
@@ -758,17 +758,23 @@ struct MeasureView: View {
                     let curveDir: CGFloat = fromPos.y >= staffTop + 2 * staffLineSpacing ? -1 : 1
                     let curveHeight: CGFloat = staffLineSpacing * 1.5
 
-                    var curve = Path()
-                    curve.move(to: CGPoint(x: fromPos.x + 4, y: fromPos.y + curveDir * 4))
-                    curve.addQuadCurve(
-                        to: CGPoint(x: toPos.x - 4, y: toPos.y + curveDir * 4),
-                        control: CGPoint(
-                            x: (fromPos.x + toPos.x) / 2,
-                            y: min(fromPos.y, toPos.y) + curveDir * curveHeight
-                        )
-                    )
-                    let lineWidth: CGFloat = event.tiedToNext ? 1.5 : 1.0
-                    context.stroke(curve, with: .color(theme.noteHead), lineWidth: lineWidth)
+                    // Конусная лига (Bravura/Gould): тонкая на концах, толстая в середине
+                    // (slur/tieMidpointThickness 0.22 sp) — заполненная форма, не обводка
+                    // постоянной ширины (та читается как любительская «дуга-трубка»).
+                    // Две квадратичные кривые с общими концами и раздвинутыми контрольными
+                    // точками (±midThick от базового контроля) дают зазор 0.22 sp ровно в
+                    // середине и сходятся в точку на концах.
+                    let start = CGPoint(x: fromPos.x + 4, y: fromPos.y + curveDir * 4)
+                    let end = CGPoint(x: toPos.x - 4, y: toPos.y + curveDir * 4)
+                    let ctrlX = (fromPos.x + toPos.x) / 2
+                    let baseCtrlY = min(fromPos.y, toPos.y) + curveDir * curveHeight
+                    let midThick = staffLineSpacing * 0.22
+                    var slur = Path()
+                    slur.move(to: start)
+                    slur.addQuadCurve(to: end, control: CGPoint(x: ctrlX, y: baseCtrlY + curveDir * midThick))
+                    slur.addQuadCurve(to: start, control: CGPoint(x: ctrlX, y: baseCtrlY - curveDir * midThick))
+                    slur.closeSubpath()
+                    context.fill(slur, with: .color(theme.noteHead))
                 }
             }
 
@@ -797,20 +803,20 @@ struct MeasureView: View {
                 var thick = Path()
                 thick.move(to: CGPoint(x: barlineX - scaled(3), y: staffTop))
                 thick.addLine(to: CGPoint(x: barlineX - scaled(3), y: staffTop + 4 * staffLineSpacing))
-                context.stroke(thick, with: .color(theme.barline), lineWidth: 2.5)
+                context.stroke(thick, with: .color(theme.barline), lineWidth: thickBarlineThickness)
             }
             // Double / Final barlines
             if measure.barlineEnd == .double {
                 var second = Path()
                 second.move(to: CGPoint(x: barlineX - scaled(3), y: staffTop))
                 second.addLine(to: CGPoint(x: barlineX - scaled(3), y: staffTop + 4 * staffLineSpacing))
-                context.stroke(second, with: .color(theme.barline), lineWidth: 1)
+                context.stroke(second, with: .color(theme.barline), lineWidth: thinBarlineThickness)
             }
             if measure.barlineEnd == .final_ {
                 var thick = Path()
                 thick.move(to: CGPoint(x: barlineX - scaled(3), y: staffTop))
                 thick.addLine(to: CGPoint(x: barlineX - scaled(3), y: staffTop + 4 * staffLineSpacing))
-                context.stroke(thick, with: .color(theme.barline), lineWidth: 3)
+                context.stroke(thick, with: .color(theme.barline), lineWidth: thickBarlineThickness)
             }
             // Repeat start (left side of this measure if first)
             if measure.barlineEnd == .repeatStart || measure.barlineEnd == .repeatBoth {
@@ -818,7 +824,7 @@ struct MeasureView: View {
                 var thick = Path()
                 thick.move(to: CGPoint(x: leftX, y: staffTop))
                 thick.addLine(to: CGPoint(x: leftX, y: staffTop + 4 * staffLineSpacing))
-                context.stroke(thick, with: .color(theme.barline), lineWidth: 2.5)
+                context.stroke(thick, with: .color(theme.barline), lineWidth: thickBarlineThickness)
                 let dotY1 = staffTop + 1.5 * staffLineSpacing
                 let dotY2 = staffTop + 2.5 * staffLineSpacing
                 let dotSize = scaled(4)
@@ -879,7 +885,7 @@ struct MeasureView: View {
                     bracket.move(to: CGPoint(x: (fp.x + lp.x) / 2 + scaled(5), y: bracketY))
                     bracket.addLine(to: CGPoint(x: lp.x, y: bracketY))
                     bracket.addLine(to: CGPoint(x: lp.x, y: bracketY + scaled(3)))
-                    context.stroke(bracket, with: .color(theme.noteHead), lineWidth: 1)
+                    context.stroke(bracket, with: .color(theme.noteHead), lineWidth: tupletBracketThickness)
 
                     let label = Text(tup.displayLabel).font(.system(size: scaled(10), weight: .semibold))
                     context.draw(label, at: CGPoint(x: (fp.x + lp.x) / 2, y: bracketY))
@@ -1303,7 +1309,7 @@ struct MeasureView: View {
                 to: CGPoint(x: stemX + flagLength * curveDir, y: flagY + flagLength * 0.6 * (stemUp ? 1 : -1)),
                 control: CGPoint(x: stemX + flagLength * 0.6 * curveDir, y: flagY)
             )
-            context.stroke(flag, with: .color(theme.noteHead), lineWidth: 1.2)
+            context.stroke(flag, with: .color(theme.noteHead), lineWidth: engravedThickness(0.12))
         }
     }
 
@@ -1320,7 +1326,7 @@ struct MeasureView: View {
                 var path = Path()
                 path.move(to: CGPoint(x: x - width / 2, y: lineY))
                 path.addLine(to: CGPoint(x: x + width / 2, y: lineY))
-                context.stroke(path, with: .color(theme.staffLine.opacity(max(theme.staffLineOpacity, 0.7))), lineWidth: max(1.0, scaled(0.6)))
+                context.stroke(path, with: .color(theme.staffLine.opacity(max(theme.staffLineOpacity, 0.7))), lineWidth: legerLineThickness)
                 lineY -= staffLineSpacing
             }
         }
@@ -1332,7 +1338,7 @@ struct MeasureView: View {
                 var path = Path()
                 path.move(to: CGPoint(x: x - width / 2, y: lineY))
                 path.addLine(to: CGPoint(x: x + width / 2, y: lineY))
-                context.stroke(path, with: .color(theme.staffLine.opacity(max(theme.staffLineOpacity, 0.7))), lineWidth: max(1.0, scaled(0.6)))
+                context.stroke(path, with: .color(theme.staffLine.opacity(max(theme.staffLineOpacity, 0.7))), lineWidth: legerLineThickness)
                 lineY += staffLineSpacing
             }
         }
@@ -1500,7 +1506,7 @@ struct MeasureView: View {
 
         let radius: CGFloat = staffLineSpacing / 2 - 1
         let minStemLength = staffLineSpacing * 2.5
-        let beamThickness: CGFloat = scaled(2.5)
+        let beamThickness: CGFloat = engravedThickness(0.5, floor: 1.5)
         let midStaff = staffTop + staffLineSpacing * 2
 
         for group in beatGroups {
@@ -1564,7 +1570,7 @@ struct MeasureView: View {
             }
             if curSixteenthGroup.count >= 2 { sixteenthGroups.append(curSixteenthGroup) }
 
-            let beamGap: CGFloat = beamThickness + scaled(2)
+            let beamGap: CGFloat = beamThickness + staffLineSpacing * 0.25
             let secondBeamOffset: CGFloat = stemUp ? beamGap : -beamGap
             for subGroup in sixteenthGroups {
                 guard let firstIdx = subGroup.first, let lastIdx = subGroup.last else { continue }

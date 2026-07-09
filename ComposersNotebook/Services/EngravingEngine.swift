@@ -2,6 +2,15 @@ import Foundation
 
 struct EngravingEngine {
 
+    // Логарифмический горизонтальный spacing (см. measureContentWidth).
+    // spacingRefBeats — «кратчайшая» опорная длительность (шестнадцатая, 0.25 доли);
+    // её ширина = spacingBase; каждое удвоение длительности добавляет spacingIncrement.
+    // Подобрано так, что типичный такт из 4 четвертей ≈ 160·zoom (как в прежней линейной
+    // модели), но целая больше не в 8 раз шире восьмой.
+    static let spacingRefBeats: Double = 0.25
+    static let spacingBase: CGFloat = 16
+    static let spacingIncrement: CGFloat = 12
+
     struct SystemLayout {
         let measureRanges: [Range<Int>]
         let measureWidths: [CGFloat]
@@ -84,10 +93,6 @@ struct EngravingEngine {
             width += 12 * z   // не отнимаем место у нот, но даём раздуть систему
         }
 
-        // Учёт tuplet timing через actualBeats — то же количество нот занимает
-        // фактически меньше долей. totalBeats для пропорций берём по actualBeats.
-        let totalBeats = max(measure.usedBeats, timeSignature.totalBeats)
-
         let hasAccidentals = measure.events.contains { event in
             switch event.type {
             case .note(let p): return p.accidental != .natural
@@ -96,18 +101,7 @@ struct EngravingEngine {
             }
         }
 
-        var noteSpace: CGFloat = 0
-        let minNoteWidth = 18 * z
-        let accPad: CGFloat = hasAccidentals ? 10 * z : 0
-
-        for event in measure.events {
-            let proportional = CGFloat(event.actualBeats / totalBeats) * 160 * z
-            // Tuplet ноты получают небольшой бонус по ширине (читаемость скобки).
-            let tupletBonus: CGFloat = event.tuplet != nil ? 4 * z : 0
-            // Аккордовый символ требует дополнительной высоты, но и ширину чуть больше
-            let chordBonus: CGFloat = event.chordSymbol != nil ? 6 * z : 0
-            noteSpace += max(proportional + tupletBonus + chordBonus, minNoteWidth + accPad)
-        }
+        var noteSpace = eventIdealWidths(events: measure.events, zoomScale: z, hasAccidentals: hasAccidentals).reduce(0, +)
 
         if measure.events.isEmpty {
             noteSpace = 40 * z
@@ -115,6 +109,33 @@ struct EngravingEngine {
 
         width += noteSpace
         return width
+    }
+
+    /// Идеальная ширина каждого события в такте — ЕДИНЫЙ источник ширины для расчёта
+    /// ширины такта, hit-test и рендера. Раньше эти три пути считали spacing по-разному
+    /// (ширина такта — по actualBeats, позиции нот — линейно по duration.beats), из-за чего
+    /// в триолях нотоглавы, зоны тапа и спаннеры разъезжались (E-3/M-3). Теперь один расчёт.
+    ///
+    /// Логарифмическая модель (LilyPond springs-and-rods / Gould «Behind Bars»): ширина ∝
+    /// log2 длительности, не линейно — иначе целая была бы в 8 раз шире восьмой. Anchor —
+    /// шестнадцатая (spacingRefBeats): её ширина = spacingBase, каждое удвоение длительности
+    /// добавляет spacingIncrement. actualBeats (не duration.beats), чтобы триоль занимала
+    /// место по фактическому времени звучания. Возвращает абсолютные ширины; вызывающий
+    /// код при необходимости масштабирует их под доступную ширину такта одним коэффициентом.
+    static func eventIdealWidths(
+        events: [NoteEvent],
+        zoomScale z: CGFloat,
+        hasAccidentals: Bool
+    ) -> [CGFloat] {
+        let minNoteWidth = 18 * z
+        let accPad: CGFloat = hasAccidentals ? 10 * z : 0
+        return events.map { event in
+            let doublings = log2(max(event.actualBeats, spacingRefBeats) / spacingRefBeats)
+            let proportional = spacingBase * z + CGFloat(doublings) * spacingIncrement * z
+            let tupletBonus: CGFloat = event.tuplet != nil ? 4 * z : 0
+            let chordBonus: CGFloat = event.chordSymbol != nil ? 6 * z : 0
+            return max(proportional + tupletBonus + chordBonus, minNoteWidth + accPad)
+        }
     }
 
     // MARK: - Accidental Collision Avoidance
@@ -146,33 +167,5 @@ struct EngravingEngine {
         }
 
         return slots
-    }
-
-    // MARK: - Duration-Proportional Spacing
-
-    static func proportionalWidths(
-        events: [NoteEvent],
-        availableWidth: CGFloat,
-        minWidth: CGFloat,
-        timeSignature: TimeSignature
-    ) -> [CGFloat] {
-        guard !events.isEmpty else { return [] }
-
-        let totalBeats = max(events.reduce(0.0) { $0 + $1.duration.beats }, timeSignature.totalBeats)
-
-        var widths: [CGFloat] = events.map { event in
-            let ratio = CGFloat(event.duration.beats / totalBeats)
-            let logScaled = CGFloat(log2(event.duration.beats + 1) / log2(totalBeats + 1))
-            let blended = ratio * 0.6 + logScaled * 0.4
-            return max(blended * availableWidth, minWidth)
-        }
-
-        let total = widths.reduce(0, +)
-        if total > availableWidth {
-            let scale = availableWidth / total
-            widths = widths.map { $0 * scale }
-        }
-
-        return widths
     }
 }
