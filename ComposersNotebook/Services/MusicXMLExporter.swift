@@ -52,8 +52,9 @@ class MusicXMLExporter {
             let partId = "P\(index + 1)"
             xml += "\n  <part id=\"\(partId)\">"
 
-            for (measureIndex, measure) in part.measures.enumerated() {
-                xml += exportMeasure(measure, index: measureIndex, score: score, part: part)
+            let measureCount = part.staves.first?.measures.count ?? 0
+            for measureIndex in 0..<measureCount {
+                xml += exportMeasure(index: measureIndex, score: score, part: part)
             }
 
             xml += "\n  </part>"
@@ -65,14 +66,21 @@ class MusicXMLExporter {
 
     // MARK: - Measure
 
-    private func exportMeasure(_ measure: Measure, index: Int, score: Score, part: Part) -> String {
+    private func exportMeasure(index: Int, score: Score, part: Part) -> String {
+        let staves = part.staves
+        let isGrand = staves.count >= 2
+        // Staff 0's measure carries shared measure-level content (time/key/tempo,
+        // directions, barline). Per-staff notes and clefs come from each staff below.
+        let measure = staves[0].measures[index]
+
         var xml = "\n    <measure number=\"\(index + 1)\">"
 
         // Attributes (first measure or when changed)
+        let anyClefChange = staves.contains { $0.measures[index].clefChange != nil }
         let needsAttributes = index == 0
             || measure.timeSignature != nil
             || measure.keySignature != nil
-            || measure.clefChange != nil
+            || anyClefChange
 
         if needsAttributes {
             xml += "\n      <attributes>"
@@ -101,9 +109,17 @@ class MusicXMLExporter {
                 """
             }
 
-            let clef = measure.clefChange ?? (index == 0 ? part.instrument.defaultClef : nil)
-            if let clef = clef {
-                xml += exportClef(clef)
+            if isGrand {
+                xml += "\n        <staves>\(staves.count)</staves>"
+            }
+
+            // One clef per staff. On measure 0 emit each staff's clef; later measures
+            // only emit a staff's clef if it actually changed there.
+            for (k, staff) in staves.enumerated() {
+                let clef = staff.measures[index].clefChange ?? (index == 0 ? staff.clef : nil)
+                if let clef = clef {
+                    xml += exportClef(clef, number: isGrand ? k + 1 : nil)
+                }
             }
 
             xml += "\n      </attributes>"
@@ -219,12 +235,25 @@ class MusicXMLExporter {
             """
         }
 
-        // Notes — chord symbols are emitted as <harmony> *before* the note they attach to.
-        for event in measure.events {
-            if let chord = event.chordSymbol {
-                xml += exportHarmony(chord)
+        // Notes — one staff at a time. Between staves, <backup> rewinds the cursor
+        // to the measure start so the next staff aligns from beat 1. Without this
+        // the lower staff of a grand staff was dropped entirely (only staves[0]
+        // was ever exported), so Verovio showed half a piano.
+        // Chord symbols are emitted as <harmony> *before* the note they attach to.
+        for (k, staff) in staves.enumerated() {
+            let staffMeasure = staff.measures[index]
+            if k > 0 {
+                let back = measureDivisions(staves[k - 1].measures[index])
+                if back > 0 {
+                    xml += "\n      <backup>\n        <duration>\(back)</duration>\n      </backup>"
+                }
             }
-            xml += exportNoteEvent(event)
+            for event in staffMeasure.events {
+                if let chord = event.chordSymbol {
+                    xml += exportHarmony(chord)
+                }
+                xml += exportNoteEvent(event, staffNumber: isGrand ? k + 1 : nil)
+            }
         }
 
         // Barline
@@ -312,29 +341,32 @@ class MusicXMLExporter {
 
     // MARK: - Note Event
 
-    private func exportNoteEvent(_ event: NoteEvent) -> String {
+    private func exportNoteEvent(_ event: NoteEvent, staffNumber: Int? = nil) -> String {
         var xml = ""
 
         switch event.type {
         case .note(let pitch):
-            xml += exportNote(pitch: pitch, duration: event.duration, event: event)
+            xml += exportNote(pitch: pitch, duration: event.duration, event: event, staffNumber: staffNumber)
 
         case .chord(let pitches):
             for (i, pitch) in pitches.enumerated() {
-                xml += exportNote(pitch: pitch, duration: event.duration, event: event, isChord: i > 0)
+                xml += exportNote(pitch: pitch, duration: event.duration, event: event, isChord: i > 0, staffNumber: staffNumber)
             }
 
         case .rest:
             xml += "\n      <note>"
             xml += "\n        <rest/>"
-            xml += exportDuration(event)
+            xml += exportDuration(event, voice: staffNumber)
+            if let staffNumber = staffNumber {
+                xml += "\n        <staff>\(staffNumber)</staff>"
+            }
             xml += "\n      </note>"
         }
 
         return xml
     }
 
-    private func exportNote(pitch: Pitch, duration: Duration, event: NoteEvent, isChord: Bool = false) -> String {
+    private func exportNote(pitch: Pitch, duration: Duration, event: NoteEvent, isChord: Bool = false, staffNumber: Int? = nil) -> String {
         var xml = "\n      <note>"
 
         if isChord {
@@ -351,7 +383,7 @@ class MusicXMLExporter {
         xml += "\n        </pitch>"
 
         // Duration
-        xml += exportDuration(event)
+        xml += exportDuration(event, voice: staffNumber)
 
         // Tuplet time-modification (3:2, 5:4, etc.)
         if let tuplet = event.tuplet {
@@ -377,6 +409,11 @@ class MusicXMLExporter {
             case .natural: accName = "natural"
             }
             xml += "\n        <accidental>\(accName)</accidental>"
+        }
+
+        // Staff assignment (grand staff) — must precede <notations> per MusicXML order.
+        if let staffNumber = staffNumber {
+            xml += "\n        <staff>\(staffNumber)</staff>"
         }
 
         // Notations
@@ -448,7 +485,7 @@ class MusicXMLExporter {
 
     // MARK: - Duration
 
-    private func exportDuration(_ event: NoteEvent) -> String {
+    private func exportDuration(_ event: NoteEvent, voice: Int? = nil) -> String {
         // <duration> — звучащая длительность в делениях, с учётом tuplet
         // (event.actualBeats — единый источник тайминга, как в плейбеке). Раньше
         // бралось duration.beats × 4: tuplet игнорировался (триоль занимала полную
@@ -466,6 +503,11 @@ class MusicXMLExporter {
         }
 
         var xml = "\n        <duration>\(divisions)</duration>"
+        // <voice> must precede <type> per MusicXML order. Emitted only for grand
+        // staff (voice == staff number) so single-staff output stays as validated.
+        if let voice = voice {
+            xml += "\n        <voice>\(voice)</voice>"
+        }
         xml += "\n        <type>\(typeName)</type>"
 
         // doubleDotted проверяется раньше dotted (как в Duration.beats): импортёры
@@ -482,7 +524,7 @@ class MusicXMLExporter {
 
     // MARK: - Clef
 
-    private func exportClef(_ clef: Clef) -> String {
+    private func exportClef(_ clef: Clef, number: Int? = nil) -> String {
         let (sign, line): (String, Int)
         switch clef {
         case .treble: (sign, line) = ("G", 2)
@@ -490,13 +532,24 @@ class MusicXMLExporter {
         case .alto: (sign, line) = ("C", 3)
         case .tenor: (sign, line) = ("C", 4)
         }
+        let numberAttr = number.map { " number=\"\($0)\"" } ?? ""
         return """
 
-                <clef>
+                <clef\(numberAttr)>
                   <sign>\(sign)</sign>
                   <line>\(line)</line>
                 </clef>
         """
+    }
+
+    /// Total sounding divisions in a measure — the sum of each event's duration
+    /// (a chord counts once). Used to size <backup> when writing multiple staves.
+    private func measureDivisions(_ measure: Measure) -> Int {
+        var total = 0
+        for event in measure.events {
+            total += max(1, Int((event.actualBeats * Double(divisionsPerQuarter)).rounded()))
+        }
+        return total
     }
 
     // MARK: - Barline

@@ -5,12 +5,19 @@ options:
     iOS: "17.0"
   xcodeVersion: "16.0"
 
+packages:
+  VerovioToolkit:
+    path: Vendor/verovio
+
 targets:
   ComposersNotebook:
     type: application
     platform: iOS
     sources:
       - ComposersNotebook
+    dependencies:
+      - package: VerovioToolkit
+        product: VerovioToolkit
     info:
       path: SupportFiles/Info.plist
       properties:

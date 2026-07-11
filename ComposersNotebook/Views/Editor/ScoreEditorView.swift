@@ -34,6 +34,7 @@ struct ScoreEditorView: View {
     @State private var showMeasureProperties = false
     @State private var showValidation = false
     @State private var showSoundFontPicker = false
+    @State private var showVerovioPreview = false
     @State private var shareURL: URL?
     @State private var alertMessage: String?
     @State private var showAlert = false
@@ -120,6 +121,11 @@ struct ScoreEditorView: View {
                 }
                 .disabled(!viewModel.canRedo)
                 .help("Повторить (Redo)")
+
+                Button { showVerovioPreview = true } label: {
+                    Image(systemName: "eye")
+                }
+                .help("Превью движком Verovio")
 
                 Menu {
                     // Save
@@ -245,6 +251,10 @@ struct ScoreEditorView: View {
         }
         .sheet(isPresented: $showSoundFontPicker) {
             SoundFontPickerView(soundFontManager: soundFontManager)
+                .presentationDetents([.large])
+        }
+        .sheet(isPresented: $showVerovioPreview) {
+            VerovioPreviewView(score: viewModel.score)
                 .presentationDetents([.large])
         }
     }

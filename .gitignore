@@ -21,3 +21,7 @@ Pods/
 # Swift Package Manager
 .build/
 Package.resolved
+
+# iOS build (agent)
+.build-ios/
+build-ios*.log

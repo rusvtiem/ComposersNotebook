@@ -26,15 +26,18 @@
 		3734652E7AA0D578931FC4B8 /* MIDIEngine.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1B80768D47A05D75303032ED /* MIDIEngine.swift */; };
 		3CEB7F925F57B07D42FAEB39 /* Instrument.swift in Sources */ = {isa = PBXBuildFile; fileRef = FDA522273EC144D26A43A262 /* Instrument.swift */; };
 		43A3102B35157066B5B481ED /* ScoreEditorView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 2994638C367DA9CF18556A26 /* ScoreEditorView.swift */; };
+		44116C04EEF73471E6BDEAA6 /* VerovioToolkit in Frameworks */ = {isa = PBXBuildFile; productRef = E3F600B43E40EA69CB57B543 /* VerovioToolkit */; };
 		46DCD35DD9C81C1BF12F9D4A /* PianoKeyboardView.swift in Sources */ = {isa = PBXBuildFile; fileRef = ED18EBF60DE96441348A72DA /* PianoKeyboardView.swift */; };
 		55AC7CBDB15EF5343AB32436 /* Part.swift in Sources */ = {isa = PBXBuildFile; fileRef = 7E2571DAF48F482D437CD5BF /* Part.swift */; };
 		56E13911DEC0752358192E85 /* ScoreValidator.swift in Sources */ = {isa = PBXBuildFile; fileRef = 283B65C3125C9250B0E8AB52 /* ScoreValidator.swift */; };
 		591358A9C10D7A3284BC13DB /* Score.swift in Sources */ = {isa = PBXBuildFile; fileRef = 68512AB05D9BE0C4BF62EB1C /* Score.swift */; };
+		5E5D8E7561416400FCF11D5C /* VerovioEngine.swift in Sources */ = {isa = PBXBuildFile; fileRef = 819CC0322CEFA8E3667D9EA0 /* VerovioEngine.swift */; };
 		6C4139C1C8A3DA2A135DD3C6 /* MusicXMLExporter.swift in Sources */ = {isa = PBXBuildFile; fileRef = F180ED3F1454863D8676C257 /* MusicXMLExporter.swift */; };
 		7401A39AB70F6E84025CF54D /* MusicXMLImporter.swift in Sources */ = {isa = PBXBuildFile; fileRef = 287E43EA5C25B87FEF4570C3 /* MusicXMLImporter.swift */; };
 		813DDF8F0FC1AB93799DC1E0 /* TimGM6mb.sf2 in Resources */ = {isa = PBXBuildFile; fileRef = 3597BACFD67D58C734C7E184 /* TimGM6mb.sf2 */; };
 		833AA40610B6F6D5D321F577 /* MetronomeEngine.swift in Sources */ = {isa = PBXBuildFile; fileRef = D88126149726E770E48A8525 /* MetronomeEngine.swift */; };
 		86C71629511E39A92B889D68 /* ScoreViewModel.swift in Sources */ = {isa = PBXBuildFile; fileRef = BDDD972C2349864CBA4F7648 /* ScoreViewModel.swift */; };
+		89F96B7D788401039B4EF4E3 /* VerovioPreviewView.swift in Sources */ = {isa = PBXBuildFile; fileRef = FCCF3E43EA929CF6D0795C46 /* VerovioPreviewView.swift */; };
 		8A0C37E370752650D55BA831 /* Theme.swift in Sources */ = {isa = PBXBuildFile; fileRef = 190212CA34ECBD03664EF613 /* Theme.swift */; };
 		907461038486626BD35EB5C9 /* EngravingEngine.swift in Sources */ = {isa = PBXBuildFile; fileRef = 8767746B686DE77B5255977D /* EngravingEngine.swift */; };
 		91DFDF6B0CB652E9CF19B6AA /* ThemeSettingsView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 0FA214476FE1FA3A1CD758E1 /* ThemeSettingsView.swift */; };
@@ -97,6 +100,7 @@
 		7099F4A8DD127C6D22FD41F2 /* MeasurePropertiesView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = MeasurePropertiesView.swift; sourceTree = "<group>"; };
 		7E2571DAF48F482D437CD5BF /* Part.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Part.swift; sourceTree = "<group>"; };
 		8073351C85E3D1B1FE88626A /* SoundFontPickerView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SoundFontPickerView.swift; sourceTree = "<group>"; };
+		819CC0322CEFA8E3667D9EA0 /* VerovioEngine.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = VerovioEngine.swift; sourceTree = "<group>"; };
 		845182DDC310ED1E6DCF3268 /* ABCNotationImporter.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ABCNotationImporter.swift; sourceTree = "<group>"; };
 		8589EB828201460A07C202F3 /* Note.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Note.swift; sourceTree = "<group>"; };
 		8767746B686DE77B5255977D /* EngravingEngine.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = EngravingEngine.swift; sourceTree = "<group>"; };
@@ -118,20 +122,42 @@
 		D49B5EBD3BC6ECABB2157696 /* StaffAreaView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = StaffAreaView.swift; sourceTree = "<group>"; };
 		D82806EEF19B77753B5E8F85 /* Pitch.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Pitch.swift; sourceTree = "<group>"; };
 		D88126149726E770E48A8525 /* MetronomeEngine.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = MetronomeEngine.swift; sourceTree = "<group>"; };
+		DACC56024A52935DD9B41BEB /* verovio */ = {isa = PBXFileReference; lastKnownFileType = folder; name = verovio; path = Vendor/verovio; sourceTree = SOURCE_ROOT; };
 		E787F5BE541F1950B58DEB22 /* DocumentPickerView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = DocumentPickerView.swift; sourceTree = "<group>"; };
 		ED18EBF60DE96441348A72DA /* PianoKeyboardView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = PianoKeyboardView.swift; sourceTree = "<group>"; };
 		EE9F96F55499ECA122A5F485 /* ChordSymbolEditor.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ChordSymbolEditor.swift; sourceTree = "<group>"; };
 		F180ED3F1454863D8676C257 /* MusicXMLExporter.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = MusicXMLExporter.swift; sourceTree = "<group>"; };
 		F85D1C62DDC7A2564A387949 /* ComposersNotebook.app */ = {isa = PBXFileReference; includeInIndex = 0; lastKnownFileType = wrapper.application; path = ComposersNotebook.app; sourceTree = BUILT_PRODUCTS_DIR; };
 		FCB4B56794BAD9F955316678 /* GuitarProImporter.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = GuitarProImporter.swift; sourceTree = "<group>"; };
+		FCCF3E43EA929CF6D0795C46 /* VerovioPreviewView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = VerovioPreviewView.swift; sourceTree = "<group>"; };
 		FDA522273EC144D26A43A262 /* Instrument.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Instrument.swift; sourceTree = "<group>"; };
 /* End PBXFileReference section */
 
+/* Begin PBXFrameworksBuildPhase section */
+		75A6C3BAB6A114211DB02940 /* Frameworks */ = {
+			isa = PBXFrameworksBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+				44116C04EEF73471E6BDEAA6 /* VerovioToolkit in Frameworks */,
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+/* End PBXFrameworksBuildPhase section */
+
 /* Begin PBXGroup section */
+		05540A17D3C38A3F1DB7D22F /* Packages */ = {
+			isa = PBXGroup;
+			children = (
+				DACC56024A52935DD9B41BEB /* verovio */,
+			);
+			name = Packages;
+			sourceTree = "<group>";
+		};
 		056A78FF835E2A2E19B51980 = {
 			isa = PBXGroup;
 			children = (
 				FFCAB689CE24864CB8CC0655 /* ComposersNotebook */,
+				05540A17D3C38A3F1DB7D22F /* Packages */,
 				547C23BA537A07C8322E68AE /* Products */,
 			);
 			sourceTree = "<group>";
@@ -149,6 +175,7 @@
 			children = (
 				2994638C367DA9CF18556A26 /* ScoreEditorView.swift */,
 				D49B5EBD3BC6ECABB2157696 /* StaffAreaView.swift */,
+				FCCF3E43EA929CF6D0795C46 /* VerovioPreviewView.swift */,
 			);
 			path = Editor;
 			sourceTree = "<group>";
@@ -247,6 +274,7 @@
 				C332283252D17AF92A4994C9 /* PluginManager.swift */,
 				283B65C3125C9250B0E8AB52 /* ScoreValidator.swift */,
 				5E0926F59E024C74C9195BF7 /* SoundFontManager.swift */,
+				819CC0322CEFA8E3667D9EA0 /* VerovioEngine.swift */,
 			);
 			path = Services;
 			sourceTree = "<group>";
@@ -289,6 +317,7 @@
 			buildPhases = (
 				EAE87665F9FD6C7FEB56B961 /* Sources */,
 				C3042D56121CB081767B2959 /* Resources */,
+				75A6C3BAB6A114211DB02940 /* Frameworks */,
 			);
 			buildRules = (
 			);
@@ -296,6 +325,7 @@
 			);
 			name = ComposersNotebook;
 			packageProductDependencies = (
+				E3F600B43E40EA69CB57B543 /* VerovioToolkit */,
 			);
 			productName = ComposersNotebook;
 			productReference = F85D1C62DDC7A2564A387949 /* ComposersNotebook.app */;
@@ -326,6 +356,9 @@
 			);
 			mainGroup = 056A78FF835E2A2E19B51980;
 			minimizedProjectReferenceProxies = 1;
+			packageReferences = (
+				AC088BB3E0D3F1C1339373C1 /* XCLocalSwiftPackageReference "Vendor/verovio" */,
+			);
 			preferredProjectObjectVersion = 77;
 			productRefGroup = 547C23BA537A07C8322E68AE /* Products */;
 			projectDirPath = "";
@@ -408,6 +441,8 @@
 				91DFDF6B0CB652E9CF19B6AA /* ThemeSettingsView.swift in Sources */,
 				2923DF5AA7F529221194CB34 /* Tuplet.swift in Sources */,
 				DBA22A99739E70267608FA4C /* ValidationView.swift in Sources */,
+				5E5D8E7561416400FCF11D5C /* VerovioEngine.swift in Sources */,
+				89F96B7D788401039B4EF4E3 /* VerovioPreviewView.swift in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -605,6 +640,20 @@
 			defaultConfigurationName = Debug;
 		};
 /* End XCConfigurationList section */
+
+/* Begin XCLocalSwiftPackageReference section */
+		AC088BB3E0D3F1C1339373C1 /* XCLocalSwiftPackageReference "Vendor/verovio" */ = {
+			isa = XCLocalSwiftPackageReference;
+			relativePath = Vendor/verovio;
+		};
+/* End XCLocalSwiftPackageReference section */
+
+/* Begin XCSwiftPackageProductDependency section */
+		E3F600B43E40EA69CB57B543 /* VerovioToolkit */ = {
+			isa = XCSwiftPackageProductDependency;
+			productName = VerovioToolkit;
+		};
+/* End XCSwiftPackageProductDependency section */
 	};
 	rootObject = 1765FF24E1FFF2682ED1847F /* Project object */;
 }
