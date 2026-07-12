@@ -35,7 +35,9 @@ struct ScoreEditorView: View {
     @State private var showValidation = false
     @State private var showSoundFontPicker = false
     @State private var showVerovioPreview = false
-    @State private var showVerovioEditor = false
+    /// Fallback to the homemade Canvas renderer if Verovio ever misbehaves.
+    /// Default off: the main staff is engraved by Verovio.
+    @AppStorage("useClassicStaffRenderer") private var useClassicRenderer = false
     @State private var shareURL: URL?
     @State private var alertMessage: String?
     @State private var showAlert = false
@@ -56,8 +58,13 @@ struct ScoreEditorView: View {
             // inside a ScrollView collapses to zero height and blanks the staff.
             GeometryReader { geo in
                 ScrollView([.horizontal, .vertical]) {
-                    StaffAreaView(viewModel: viewModel, availableWidth: max(geo.size.width - 32, 300))
-                        .padding()
+                    if useClassicRenderer {
+                        StaffAreaView(viewModel: viewModel, availableWidth: max(geo.size.width - 32, 300))
+                            .padding()
+                    } else {
+                        VerovioStaffSurface(viewModel: viewModel, availableWidth: max(geo.size.width - 32, 300))
+                            .padding()
+                    }
                 }
                 .simultaneousGesture(
                     MagnifyGesture()
@@ -128,10 +135,10 @@ struct ScoreEditorView: View {
                 }
                 .help("Превью движком Verovio")
 
-                Button { showVerovioEditor = true } label: {
-                    Image(systemName: "hand.tap")
+                Button { useClassicRenderer.toggle() } label: {
+                    Image(systemName: useClassicRenderer ? "pencil.and.outline" : "music.note")
                 }
-                .help("Стан на движке Verovio (тап по ноте)")
+                .help(useClassicRenderer ? "Классический рендер (вкл). Нажми — вернуть Verovio" : "Стан рисует движок Verovio. Нажми — классический рендер")
 
                 Menu {
                     // Save
@@ -261,10 +268,6 @@ struct ScoreEditorView: View {
         }
         .sheet(isPresented: $showVerovioPreview) {
             VerovioPreviewView(score: viewModel.score)
-                .presentationDetents([.large])
-        }
-        .sheet(isPresented: $showVerovioEditor) {
-            VerovioEditorView(viewModel: viewModel)
                 .presentationDetents([.large])
         }
     }

@@ -52,6 +52,7 @@
 		B00A65CB074EC8EFA0E665AA /* HapticManager.swift in Sources */ = {isa = PBXBuildFile; fileRef = 258B049FF3BDAE14219D42FA /* HapticManager.swift */; };
 		B92B212B3BD2A945FA99C721 /* ExternalMIDIReceiver.swift in Sources */ = {isa = PBXBuildFile; fileRef = 068C6D907B670651E82A5C6E /* ExternalMIDIReceiver.swift */; };
 		BB881ADB87E40142AE3804C3 /* Pitch.swift in Sources */ = {isa = PBXBuildFile; fileRef = D82806EEF19B77753B5E8F85 /* Pitch.swift */; };
+		BE84974ADBD8C13F7CFD7CBA /* VerovioStaffSurface.swift in Sources */ = {isa = PBXBuildFile; fileRef = BD9C7B9E255C101B3DBF8C0D /* VerovioStaffSurface.swift */; };
 		C0C40345F922A38CC4EF8444 /* AppSupportContacts.swift in Sources */ = {isa = PBXBuildFile; fileRef = CFE90529AD079AAF1ECC7DF9 /* AppSupportContacts.swift */; };
 		CBD7CC61B245383EF27697B6 /* SoundFontManager.swift in Sources */ = {isa = PBXBuildFile; fileRef = 5E0926F59E024C74C9195BF7 /* SoundFontManager.swift */; };
 		CE08C92988EF4608810D80F1 /* OctaveShift.swift in Sources */ = {isa = PBXBuildFile; fileRef = CF37449983CAD06A212D3231 /* OctaveShift.swift */; };
@@ -114,6 +115,7 @@
 		B4EF73134ACBD30DB13973BD /* MusicTerms.xcstrings */ = {isa = PBXFileReference; lastKnownFileType = text.json.xcstrings; path = MusicTerms.xcstrings; sourceTree = "<group>"; };
 		B96876E6DC6637C53E496FFA /* MIDIFileHandler.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = MIDIFileHandler.swift; sourceTree = "<group>"; };
 		BB67B46759B5D181F577F39F /* MusicOMREngine.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = MusicOMREngine.swift; sourceTree = "<group>"; };
+		BD9C7B9E255C101B3DBF8C0D /* VerovioStaffSurface.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = VerovioStaffSurface.swift; sourceTree = "<group>"; };
 		BDDD972C2349864CBA4F7648 /* ScoreViewModel.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ScoreViewModel.swift; sourceTree = "<group>"; };
 		C14D67B6647B9BC7E49E7743 /* PlaybackScheduler.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = PlaybackScheduler.swift; sourceTree = "<group>"; };
 		C332283252D17AF92A4994C9 /* PluginManager.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = PluginManager.swift; sourceTree = "<group>"; };
@@ -178,6 +180,7 @@
 				2994638C367DA9CF18556A26 /* ScoreEditorView.swift */,
 				D49B5EBD3BC6ECABB2157696 /* StaffAreaView.swift */,
 				FCCF3E43EA929CF6D0795C46 /* VerovioPreviewView.swift */,
+				BD9C7B9E255C101B3DBF8C0D /* VerovioStaffSurface.swift */,
 			);
 			path = Editor;
 			sourceTree = "<group>";
@@ -447,6 +450,7 @@
 				5E5D8E7561416400FCF11D5C /* VerovioEngine.swift in Sources */,
 				89F96B7D788401039B4EF4E3 /* VerovioPreviewView.swift in Sources */,
 				121EB957457578E1602D39E9 /* VerovioSVGGeometry.swift in Sources */,
+				BE84974ADBD8C13F7CFD7CBA /* VerovioStaffSurface.swift in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
