@@ -255,6 +255,34 @@ class ScoreViewModel: ObservableObject {
         selectedPitchIndex = nil
     }
 
+    /// Resolves a note id exported into MusicXML (see `MusicXMLExporter.idAttribute`)
+    /// back to its location and selects it. This is the bridge from a tap on a
+    /// Verovio-drawn notehead (whose SVG id is our exported id) to our model.
+    /// Returns true if found. The id is `e<uuidHex>` with an optional `-N` chord suffix.
+    @discardableResult
+    func selectEvent(byExportedID exportedID: String) -> Bool {
+        var hex = exportedID
+        if hex.hasPrefix("e") { hex.removeFirst() }
+        if let dash = hex.firstIndex(of: "-") { hex = String(hex[..<dash]) }
+        for (pi, part) in score.parts.enumerated() {
+            for (si, staff) in part.staves.enumerated() {
+                for (mi, measure) in staff.measures.enumerated() {
+                    for (ei, event) in measure.events.enumerated() {
+                        let eventHex = event.id.uuidString.replacingOccurrences(of: "-", with: "").lowercased()
+                        if eventHex == hex {
+                            selectedPartIndex = pi
+                            selectedStaffIndex = si
+                            selectedMeasureIndex = mi
+                            selectedEventIndex = ei
+                            return true
+                        }
+                    }
+                }
+            }
+        }
+        return false
+    }
+
     func selectPitchInChord(at pitchIndex: Int) {
         selectedPitchIndex = pitchIndex
     }

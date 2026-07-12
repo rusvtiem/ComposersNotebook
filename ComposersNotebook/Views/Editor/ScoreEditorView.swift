@@ -35,6 +35,7 @@ struct ScoreEditorView: View {
     @State private var showValidation = false
     @State private var showSoundFontPicker = false
     @State private var showVerovioPreview = false
+    @State private var showVerovioEditor = false
     @State private var shareURL: URL?
     @State private var alertMessage: String?
     @State private var showAlert = false
@@ -126,6 +127,11 @@ struct ScoreEditorView: View {
                     Image(systemName: "eye")
                 }
                 .help("Превью движком Verovio")
+
+                Button { showVerovioEditor = true } label: {
+                    Image(systemName: "hand.tap")
+                }
+                .help("Стан на движке Verovio (тап по ноте)")
 
                 Menu {
                     // Save
@@ -255,6 +261,10 @@ struct ScoreEditorView: View {
         }
         .sheet(isPresented: $showVerovioPreview) {
             VerovioPreviewView(score: viewModel.score)
+                .presentationDetents([.large])
+        }
+        .sheet(isPresented: $showVerovioEditor) {
+            VerovioEditorView(viewModel: viewModel)
                 .presentationDetents([.large])
         }
     }
