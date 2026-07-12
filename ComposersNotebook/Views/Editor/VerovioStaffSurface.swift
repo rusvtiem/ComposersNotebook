@@ -31,36 +31,59 @@ struct VerovioStaffSurface: View {
     @State private var svg: String?
     @State private var geometry: VerovioSVGGeometry?
     @State private var selectedNotePoint: CGPoint?   // viewBox units
-    @State private var failed = false
+    /// Human-readable reason the staff is not showing. Surfaced on-screen so a
+    /// blank never happens silently — the message itself explains the recovery.
+    @State private var status: String = ""
 
     var body: some View {
         Group {
-            if let svg, let geometry {
+            if let svg {
                 engraved(svg: svg, geometry: geometry)
             } else {
-                ContentUnavailableView {
-                    Label(String(localized: "Cannot engrave"), systemImage: "music.note.list")
-                } description: {
-                    Text(String(localized: "The Verovio engine could not render this score. You can switch to the classic renderer in Settings."))
-                }
-                .frame(width: availableWidth)
+                unavailable
             }
         }
         .task { render() }
         .onChange(of: viewModel.score.modifiedAt) { _, _ in render() }
         .onChange(of: availableWidth) { _, _ in render() }
-        .onChange(of: viewModel.zoomScale) { _, _ in /* scale is applied in layout, no re-engrave needed */ }
+    }
+
+    private var unavailable: some View {
+        VStack(spacing: 8) {
+            Image(systemName: "music.note.list")
+                .font(.largeTitle)
+                .foregroundStyle(.secondary)
+            Text(String(localized: "Cannot engrave"))
+                .font(.headline)
+            Text(status.isEmpty
+                 ? String(localized: "The Verovio engine could not render this score. You can switch to the classic renderer in Settings.")
+                 : status)
+                .font(.caption)
+                .foregroundStyle(.secondary)
+                .multilineTextAlignment(.center)
+        }
+        .padding()
+        .frame(maxWidth: .infinity, minHeight: 220)
     }
 
     // MARK: - Engraved staff + tap layer
 
-    private func engraved(svg: String, geometry: VerovioSVGGeometry) -> some View {
-        // The SVG is scaled uniformly to `availableWidth * zoom`; one viewBox unit
-        // therefore equals `contentWidth / viewBox.width` points — the single
-        // factor that maps a tap back to viewBox coordinates and a note to screen.
+    private func engraved(svg: String, geometry: VerovioSVGGeometry?) -> some View {
+        // The SVG is scaled uniformly to `availableWidth * zoom`; height follows the
+        // viewBox aspect (always present once Verovio rendered). A floor keeps the
+        // staff visible even if geometry parsing degrades, so the surface never
+        // collapses to nothing. One viewBox unit = `contentWidth / viewBox.width`
+        // points — the factor mapping a tap back to viewBox coords and a note to screen.
         let contentWidth = availableWidth * viewModel.zoomScale
-        let unitToPoint = contentWidth / geometry.viewBox.width
-        let contentHeight = geometry.pixelSize.height * (contentWidth / geometry.pixelSize.width)
+        let aspect: CGFloat = {
+            if let g = geometry, g.viewBox.width > 0 { return g.viewBox.height / g.viewBox.width }
+            return 0.28
+        }()
+        let contentHeight = max(contentWidth * aspect, 120)
+        let unitToPoint: CGFloat = {
+            if let g = geometry, g.viewBox.width > 0 { return contentWidth / g.viewBox.width }
+            return 1
+        }()
 
         return ZStack(alignment: .topLeading) {
             SVGWebView(svg: svg)
@@ -74,12 +97,14 @@ struct VerovioStaffSurface: View {
                     .allowsHitTesting(false)
             }
 
-            Color.clear
-                .contentShape(Rectangle())
-                .frame(width: contentWidth, height: contentHeight)
-                .onTapGesture { location in
-                    handleTap(at: location, unitToPoint: unitToPoint, geometry: geometry)
-                }
+            if let geometry {
+                Color.clear
+                    .contentShape(Rectangle())
+                    .frame(width: contentWidth, height: contentHeight)
+                    .onTapGesture { location in
+                        handleTap(at: location, unitToPoint: unitToPoint, geometry: geometry)
+                    }
+            }
         }
         .frame(width: contentWidth, height: contentHeight)
     }
@@ -121,13 +146,21 @@ struct VerovioStaffSurface: View {
 
     private func render() {
         let engine = VerovioEngine.shared
-        guard engine.isReady else { svg = nil; geometry = nil; return }
+        guard engine.isReady else {
+            status = String(localized: "Verovio engine not ready (resources missing).")
+            return
+        }
         let xml = MusicXMLExporter().export(score: viewModel.score)
         guard let rendered = engine.renderSVG(fromMusicXML: xml) else {
-            svg = nil; geometry = nil; return
+            // Keep the last good SVG (if any) rather than blanking on a transient miss.
+            status = "Verovio returned an empty render (MusicXML \(xml.count) chars)."
+            return
         }
         svg = rendered
         geometry = VerovioSVGGeometry.parse(rendered)
+        status = geometry == nil
+            ? "SVG rendered (\(rendered.count) B) but geometry not parsed — taps disabled."
+            : ""
     }
 }
 
