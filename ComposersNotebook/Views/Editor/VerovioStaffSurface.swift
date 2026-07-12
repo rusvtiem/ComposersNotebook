@@ -28,6 +28,11 @@ struct VerovioStaffSurface: View {
     /// nested in a ScrollView collapses to zero height).
     let availableWidth: CGFloat
 
+    /// Drives the engraving ink colour explicitly. WKWebView does NOT reliably
+    /// answer `prefers-color-scheme` without a declared `color-scheme`, so we
+    /// resolve the scheme in SwiftUI and pass the ink in — deterministic.
+    @Environment(\.colorScheme) private var colorScheme
+
     @State private var svg: String?
     @State private var geometry: VerovioSVGGeometry?
     @State private var selectedNotePoint: CGPoint?   // viewBox units
@@ -86,7 +91,7 @@ struct VerovioStaffSurface: View {
         }()
 
         return ZStack(alignment: .topLeading) {
-            SVGWebView(svg: svg)
+            SVGWebView(svg: svg, ink: colorScheme == .dark ? "white" : "black")
                 .frame(width: contentWidth, height: contentHeight)
 
             if let p = selectedNotePoint {
@@ -169,35 +174,36 @@ struct VerovioStaffSurface: View {
 /// keeps tap mapping exact.
 private struct SVGWebView: UIViewRepresentable {
     let svg: String
+    /// CSS colour for the engraving ("white" on dark UI, "black" on light).
+    let ink: String
 
     func makeUIView(context: Context) -> WKWebView {
         let webView = WKWebView(frame: .zero, configuration: WKWebViewConfiguration())
         webView.scrollView.isScrollEnabled = false
         webView.scrollView.bouncesZoom = false
         webView.isOpaque = false
-        webView.backgroundColor = .systemBackground
-        webView.scrollView.backgroundColor = .systemBackground
+        webView.backgroundColor = .clear
+        webView.scrollView.backgroundColor = .clear
         return webView
     }
 
     func updateUIView(_ webView: WKWebView, context: Context) {
-        webView.loadHTMLString(Self.html(svg), baseURL: nil)
+        webView.loadHTMLString(Self.html(svg, ink: ink), baseURL: nil)
     }
 
-    private static func html(_ svg: String) -> String {
+    private static func html(_ svg: String, ink: String) -> String {
         // Verovio draws staff lines with `stroke:currentColor` and glyphs with a
-        // default (black) fill. On a dark background black is invisible, so we
-        // drive both from `color`, which follows the system light/dark scheme —
-        // the engraving is black on light, white on dark, like the rest of the UI.
+        // default (black) fill. On a dark background black is invisible. We set the
+        // ink colour explicitly (resolved from the SwiftUI colour scheme) and force
+        // BOTH stroke and fill from it, so lines and glyphs are always visible.
         """
         <!DOCTYPE html>
         <html><head><meta charset="utf-8">
         <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no">
         <style>
-            html, body { margin: 0; padding: 0; background: transparent; color: black; }
-            @media (prefers-color-scheme: dark) { html, body { color: white; } }
+            html, body { margin: 0; padding: 0; background: transparent; color: \(ink); }
             svg { width: 100% !important; height: auto !important; display: block; }
-            svg, svg * { fill: currentColor; }
+            svg, svg * { fill: \(ink) !important; }
         </style></head>
         <body>\(svg)</body></html>
         """
