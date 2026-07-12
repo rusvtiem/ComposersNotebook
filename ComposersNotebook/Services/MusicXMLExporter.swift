@@ -350,11 +350,11 @@ class MusicXMLExporter {
 
         case .chord(let pitches):
             for (i, pitch) in pitches.enumerated() {
-                xml += exportNote(pitch: pitch, duration: event.duration, event: event, isChord: i > 0, staffNumber: staffNumber)
+                xml += exportNote(pitch: pitch, duration: event.duration, event: event, isChord: i > 0, staffNumber: staffNumber, chordIndex: i)
             }
 
         case .rest:
-            xml += "\n      <note>"
+            xml += "\n      <note\(Self.idAttribute(event.id))>"
             xml += "\n        <rest/>"
             xml += exportDuration(event, voice: staffNumber)
             if let staffNumber = staffNumber {
@@ -366,8 +366,19 @@ class MusicXMLExporter {
         return xml
     }
 
-    private func exportNote(pitch: Pitch, duration: Duration, event: NoteEvent, isChord: Bool = false, staffNumber: Int? = nil) -> String {
-        var xml = "\n      <note>"
+    /// Emits our stable `NoteEvent.id` as the MusicXML `id` attribute so Verovio
+    /// preserves it as `@xml:id` on the rendered `<g class="note">` — this is the
+    /// round-trip that lets a tap on a Verovio-drawn note resolve back to our event.
+    /// Chord notes share one event, so non-first noteheads get a `-N` suffix to stay unique.
+    /// The `e` prefix guarantees a valid XML Name (must not start with a digit).
+    static func idAttribute(_ id: UUID, chordIndex: Int = 0) -> String {
+        let hex = id.uuidString.replacingOccurrences(of: "-", with: "").lowercased()
+        let suffix = chordIndex > 0 ? "-\(chordIndex)" : ""
+        return " id=\"e\(hex)\(suffix)\""
+    }
+
+    private func exportNote(pitch: Pitch, duration: Duration, event: NoteEvent, isChord: Bool = false, staffNumber: Int? = nil, chordIndex: Int = 0) -> String {
+        var xml = "\n      <note\(Self.idAttribute(event.id, chordIndex: chordIndex))>"
 
         if isChord {
             xml += "\n        <chord/>"

@@ -8,6 +8,7 @@
 
 /* Begin PBXBuildFile section */
 		098029A71190BFCD796DFF6C /* MusicOMREngine.swift in Sources */ = {isa = PBXBuildFile; fileRef = BB67B46759B5D181F577F39F /* MusicOMREngine.swift */; };
+		121EB957457578E1602D39E9 /* VerovioSVGGeometry.swift in Sources */ = {isa = PBXBuildFile; fileRef = 7F3541B9B25E1253FC8BBBB5 /* VerovioSVGGeometry.swift */; };
 		163A5B55C125884C2F9C5408 /* MeasureText.swift in Sources */ = {isa = PBXBuildFile; fileRef = 2E920D069D49DC524D2C9B3F /* MeasureText.swift */; };
 		17F5D248B9DB58295D28573A /* ComposersNotebookApp.swift in Sources */ = {isa = PBXBuildFile; fileRef = 6DB29E2A4F0338EE1C46AA96 /* ComposersNotebookApp.swift */; };
 		19FCD0B26A41002969D5CDC5 /* PlaybackScheduler.swift in Sources */ = {isa = PBXBuildFile; fileRef = C14D67B6647B9BC7E49E7743 /* PlaybackScheduler.swift */; };
@@ -99,6 +100,7 @@
 		6DB29E2A4F0338EE1C46AA96 /* ComposersNotebookApp.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ComposersNotebookApp.swift; sourceTree = "<group>"; };
 		7099F4A8DD127C6D22FD41F2 /* MeasurePropertiesView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = MeasurePropertiesView.swift; sourceTree = "<group>"; };
 		7E2571DAF48F482D437CD5BF /* Part.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Part.swift; sourceTree = "<group>"; };
+		7F3541B9B25E1253FC8BBBB5 /* VerovioSVGGeometry.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = VerovioSVGGeometry.swift; sourceTree = "<group>"; };
 		8073351C85E3D1B1FE88626A /* SoundFontPickerView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SoundFontPickerView.swift; sourceTree = "<group>"; };
 		819CC0322CEFA8E3667D9EA0 /* VerovioEngine.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = VerovioEngine.swift; sourceTree = "<group>"; };
 		845182DDC310ED1E6DCF3268 /* ABCNotationImporter.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ABCNotationImporter.swift; sourceTree = "<group>"; };
@@ -275,6 +277,7 @@
 				283B65C3125C9250B0E8AB52 /* ScoreValidator.swift */,
 				5E0926F59E024C74C9195BF7 /* SoundFontManager.swift */,
 				819CC0322CEFA8E3667D9EA0 /* VerovioEngine.swift */,
+				7F3541B9B25E1253FC8BBBB5 /* VerovioSVGGeometry.swift */,
 			);
 			path = Services;
 			sourceTree = "<group>";
@@ -443,6 +446,7 @@
 				DBA22A99739E70267608FA4C /* ValidationView.swift in Sources */,
 				5E5D8E7561416400FCF11D5C /* VerovioEngine.swift in Sources */,
 				89F96B7D788401039B4EF4E3 /* VerovioPreviewView.swift in Sources */,
+				121EB957457578E1602D39E9 /* VerovioSVGGeometry.swift in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
