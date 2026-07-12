@@ -152,13 +152,19 @@ private struct SVGWebView: UIViewRepresentable {
     }
 
     private static func html(_ svg: String) -> String {
+        // Verovio draws staff lines with `stroke:currentColor` and glyphs with a
+        // default (black) fill. On a dark background black is invisible, so we
+        // drive both from `color`, which follows the system light/dark scheme —
+        // the engraving is black on light, white on dark, like the rest of the UI.
         """
         <!DOCTYPE html>
         <html><head><meta charset="utf-8">
         <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no">
         <style>
-            html, body { margin: 0; padding: 0; background: transparent; }
+            html, body { margin: 0; padding: 0; background: transparent; color: black; }
+            @media (prefers-color-scheme: dark) { html, body { color: white; } }
             svg { width: 100% !important; height: auto !important; display: block; }
+            svg, svg * { fill: currentColor; }
         </style></head>
         <body>\(svg)</body></html>
         """
