@@ -117,7 +117,29 @@ class ScoreViewModel: ObservableObject {
         return score.keySignature
     }
 
+    var effectiveClef: Clef {
+        guard let staff = currentStaff else { return .treble }
+        for i in stride(from: selectedMeasureIndex, through: 0, by: -1) {
+            if let clef = staff.measures[i].clefChange {
+                return clef
+            }
+        }
+        return staff.clef
+    }
+
     // MARK: - Note Input
+
+    /// Insert a fresh note at the cursor from the Verovio editing surface, which
+    /// resolves pitch from a tap on the engraving instead of the toolbar input
+    /// mode. Bypasses the `inputMode` guard and deselects first so the tap adds a
+    /// standalone note rather than extending the selected event into a chord.
+    func insertNoteAtCursor(_ pitch: Pitch) {
+        let previousMode = inputMode
+        inputMode = .note
+        selectedEventIndex = nil
+        addNote(pitch: pitch)
+        inputMode = previousMode
+    }
 
     func addNote(pitch: Pitch) {
         guard inputMode == .note else { return }

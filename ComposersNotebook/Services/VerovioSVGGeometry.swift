@@ -158,6 +158,18 @@ struct VerovioSVGGeometry {
         }
     }
 
+    /// Diatonic steps of `y` above the staff's middle (3rd) line — positive is
+    /// upward (screen-up = smaller y), so a note one line higher than the middle
+    /// line is +2 steps. One diatonic step is half a staff-space. Combined with a
+    /// clef's middle-line pitch this yields the tapped pitch. Returns nil for a
+    /// staff without a resolvable middle line.
+    func diatonicStepsAboveMiddle(ofStaff staff: Staff, y: CGFloat) -> Int? {
+        guard staff.lineYs.count == 5, staff.staffSpace > 0 else { return nil }
+        let middleY = staff.lineYs[2]
+        let stepHeight = staff.staffSpace / 2
+        return Int(((middleY - y) / stepHeight).rounded())
+    }
+
     private func distance(_ y: CGFloat, toBand s: Staff) -> CGFloat {
         if y < s.top { return s.top - y }
         if y > s.bottom { return y - s.bottom }

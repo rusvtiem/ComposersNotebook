@@ -111,6 +111,16 @@ struct Pitch: Codable, Equatable, Hashable {
         return (octave - 4) * 7 + name.rawValue
     }
 
+    /// Create a natural pitch from a diatonic staff position (inverse of
+    /// `staffPosition`; C4 = 0, D4 = 1, …). Used when a tap on an engraved staff
+    /// is resolved to a line/space and must become a concrete note; the caller
+    /// adds any accidental afterwards.
+    static func fromStaffPosition(_ position: Int) -> Pitch {
+        let nameRaw = ((position % 7) + 7) % 7
+        let octave = 4 + (position - nameRaw) / 7
+        return Pitch(name: PitchName(rawValue: nameRaw) ?? .C, octave: octave)
+    }
+
     /// Create pitch from MIDI note number
     static func fromMIDI(_ note: Int) -> Pitch {
         let octave = (note / 12) - 1
