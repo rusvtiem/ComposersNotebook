@@ -296,6 +296,23 @@ struct NoteToolbarView: View {
 
             Divider().frame(height: 30)
 
+            // Selection navigation (MuseScore ←/→): step through notes one at a time
+            NoteToolbarButton(
+                icon: "chevron.left",
+                label: "Пред.",
+                isActive: false,
+                tooltip: "Предыдущая нота (←)"
+            ) { viewModel.selectPreviousEvent() }
+
+            NoteToolbarButton(
+                icon: "chevron.right",
+                label: "След.",
+                isActive: false,
+                tooltip: "Следующая нота (→)"
+            ) { viewModel.selectNextEvent() }
+
+            Divider().frame(height: 30)
+
             // Transpose
             NoteToolbarButton(
                 icon: "arrow.up",
@@ -324,6 +341,21 @@ struct NoteToolbarView: View {
                 isActive: false,
                 tooltip: "Транспозиция вниз на октаву"
             ) { viewModel.transposeSelectedEvent(semitones: -12) }
+
+            // Diatonic step (MuseScore Alt+Shift+↑/↓): move within the key
+            NoteToolbarButton(
+                icon: "arrow.up.circle",
+                label: "Диат↑",
+                isActive: false,
+                tooltip: "Диатонический шаг вверх (в тональности)"
+            ) { viewModel.transposeSelectedEventDiatonic(steps: 1) }
+
+            NoteToolbarButton(
+                icon: "arrow.down.circle",
+                label: "Диат↓",
+                isActive: false,
+                tooltip: "Диатонический шаг вниз (в тональности)"
+            ) { viewModel.transposeSelectedEventDiatonic(steps: -1) }
 
             Divider().frame(height: 30)
 

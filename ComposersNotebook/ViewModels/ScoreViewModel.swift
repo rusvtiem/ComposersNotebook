@@ -621,6 +621,64 @@ class ScoreViewModel: ObservableObject {
         }
     }
 
+    /// MuseScore `→`: move the selection one note/rest forward, crossing into the
+    /// next measure of the SAME staff at a bar boundary. No-op at the score end.
+    func selectNextEvent() {
+        guard let staff = currentStaff else { return }
+        guard let idx = selectedEventIndex else {
+            if let m = currentMeasure, !m.events.isEmpty {
+                selectedEventIndex = 0
+                selectedPitchIndex = nil
+            }
+            return
+        }
+        if let m = currentMeasure, idx + 1 < m.events.count {
+            selectedEventIndex = idx + 1
+            selectedPitchIndex = nil
+            return
+        }
+        var mi = selectedMeasureIndex + 1
+        while mi < staff.measures.count {
+            if !staff.measures[mi].events.isEmpty {
+                selectedMeasureIndex = mi
+                selectedEventIndex = 0
+                selectedPitchIndex = nil
+                cursorPosition = 0
+                return
+            }
+            mi += 1
+        }
+    }
+
+    /// MuseScore `←`: move the selection one note/rest back, crossing into the
+    /// previous measure of the SAME staff at a bar boundary. No-op at the score start.
+    func selectPreviousEvent() {
+        guard let staff = currentStaff else { return }
+        guard let idx = selectedEventIndex else {
+            if let m = currentMeasure, !m.events.isEmpty {
+                selectedEventIndex = m.events.count - 1
+                selectedPitchIndex = nil
+            }
+            return
+        }
+        if idx > 0 {
+            selectedEventIndex = idx - 1
+            selectedPitchIndex = nil
+            return
+        }
+        var mi = selectedMeasureIndex - 1
+        while mi >= 0 {
+            if !staff.measures[mi].events.isEmpty {
+                selectedMeasureIndex = mi
+                selectedEventIndex = staff.measures[mi].events.count - 1
+                selectedPitchIndex = nil
+                cursorPosition = 0
+                return
+            }
+            mi -= 1
+        }
+    }
+
     func selectPart(at index: Int) {
         guard index < score.parts.count else { return }
         selectedPartIndex = index
