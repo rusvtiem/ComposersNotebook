@@ -582,6 +582,7 @@ struct NoteToolbarView: View {
         case .eighth: return "Восьмая (quaver/croma) — ½ доли"
         case .sixteenth: return "Шестнадцатая (semiquaver/semicroma) — ¼ доли"
         case .thirtySecond: return "Тридцать вторая (demisemiquaver/biscroma) — ⅛ доли"
+        case .sixtyFourth: return "Шестьдесят четвёртая (hemidemisemiquaver/semibiscroma) — ¹⁄₁₆ доли"
         }
     }
 

@@ -64,6 +64,7 @@ enum MusicSymbol {
     static let restEighth = "\u{E4E6}"             // Eighth rest
     static let rest16th = "\u{E4E7}"               // 16th rest
     static let rest32nd = "\u{E4E8}"               // 32nd rest
+    static let rest64th = "\u{E4E9}"               // 64th rest
 
     // Clefs
     static let gClef = "\u{E050}"                  // Treble clef
@@ -84,6 +85,8 @@ enum MusicSymbol {
     static let flag16thDown = "\u{E243}"           // 16th flag down
     static let flag32ndUp = "\u{E244}"             // 32nd flag up
     static let flag32ndDown = "\u{E245}"           // 32nd flag down
+    static let flag64thUp = "\u{E246}"             // 64th flag up
+    static let flag64thDown = "\u{E247}"           // 64th flag down
 
     // Dynamics
     static let dynamicPiano = "\u{E520}"           // p
@@ -134,6 +137,7 @@ enum MusicSymbol {
         case .eighth: return restEighth
         case .sixteenth: return rest16th
         case .thirtySecond: return rest32nd
+        case .sixtyFourth: return rest64th
         }
     }
 
@@ -143,6 +147,7 @@ enum MusicSymbol {
         case .eighth: return stemUp ? flag8thUp : flag8thDown
         case .sixteenth: return stemUp ? flag16thUp : flag16thDown
         case .thirtySecond: return stemUp ? flag32ndUp : flag32ndDown
+        case .sixtyFourth: return stemUp ? flag64thUp : flag64thDown
         default: return nil
         }
     }
@@ -193,6 +198,7 @@ enum MusicSymbol {
             case .eighth: return "𝄾"
             case .sixteenth: return "𝄿"
             case .thirtySecond: return "𝅀"
+            case .sixtyFourth: return "𝅁"
             }
         }
     }

@@ -557,6 +557,7 @@ class MusicXMLExporter {
         case .eighth: typeName = "eighth"
         case .sixteenth: typeName = "16th"
         case .thirtySecond: typeName = "32nd"
+        case .sixtyFourth: typeName = "64th"
         }
 
         var xml = "\n        <duration>\(divisions)</duration>"

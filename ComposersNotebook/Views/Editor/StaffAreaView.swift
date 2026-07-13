@@ -1675,6 +1675,7 @@ struct MeasureView: View {
         case .eighth: return "𝄾"
         case .sixteenth: return "𝄿"
         case .thirtySecond: return "𝅀"
+        case .sixtyFourth: return "𝅁"
         }
     }
 
@@ -1770,6 +1771,17 @@ struct MeasureView: View {
             tail.move(to: CGPoint(x: x, y: dot1Y))
             tail.addLine(to: CGPoint(x: x - sp * 0.3, y: staffTop + sp * 3.25))
             context.stroke(tail, with: .color(theme.noteHead), lineWidth: scaled(1.0))
+
+        case .sixtyFourth:
+            let dotR: CGFloat = sp * 0.14
+            let dotYs = [sp * 0.85, sp * 1.5, sp * 2.15, sp * 2.8].map { staffTop + $0 }
+            for dy in dotYs {
+                context.fill(Path(ellipseIn: CGRect(x: x - dotR, y: dy - dotR, width: dotR * 2, height: dotR * 2)), with: .color(theme.noteHead))
+            }
+            var tail = Path()
+            tail.move(to: CGPoint(x: x, y: dotYs[0]))
+            tail.addLine(to: CGPoint(x: x - sp * 0.3, y: staffTop + sp * 3.6))
+            context.stroke(tail, with: .color(theme.noteHead), lineWidth: scaled(1.0))
         }
     }
 
@@ -1780,6 +1792,7 @@ struct MeasureView: View {
         if beats >= 1.0 { return .quarter }
         if beats >= 0.5 { return .eighth }
         if beats >= 0.25 { return .sixteenth }
-        return .thirtySecond
+        if beats >= 0.125 { return .thirtySecond }
+        return .sixtyFourth
     }
 }

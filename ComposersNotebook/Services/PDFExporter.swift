@@ -379,6 +379,7 @@ class PDFExporter {
             case .eighth: return "𝄿"
             case .sixteenth: return "𝅀"
             case .thirtySecond: return "𝅁"
+            case .sixtyFourth: return "𝅂"
             }
         }()
 

@@ -9,6 +9,7 @@ enum DurationValue: Int, Codable, CaseIterable {
     case eighth = 8         // восьмая
     case sixteenth = 16     // шестнадцатая
     case thirtySecond = 32  // тридцать вторая
+    case sixtyFourth = 64   // шестьдесят четвёртая
 
     var displayName: String {
         switch self {
@@ -18,6 +19,7 @@ enum DurationValue: Int, Codable, CaseIterable {
         case .eighth: return "Восьмая"
         case .sixteenth: return "Шестнадцатая"
         case .thirtySecond: return "Тридцать вторая"
+        case .sixtyFourth: return "Шестьдесят четвёртая"
         }
     }
 
@@ -29,6 +31,7 @@ enum DurationValue: Int, Codable, CaseIterable {
         case .eighth: return "⅛"
         case .sixteenth: return "¹⁄₁₆"
         case .thirtySecond: return "¹⁄₃₂"
+        case .sixtyFourth: return "¹⁄₆₄"
         }
     }
 

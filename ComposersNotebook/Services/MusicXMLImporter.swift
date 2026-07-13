@@ -913,6 +913,7 @@ class MusicXMLImporter: NSObject, XMLParserDelegate {
             case "eighth": return .eighth
             case "16th": return .sixteenth
             case "32nd": return .thirtySecond
+            case "64th": return .sixtyFourth
             default: return .quarter
             }
         }()
