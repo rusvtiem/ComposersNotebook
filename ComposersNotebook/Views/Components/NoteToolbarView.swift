@@ -562,6 +562,13 @@ struct NoteToolbarView: View {
                 isActive: viewModel.addToChordMode,
                 tooltip: "Режим аккорда: ввод при выделенной ноте добавляет её в аккорд (как Shift в MuseScore)"
             ) { viewModel.addToChordMode.toggle() }
+
+            NoteToolbarButton(
+                icon: "repeat",
+                label: "Повтор",
+                isActive: false,
+                tooltip: "Повторить выделенную (или последнюю) ноту той же высоты и длительности (как R в MuseScore)"
+            ) { viewModel.repeatLastEvent() }
         }
     }
 

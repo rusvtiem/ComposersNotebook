@@ -310,6 +310,45 @@ class ScoreViewModel: ObservableObject {
         insertEvent(event)
     }
 
+    /// Last event before the cursor (note/chord/rest), walking back across
+    /// measures. Basis for MuseScore `R` when nothing is explicitly selected.
+    private var lastEnteredEvent: NoteEvent? {
+        guard let staff = currentStaff, !staff.measures.isEmpty else { return nil }
+        let start = min(selectedMeasureIndex, staff.measures.count - 1)
+        for mi in stride(from: start, through: 0, by: -1) {
+            if let last = staff.measures[mi].events.last { return last }
+        }
+        return nil
+    }
+
+    /// MuseScore `R`: repeat the selected event (or the last entered one) at the
+    /// input cursor with the same pitch(es) and duration. Relational marks (ties,
+    /// slurs) are intentionally dropped — they belong between specific notes, not
+    /// on a fresh copy. A brand-new id makes the copy an independent event.
+    func repeatLastEvent() {
+        guard let source = selectedEvent ?? lastEnteredEvent else { return }
+        saveUndoState()
+        let copy = NoteEvent(
+            type: source.type,
+            duration: source.duration,
+            articulations: source.articulations,
+            dynamic: source.dynamic,
+            stemDirection: source.stemDirection,
+            showNatural: source.showNatural,
+            voice: source.voice,
+            technique: source.technique
+        )
+        // Repeating continues input past the selection rather than editing it.
+        if selectedEventIndex != nil { deselectEvent() }
+        insertEvent(copy)
+        if case .rest = copy.type {} else {
+            let midiProg = currentPart?.instrument.midiProgram ?? 0
+            for pitch in copy.pitches {
+                midiEngine.playNote(pitch: pitch, velocity: 80, duration: 0.3, midiProgram: midiProg)
+            }
+        }
+    }
+
     private func makeDuration() -> Duration {
         Duration(value: selectedDuration, dotted: isDotted, doubleDotted: isDoubleDotted)
     }
