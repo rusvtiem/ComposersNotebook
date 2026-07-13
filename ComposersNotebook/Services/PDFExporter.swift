@@ -373,6 +373,8 @@ class PDFExporter {
     private func drawRest(_ duration: Duration, at point: CGPoint, ctx: CGContext) {
         let restStr: String = {
             switch duration.value {
+            case .longa: return "𝄺"
+            case .breve: return "𝄺"
             case .whole: return "𝄻"
             case .half: return "𝄼"
             case .quarter: return "𝄾"

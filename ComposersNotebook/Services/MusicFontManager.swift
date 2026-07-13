@@ -53,11 +53,14 @@ class MusicFontManager: ObservableObject {
 
 enum MusicSymbol {
     // Noteheads
+    static let noteheadDoubleWhole = "\u{E0A0}"    // Breve / double whole (with side bars)
     static let noteheadWhole = "\u{E0A2}"         // Whole note
     static let noteheadHalf = "\u{E0A3}"           // Half note
     static let noteheadBlack = "\u{E0A4}"          // Filled notehead (quarter+)
 
     // Rests
+    static let restLonga = "\u{E4E1}"              // Longa rest
+    static let restDoubleWhole = "\u{E4E2}"        // Breve (double whole) rest
     static let restWhole = "\u{E4E3}"              // Whole rest
     static let restHalf = "\u{E4E4}"               // Half rest
     static let restQuarter = "\u{E4E5}"            // Quarter rest
@@ -131,6 +134,8 @@ enum MusicSymbol {
     /// Get rest symbol for duration
     static func rest(for duration: DurationValue) -> String {
         switch duration {
+        case .longa: return restLonga
+        case .breve: return restDoubleWhole
         case .whole: return restWhole
         case .half: return restHalf
         case .quarter: return restQuarter
@@ -192,6 +197,8 @@ enum MusicSymbol {
 
         static func rest(_ duration: DurationValue) -> String {
             switch duration {
+            case .longa: return "▐"
+            case .breve: return "▬▬"
             case .whole: return "—"
             case .half: return "▬"
             case .quarter: return "𝄾"

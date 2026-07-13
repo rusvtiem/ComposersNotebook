@@ -1173,8 +1173,11 @@ struct MeasureView: View {
             switch duration {
             case .whole: symbol = MusicSymbol.noteheadWhole
             case .half: symbol = MusicSymbol.noteheadHalf
+            case .breve, .longa: symbol = MusicSymbol.noteheadDoubleWhole
             default: symbol = MusicSymbol.noteheadBlack
             }
+            // Notes with no stem: whole and breve (double whole). Longa keeps a stem.
+            let stemless = duration == .whole || duration == .breve
             let ctFont = musicFont.uiMusicFont(size: smuflEm) as CTFont
             if let head = musicGlyphPath(symbol, ctFont: ctFont) {
                 // Centre the notehead on (x, y) using its true glyph box (not the
@@ -1186,10 +1189,10 @@ struct MeasureView: View {
                     context.fill(Path(placed), with: .color(noteColor))
                 }
                 let headHalf = head.bbox.width / 2
-                if duration == .half || (duration != .whole && !skipFlags) {
+                if duration == .half || (!stemless && !skipFlags) {
                     drawStem(context: context, x: x, y: y, radius: headHalf, stemUp: stemUp, color: noteColor, staffTop: staffTop)
                 }
-                if duration != .whole && duration != .half && !skipFlags {
+                if !stemless && duration != .half && !skipFlags {
                     drawFlags(context: context, x: x, y: y, radius: headHalf, stemUp: stemUp, duration: duration, staffTop: staffTop)
                 }
             } else {
@@ -1669,6 +1672,8 @@ struct MeasureView: View {
     private func restSymbol(for duration: DurationValue) -> String {
         // Text-based rest symbols (iOS system fonts don't render Unicode Musical Symbols block)
         switch duration {
+        case .longa: return "▐"       // Longa rest (tall bar)
+        case .breve: return "▬▬"      // Breve rest (double bar)
         case .whole: return "—"       // Whole rest (horizontal bar)
         case .half: return "▬"        // Half rest (filled bar)
         case .quarter: return "𝄾"     // Try quarter rest, fallback below
@@ -1719,6 +1724,16 @@ struct MeasureView: View {
 
         // Fallback: Path-based drawing when Bravura not available
         switch duration {
+        case .longa:
+            // Longa rest: tall bar hanging from the top staff line (2 spaces).
+            let rect = CGRect(x: x - sp * 0.22, y: staffTop, width: sp * 0.44, height: sp * 2)
+            context.fill(Path(rect), with: .color(theme.noteHead))
+
+        case .breve:
+            // Breve rest: a full-height block filling the middle staff space.
+            let rect = CGRect(x: x - sp * 0.6, y: staffTop + sp, width: sp * 1.2, height: sp)
+            context.fill(Path(rect), with: .color(theme.noteHead))
+
         case .whole:
             let rect = CGRect(x: x - sp * 0.6, y: staffTop + sp - sp * 0.05, width: sp * 1.2, height: sp * 0.45)
             context.fill(Path(rect), with: .color(theme.noteHead))
@@ -1787,6 +1802,8 @@ struct MeasureView: View {
 
     /// Pick the best rest symbol to represent a given number of remaining beats
     private func restSymbolForBeats(_ beats: Double) -> DurationValue {
+        if beats >= 16.0 { return .longa }
+        if beats >= 8.0 { return .breve }
         if beats >= 4.0 { return .whole }
         if beats >= 2.0 { return .half }
         if beats >= 1.0 { return .quarter }

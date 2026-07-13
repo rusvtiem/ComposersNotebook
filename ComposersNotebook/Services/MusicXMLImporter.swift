@@ -907,6 +907,8 @@ class MusicXMLImporter: NSObject, XMLParserDelegate {
     private func durationFromType(_ type: String, dotted: Bool, doubleDotted: Bool) -> Duration {
         let value: DurationValue = {
             switch type {
+            case "long", "longa": return .longa
+            case "breve", "double-whole": return .breve
             case "whole": return .whole
             case "half": return .half
             case "quarter": return .quarter

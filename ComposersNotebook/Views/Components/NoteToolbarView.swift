@@ -576,6 +576,8 @@ struct NoteToolbarView: View {
 
     private func durationTooltip(_ dur: DurationValue) -> String {
         switch dur {
+        case .longa: return "Лонга (longa) — 16 долей (4 целых)"
+        case .breve: return "Бревис / двойная целая (breve) — 8 долей (2 целых)"
         case .whole: return "Целая (semibreve) — 4 доли"
         case .half: return "Половинная (minim) — 2 доли"
         case .quarter: return "Четвертная (crotchet/semiminima) — 1 доля"

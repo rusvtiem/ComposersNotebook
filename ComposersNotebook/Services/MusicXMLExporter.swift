@@ -551,6 +551,8 @@ class MusicXMLExporter {
         let divisions = max(1, Int((event.actualBeats * Double(divisionsPerQuarter)).rounded()))
         let typeName: String
         switch event.duration.value {
+        case .longa: typeName = "long"
+        case .breve: typeName = "breve"
         case .whole: typeName = "whole"
         case .half: typeName = "half"
         case .quarter: typeName = "quarter"

@@ -3,6 +3,14 @@ import Foundation
 // MARK: - Note Duration
 
 enum DurationValue: Int, Codable, CaseIterable {
+    // rawValue для целых и дробных нот — делитель целой (beats = 4/rawValue).
+    // Для нот ДЛИННЕЕ целой (бревис = 2 целые, лонга = 4 целые) делитель не
+    // выражается целым числом, поэтому им даны отрицательные rawValue-множители
+    // (−2 = ×2 целой, −4 = ×4 целой), а `beats` считается через switch, а не
+    // формулой. Порядок объявления = порядок кнопок в тулбаре (ForEach allCases):
+    // от самых длинных к самым коротким, как в палитре длительностей MuseScore.
+    case longa = -4         // лонга (4 целые, 16 долей)
+    case breve = -2         // бревис / двойная целая (2 целые, 8 долей)
     case whole = 1          // целая
     case half = 2           // половинная
     case quarter = 4        // четвертная
@@ -13,6 +21,8 @@ enum DurationValue: Int, Codable, CaseIterable {
 
     var displayName: String {
         switch self {
+        case .longa: return "Лонга"
+        case .breve: return "Бревис"
         case .whole: return "Целая"
         case .half: return "Половинная"
         case .quarter: return "Четвертная"
@@ -25,6 +35,8 @@ enum DurationValue: Int, Codable, CaseIterable {
 
     var symbol: String {
         switch self {
+        case .longa: return "𝆷"
+        case .breve: return "𝅜"
         case .whole: return "1"
         case .half: return "½"
         case .quarter: return "¼"
@@ -37,7 +49,11 @@ enum DurationValue: Int, Codable, CaseIterable {
 
     /// Duration in beats (quarter note = 1.0)
     var beats: Double {
-        return 4.0 / Double(rawValue)
+        switch self {
+        case .longa: return 16.0
+        case .breve: return 8.0
+        default: return 4.0 / Double(rawValue)
+        }
     }
 }
 
