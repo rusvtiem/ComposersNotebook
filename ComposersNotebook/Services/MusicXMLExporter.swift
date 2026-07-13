@@ -81,6 +81,7 @@ class MusicXMLExporter {
             || measure.timeSignature != nil
             || measure.keySignature != nil
             || anyClefChange
+            || measure.multiMeasureRestCount > 0
 
         if needsAttributes {
             xml += "\n      <attributes>"
@@ -120,6 +121,11 @@ class MusicXMLExporter {
                 if let clef = clef {
                     xml += exportClef(clef, number: isGrand ? k + 1 : nil)
                 }
+            }
+
+            // Multi-measure rest — <measure-style> follows clef per MusicXML order.
+            if measure.multiMeasureRestCount > 0 {
+                xml += "\n        <measure-style>\n          <multiple-rest>\(measure.multiMeasureRestCount)</multiple-rest>\n        </measure-style>"
             }
 
             xml += "\n      </attributes>"
@@ -248,9 +254,23 @@ class MusicXMLExporter {
                     xml += "\n      <backup>\n        <duration>\(back)</duration>\n      </backup>"
                 }
             }
+            var lastTechnique: PlaybackTechnique?
             for event in staffMeasure.events {
                 if let chord = event.chordSymbol {
                     xml += exportHarmony(chord)
+                }
+                // Playback-technique text (pizz./arco/…) — printed once when it
+                // changes, matching the classic renderer which draws italianName.
+                if let tech = event.technique, tech != lastTechnique {
+                    xml += """
+
+                          <direction placement="above">
+                            <direction-type>
+                              <words font-style="italic">\(escapeXML(tech.italianName))</words>
+                            </direction-type>
+                          </direction>
+                    """
+                    lastTechnique = tech
                 }
                 xml += exportNoteEvent(event, staffNumber: isGrand ? k + 1 : nil)
             }
@@ -488,6 +508,13 @@ class MusicXMLExporter {
                       <\(dynamic.rawValue)/>
                     </dynamics>
             """
+        }
+
+        // Lyric — attached to the first notehead only (chord's extra notes share
+        // the event, so !isChord avoids duplicate syllables). <syllabic>single</>
+        // keeps each word standalone; word-splitting isn't modeled yet.
+        if !isChord, let lyric = event.lyric, !lyric.isEmpty {
+            xml += "\n        <lyric number=\"1\">\n          <syllabic>single</syllabic>\n          <text>\(escapeXML(lyric))</text>\n        </lyric>"
         }
 
         xml += "\n      </note>"

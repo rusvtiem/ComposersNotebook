@@ -329,7 +329,13 @@ class ScoreViewModel: ObservableObject {
     func selectEvent(byExportedID exportedID: String) -> Bool {
         var hex = exportedID
         if hex.hasPrefix("e") { hex.removeFirst() }
-        if let dash = hex.firstIndex(of: "-") { hex = String(hex[..<dash]) }
+        // The `-N` suffix (N>0) marks a specific notehead of a chord, so a tap on
+        // one note of a chord selects that pitch, not just the whole event.
+        var pitchIndex: Int?
+        if let dash = hex.firstIndex(of: "-") {
+            pitchIndex = Int(hex[hex.index(after: dash)...])
+            hex = String(hex[..<dash])
+        }
         for (pi, part) in score.parts.enumerated() {
             for (si, staff) in part.staves.enumerated() {
                 for (mi, measure) in staff.measures.enumerated() {
@@ -340,6 +346,7 @@ class ScoreViewModel: ObservableObject {
                             selectedStaffIndex = si
                             selectedMeasureIndex = mi
                             selectedEventIndex = ei
+                            selectedPitchIndex = pitchIndex
                             return true
                         }
                     }

@@ -116,9 +116,25 @@ struct VerovioStaffSurface: View {
                 Color.clear
                     .contentShape(Rectangle())
                     .frame(width: contentWidth, height: contentHeight)
-                    .onTapGesture { location in
-                        handleTap(at: location, unitToPoint: unitToPoint, geometry: geometry)
-                    }
+                    // Same arbitration as the classic renderer: hold 0.3s then drag
+                    // re-pitches the selected note (vertical drag isn't stolen by the
+                    // surrounding ScrollView because it's a highPriorityGesture); a
+                    // quick tap falls through to the normal tap handler.
+                    .highPriorityGesture(
+                        ExclusiveGesture(
+                            LongPressGesture(minimumDuration: 0.3)
+                                .sequenced(before: DragGesture(minimumDistance: 0))
+                                .onChanged { value in
+                                    if case .second(true, let drag?) = value {
+                                        handleRepitchDrag(at: drag.location, unitToPoint: unitToPoint, geometry: geometry)
+                                    }
+                                },
+                            SpatialTapGesture()
+                                .onEnded { value in
+                                    handleTap(at: value.location, unitToPoint: unitToPoint, geometry: geometry)
+                                }
+                        )
+                    )
             }
         }
         .frame(width: contentWidth, height: contentHeight)
@@ -213,6 +229,25 @@ struct VerovioStaffSurface: View {
             pitch = Pitch(name: pitch.name, octave: pitch.octave, accidental: accidental)
         }
         viewModel.insertNoteAtCursor(pitch)
+    }
+
+    /// Hold-and-drag on the selected note changes its pitch, reading the vertical
+    /// position under the finger through the drag-over staff's clef — the classic
+    /// renderer's `updateSelectedEventPitch` behaviour. No selection -> no-op, so a
+    /// stray long-press on empty staff does nothing.
+    private func handleRepitchDrag(at location: CGPoint, unitToPoint: CGFloat, geometry: VerovioSVGGeometry) {
+        guard viewModel.selectedEvent != nil else { return }
+        let vb = CGPoint(x: location.x / unitToPoint, y: location.y / unitToPoint)
+        guard let staff = geometry.nearestStaff(toY: vb.y),
+              let steps = geometry.diatonicStepsAboveMiddle(ofStaff: staff, y: vb.y) else { return }
+        let position = viewModel.effectiveClef.referencePitch.staffPosition + steps
+        var pitch = Pitch.fromStaffPosition(position)
+        let accidental = viewModel.selectedAccidental
+            ?? viewModel.effectiveKeySignature.accidental(for: pitch.name)
+        if accidental != .natural {
+            pitch = Pitch(name: pitch.name, octave: pitch.octave, accidental: accidental)
+        }
+        viewModel.updateSelectedEventPitch(pitch)
     }
 
     // MARK: - Render pipeline
