@@ -14,6 +14,9 @@ struct LetterInputView: View {
     @ObservedObject var viewModel: ScoreViewModel
     @State private var currentOctave: Int = 4
     @State private var letterMode: LetterInputMode = .note
+    // A chevron tap forces the octave of the NEXT note; otherwise placement uses
+    // MuseScore-style nearest-octave relative to the previous note.
+    @State private var octaveManuallySet: Bool = false
 
     private let notes: [(PitchName, String, String)] = [
         (.C, "До", "C"),
@@ -30,7 +33,7 @@ struct LetterInputView: View {
             // Top row: octave + mode selector
             HStack {
                 Button {
-                    if currentOctave > 1 { currentOctave -= 1 }
+                    if currentOctave > 1 { currentOctave -= 1; octaveManuallySet = true }
                 } label: {
                     Image(systemName: "chevron.left")
                         .frame(width: 32, height: 24)
@@ -43,7 +46,7 @@ struct LetterInputView: View {
                     .frame(width: 80)
 
                 Button {
-                    if currentOctave < 7 { currentOctave += 1 }
+                    if currentOctave < 7 { currentOctave += 1; octaveManuallySet = true }
                 } label: {
                     Image(systemName: "chevron.right")
                         .frame(width: 32, height: 24)
@@ -106,15 +109,23 @@ struct LetterInputView: View {
     private func inputNote(_ pitchName: PitchName) {
         let accidental = viewModel.selectedAccidental ?? .natural
 
+        // MuseScore places A–G in the octave nearest the previous note. A chevron
+        // tap overrides this once (forces `currentOctave` for the next note).
+        let octave = octaveManuallySet
+            ? currentOctave
+            : viewModel.nearestOctave(forName: pitchName, fallback: currentOctave)
+        octaveManuallySet = false
+        currentOctave = octave  // keep the on-screen octave truthful
+
         switch letterMode {
         case .note:
-            let pitch = Pitch(name: pitchName, octave: currentOctave, accidental: accidental)
+            let pitch = Pitch(name: pitchName, octave: octave, accidental: accidental)
             viewModel.addNote(pitch: pitch)
         case .chord:
-            let chord = buildDiatonicTriad(root: pitchName, octave: currentOctave)
+            let chord = buildDiatonicTriad(root: pitchName, octave: octave)
             viewModel.addChord(pitches: chord)
         case .chord7:
-            let chord = buildDiatonicSeventh(root: pitchName, octave: currentOctave)
+            let chord = buildDiatonicSeventh(root: pitchName, octave: octave)
             viewModel.addChord(pitches: chord)
         }
     }

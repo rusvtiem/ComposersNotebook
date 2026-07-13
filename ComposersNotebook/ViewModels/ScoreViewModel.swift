@@ -177,6 +177,42 @@ class ScoreViewModel: ObservableObject {
 
     // MARK: - Note Input
 
+    /// The most recent pitched note before the input cursor — the reference for
+    /// MuseScore-style nearest-octave letter input. Walks back from the current
+    /// measure; within a measure takes the last note/chord (chord → its top
+    /// pitch). Rests are skipped. `nil` when nothing has been entered yet.
+    var previousInputPitch: Pitch? {
+        guard let staff = currentStaff, !staff.measures.isEmpty else { return nil }
+        let start = min(selectedMeasureIndex, staff.measures.count - 1)
+        for mi in stride(from: start, through: 0, by: -1) {
+            for event in staff.measures[mi].events.reversed() {
+                switch event.type {
+                case .note(let pitch): return pitch
+                case .chord(let pitches): return pitches.max(by: { $0.midiNote < $1.midiNote })
+                case .rest: continue
+                }
+            }
+        }
+        return nil
+    }
+
+    /// The octave that places `name` closest to the previous note (MuseScore rule:
+    /// A–G lands in the octave nearest the preceding note). `PitchName.rawValue` is
+    /// the diatonic degree (C=0…B=6), so a diatonic index is `octave*7 + degree`.
+    /// Falls back to `fallback` when there is no previous note. Clamped to 1…7.
+    func nearestOctave(forName name: PitchName, fallback: Int) -> Int {
+        guard let ref = previousInputPitch else { return fallback }
+        let newDeg = name.rawValue
+        let refIndex = ref.octave * 7 + ref.name.rawValue
+        var best = ref.octave
+        var bestDist = Int.max
+        for octave in [ref.octave - 1, ref.octave, ref.octave + 1] {
+            let dist = abs((octave * 7 + newDeg) - refIndex)
+            if dist < bestDist { bestDist = dist; best = octave }
+        }
+        return min(7, max(1, best))
+    }
+
     /// Insert a fresh note at the cursor from the Verovio editing surface, which
     /// resolves pitch from a tap on the engraving instead of the toolbar input
     /// mode. Bypasses the `inputMode` guard and deselects first so the tap adds a
