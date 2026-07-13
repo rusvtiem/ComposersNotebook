@@ -106,7 +106,7 @@ struct NoteToolbarView: View {
             Divider().frame(height: 30)
 
             // Accidentals
-            ForEach([Accidental.flat, .natural, .sharp], id: \.self) { acc in
+            ForEach([Accidental.doubleFlat, .flat, .natural, .sharp, .doubleSharp], id: \.self) { acc in
                 let isActive = viewModel.selectedEvent?.pitches.first?.accidental == acc
                 NoteToolbarButton(
                     icon: nil,
@@ -657,7 +657,7 @@ struct NoteToolbarView: View {
 
     private var accidentalButtons: some View {
         HStack(spacing: 2) {
-            ForEach([Accidental.flat, .natural, .sharp], id: \.self) { acc in
+            ForEach([Accidental.doubleFlat, .flat, .natural, .sharp, .doubleSharp], id: \.self) { acc in
                 NoteToolbarButton(
                     icon: nil,
                     label: acc.displaySymbol,
