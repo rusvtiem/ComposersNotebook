@@ -260,39 +260,53 @@ class MusicXMLExporter {
             """
         }
 
-        // Notes — one staff at a time. Between staves, <backup> rewinds the cursor
-        // to the measure start so the next staff aligns from beat 1. Without this
-        // the lower staff of a grand staff was dropped entirely (only staves[0]
-        // was ever exported), so Verovio showed half a piano.
+        // Notes — one staff at a time, and within a staff one voice-group at a time.
+        // Between voice groups AND between staves, <backup> rewinds the cursor to the
+        // measure start so the next stream aligns from beat 1. Without the cross-staff
+        // backup the lower staff of a grand staff was dropped (Verovio showed half a
+        // piano). A single-voice staff emits exactly one group, so its output — and the
+        // cross-staff backup size — is byte-identical to before this voice split.
         // Chord symbols are emitted as <harmony> *before* the note they attach to.
+        var previousStaffTailDivisions = 0  // where the cursor sits past measure start after prev staff
         for (k, staff) in staves.enumerated() {
             let staffMeasure = staff.measures[index]
-            if k > 0 {
-                let back = measureDivisions(staves[k - 1].measures[index])
-                if back > 0 {
-                    xml += "\n      <backup>\n        <duration>\(back)</duration>\n      </backup>"
-                }
+            if k > 0 && previousStaffTailDivisions > 0 {
+                xml += "\n      <backup>\n        <duration>\(previousStaffTailDivisions)</duration>\n      </backup>"
             }
-            var lastTechnique: PlaybackTechnique?
-            for event in staffMeasure.events {
-                if let chord = event.chordSymbol {
-                    xml += exportHarmony(chord)
+            let sNum = isGrand ? k + 1 : nil
+            let groups = groupEventsByVoice(staffMeasure.events)
+            let multiVoice = groups.count > 1
+            var previousGroupDivisions = 0
+            for (gi, group) in groups.enumerated() {
+                if gi > 0 && previousGroupDivisions > 0 {
+                    xml += "\n      <backup>\n        <duration>\(previousGroupDivisions)</duration>\n      </backup>"
                 }
-                // Playback-technique text (pizz./arco/…) — printed once when it
-                // changes, matching the classic renderer which draws italianName.
-                if let tech = event.technique, tech != lastTechnique {
-                    xml += """
+                // Distinct MusicXML voice number: staff 1 → 1…4, staff 2 → 5…8, so voices
+                // never collide across a grand staff. Single-voice keeps voice == staff number.
+                let vNum: Int? = multiVoice ? ((sNum ?? 1) - 1) * 4 + group.voice.rawValue : sNum
+                var lastTechnique: PlaybackTechnique?
+                for event in group.events {
+                    if let chord = event.chordSymbol {
+                        xml += exportHarmony(chord)
+                    }
+                    // Playback-technique text (pizz./arco/…) — printed once when it
+                    // changes, matching the classic renderer which draws italianName.
+                    if let tech = event.technique, tech != lastTechnique {
+                        xml += """
 
-                          <direction placement="above">
-                            <direction-type>
-                              <words font-style="italic">\(escapeXML(tech.italianName))</words>
-                            </direction-type>
-                          </direction>
-                    """
-                    lastTechnique = tech
+                              <direction placement="above">
+                                <direction-type>
+                                  <words font-style="italic">\(escapeXML(tech.italianName))</words>
+                                </direction-type>
+                              </direction>
+                        """
+                        lastTechnique = tech
+                    }
+                    xml += exportNoteEvent(event, staffNumber: sNum, voiceNumber: vNum, multiVoice: multiVoice)
                 }
-                xml += exportNoteEvent(event, staffNumber: isGrand ? k + 1 : nil)
+                previousGroupDivisions = groupDivisions(group.events)
             }
+            previousStaffTailDivisions = previousGroupDivisions
         }
 
         // Barline
@@ -380,22 +394,22 @@ class MusicXMLExporter {
 
     // MARK: - Note Event
 
-    private func exportNoteEvent(_ event: NoteEvent, staffNumber: Int? = nil) -> String {
+    private func exportNoteEvent(_ event: NoteEvent, staffNumber: Int? = nil, voiceNumber: Int? = nil, multiVoice: Bool = false) -> String {
         var xml = ""
 
         switch event.type {
         case .note(let pitch):
-            xml += exportNote(pitch: pitch, duration: event.duration, event: event, staffNumber: staffNumber)
+            xml += exportNote(pitch: pitch, duration: event.duration, event: event, staffNumber: staffNumber, voiceNumber: voiceNumber, multiVoice: multiVoice)
 
         case .chord(let pitches):
             for (i, pitch) in pitches.enumerated() {
-                xml += exportNote(pitch: pitch, duration: event.duration, event: event, isChord: i > 0, staffNumber: staffNumber, chordIndex: i)
+                xml += exportNote(pitch: pitch, duration: event.duration, event: event, isChord: i > 0, staffNumber: staffNumber, chordIndex: i, voiceNumber: voiceNumber, multiVoice: multiVoice)
             }
 
         case .rest:
             xml += "\n      <note\(Self.idAttribute(event.id))\(colorAttribute(for: event))>"
             xml += "\n        <rest/>"
-            xml += exportDuration(event, voice: staffNumber)
+            xml += exportDuration(event, voice: voiceNumber ?? staffNumber)
             if let staffNumber = staffNumber {
                 xml += "\n        <staff>\(staffNumber)</staff>"
             }
@@ -416,7 +430,7 @@ class MusicXMLExporter {
         return " id=\"e\(hex)\(suffix)\""
     }
 
-    private func exportNote(pitch: Pitch, duration: Duration, event: NoteEvent, isChord: Bool = false, staffNumber: Int? = nil, chordIndex: Int = 0) -> String {
+    private func exportNote(pitch: Pitch, duration: Duration, event: NoteEvent, isChord: Bool = false, staffNumber: Int? = nil, chordIndex: Int = 0, voiceNumber: Int? = nil, multiVoice: Bool = false) -> String {
         var xml = "\n      <note\(Self.idAttribute(event.id, chordIndex: chordIndex))\(colorAttribute(for: event))>"
 
         if isChord {
@@ -433,7 +447,7 @@ class MusicXMLExporter {
         xml += "\n        </pitch>"
 
         // Duration
-        xml += exportDuration(event, voice: staffNumber)
+        xml += exportDuration(event, voice: voiceNumber ?? staffNumber)
 
         // Tuplet time-modification (3:2, 5:4, etc.)
         if let tuplet = event.tuplet {
@@ -459,6 +473,15 @@ class MusicXMLExporter {
             case .natural: accName = "natural"
             }
             xml += "\n        <accidental>\(accName)</accidental>"
+        }
+
+        // Stem direction — emitted when the user explicitly flipped the stem
+        // (X in MuseScore) OR when a staff carries multiple voices (V1/V3 up,
+        // V2/V4 down, как в MuseScore). Default single-voice notes emit nothing,
+        // so Verovio keeps its own auto-stem and output stays byte-identical.
+        // Must precede <staff> per MusicXML <note> child order.
+        if let stem = stemValue(for: event, multiVoice: multiVoice) {
+            xml += "\n        <stem>\(stem)</stem>"
         }
 
         // Staff assignment (grand staff) — must precede <notations> per MusicXML order.
@@ -540,6 +563,27 @@ class MusicXMLExporter {
         return xml
     }
 
+    // MARK: - Stem
+
+    /// MusicXML `<stem>` value for an event, or nil to leave it to Verovio's
+    /// auto-stem. An explicit flip (`event.stemDirection` .up/.down — the X button)
+    /// always wins. Otherwise a stem is forced only when the staff is polyphonic:
+    /// odd voices point up, even voices down, matching MuseScore's V1↑/V2↓ default.
+    /// Rests never carry a stem.
+    private func stemValue(for event: NoteEvent, multiVoice: Bool) -> String? {
+        if event.isRest { return nil }
+        switch event.stemDirection {
+        case .up: return "up"
+        case .down: return "down"
+        case .auto:
+            guard multiVoice else { return nil }
+            switch event.voice {
+            case .voice1, .voice3: return "up"
+            case .voice2, .voice4: return "down"
+            }
+        }
+    }
+
     // MARK: - Duration
 
     private func exportDuration(_ event: NoteEvent, voice: Int? = nil) -> String {
@@ -605,11 +649,35 @@ class MusicXMLExporter {
     /// Total sounding divisions in a measure — the sum of each event's duration
     /// (a chord counts once). Used to size <backup> when writing multiple staves.
     private func measureDivisions(_ measure: Measure) -> Int {
+        groupDivisions(measure.events)
+    }
+
+    /// Sounding divisions for an arbitrary event stream (a voice group or a whole
+    /// measure). Sizes the <backup> that rewinds the cursor to the measure start.
+    private func groupDivisions(_ events: [NoteEvent]) -> Int {
         var total = 0
-        for event in measure.events {
+        for event in events {
             total += max(1, Int((event.actualBeats * Double(divisionsPerQuarter)).rounded()))
         }
         return total
+    }
+
+    /// Partition a staff-measure's events into per-voice streams for polyphonic
+    /// export. The common single-voice case returns exactly one group in original
+    /// order (so its MusicXML is unchanged). When several voices share the staff,
+    /// each voice's internal order is preserved and groups come out voice-1 first,
+    /// then 2, 3, 4 — the order MuseScore writes and Verovio expects for stacking.
+    private func groupEventsByVoice(_ events: [NoteEvent]) -> [(voice: VoiceLayer, events: [NoteEvent])] {
+        if events.isEmpty { return [] }
+        let voicesPresent = Set(events.map { $0.voice })
+        if voicesPresent.count <= 1 {
+            return [(voice: events[0].voice, events: events)]
+        }
+        var buckets: [VoiceLayer: [NoteEvent]] = [:]
+        for event in events { buckets[event.voice, default: []].append(event) }
+        return buckets.keys
+            .sorted { $0.rawValue < $1.rawValue }
+            .map { (voice: $0, events: buckets[$0]!) }
     }
 
     // MARK: - Barline
