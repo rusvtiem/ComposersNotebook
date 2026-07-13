@@ -30,7 +30,6 @@ struct VerovioStaffSurface: View {
 
     @State private var svg: String?
     @State private var geometry: VerovioSVGGeometry?
-    @State private var selectedNotePoint: CGPoint?   // viewBox units
     /// Human-readable reason the staff is not showing. Surfaced on-screen so a
     /// blank never happens silently — the message itself explains the recovery.
     @State private var status: String = ""
@@ -96,15 +95,24 @@ struct VerovioStaffSurface: View {
             SVGWebView(svg: svg, ink: "black")
                 .frame(width: contentWidth, height: contentHeight)
 
-            if let p = selectedNotePoint {
-                Circle()
-                    .stroke(Color.accentColor, lineWidth: 2)
-                    .frame(width: 26, height: 26)
-                    .position(x: p.x * unitToPoint, y: p.y * unitToPoint)
-                    .allowsHitTesting(false)
-            }
-
             if let geometry {
+                if let caret = cursorCaret(in: geometry) {
+                    Path { path in
+                        path.move(to: CGPoint(x: caret.x * unitToPoint, y: caret.top * unitToPoint))
+                        path.addLine(to: CGPoint(x: caret.x * unitToPoint, y: caret.bottom * unitToPoint))
+                    }
+                    .stroke(Color.accentColor.opacity(0.7), lineWidth: 1.5)
+                    .allowsHitTesting(false)
+                }
+
+                if let p = selectedNotePoint(in: geometry) {
+                    Circle()
+                        .stroke(Color.accentColor, lineWidth: 2)
+                        .frame(width: 26, height: 26)
+                        .position(x: p.x * unitToPoint, y: p.y * unitToPoint)
+                        .allowsHitTesting(false)
+                }
+
                 Color.clear
                     .contentShape(Rectangle())
                     .frame(width: contentWidth, height: contentHeight)
@@ -128,15 +136,55 @@ struct VerovioStaffSurface: View {
         }
     }
 
+    /// Select the tapped note, or deselect if the tap misses every notehead or
+    /// re-taps the already-selected note (parity with the classic renderer). The
+    /// selection ring is derived from `viewModel.selectedEvent`, so no local state
+    /// is written here — the ring follows the model through edits and deletes.
     private func selectNote(at vb: CGPoint, geometry: VerovioSVGGeometry) {
         let tolerance = (geometry.nearestStaff(toY: vb.y)?.staffSpace ?? 180) * 1.5
-        guard let id = geometry.note(near: vb, tolerance: tolerance),
-              let note = geometry.notes.first(where: { $0.id == id }),
-              viewModel.selectEvent(byExportedID: id) else {
-            selectedNotePoint = nil
+        guard let id = geometry.note(near: vb, tolerance: tolerance) else {
+            viewModel.deselectEvent()
             return
         }
-        selectedNotePoint = note.point
+        if selectedExportedID == id {
+            viewModel.deselectEvent()
+            return
+        }
+        _ = viewModel.selectEvent(byExportedID: id)
+    }
+
+    /// The Verovio exported id of the currently selected event, or nil. Mirrors the
+    /// `@xml:id` Verovio drew (`e` + dashless-lowercase UUID), so it matches back to
+    /// a rendered notehead for the selection ring.
+    private var selectedExportedID: String? {
+        guard let event = viewModel.selectedEvent else { return nil }
+        return "e" + event.id.uuidString.replacingOccurrences(of: "-", with: "").lowercased()
+    }
+
+    /// Screen-independent (viewBox-unit) centre of the selected note's notehead, or
+    /// nil if nothing is selected / the note is not on the current render. Derived
+    /// each layout from the model + geometry rather than stored, so it stays correct
+    /// after the score is edited and re-engraved.
+    private func selectedNotePoint(in geometry: VerovioSVGGeometry) -> CGPoint? {
+        guard let base = selectedExportedID else { return nil }
+        return geometry.notes.first(where: { $0.id == base || $0.id.hasPrefix(base + "-") })?.point
+    }
+
+    /// The insertion caret (viewBox units) at the model's current focus — the
+    /// vertical line marking where an appended note/rest lands. Shown only in the
+    /// add modes (`.note`/`.rest`) so navigation stays uncluttered; the ends run
+    /// half a staff-space past the top/bottom lines so the caret reads clearly.
+    /// nil when the focused staff is not on the current render.
+    private func cursorCaret(in geometry: VerovioSVGGeometry) -> (x: CGFloat, top: CGFloat, bottom: CGFloat)? {
+        guard viewModel.inputMode != .navigate,
+              let flat = viewModel.flattenedStaffIndex(part: viewModel.selectedPartIndex,
+                                                       staff: viewModel.selectedStaffIndex),
+              let hit = geometry.insertionPoint(measureIndex: viewModel.selectedMeasureIndex,
+                                                staffInMeasure: flat) else {
+            return nil
+        }
+        let overshoot = hit.staff.staffSpace * 0.5
+        return (hit.x, hit.staff.top - overshoot, hit.staff.bottom + overshoot)
     }
 
     /// Resolve the tapped vertical position to a pitch — steps from the tapped
@@ -163,7 +211,6 @@ struct VerovioStaffSurface: View {
             pitch = Pitch(name: pitch.name, octave: pitch.octave, accidental: accidental)
         }
         viewModel.insertNoteAtCursor(pitch)
-        selectedNotePoint = nil
     }
 
     // MARK: - Render pipeline

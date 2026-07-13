@@ -148,6 +148,17 @@ class ScoreViewModel: ObservableObject {
         return nil
     }
 
+    /// Inverse of `partStaff(forFlattenedStaffIndex:)`: the render-order flattened
+    /// staff index for a concrete part+staff. Used to find the Verovio staff column
+    /// (staves are drawn flattened across parts) that the model cursor sits on.
+    func flattenedStaffIndex(part: Int, staff: Int) -> Int? {
+        guard part >= 0, part < score.parts.count,
+              staff >= 0, staff < score.parts[part].staves.count else { return nil }
+        var base = 0
+        for pi in 0..<part { base += score.parts[pi].staves.count }
+        return base + staff
+    }
+
     /// Point the current selection at a specific part+staff (e.g. the staff a
     /// Verovio tap landed on), so `effectiveClef`/`effectiveKeySignature` read that
     /// staff. Safe against stale indices.

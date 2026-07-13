@@ -38,12 +38,28 @@ struct VerovioSVGGeometry {
         var bottom: CGFloat { lineYs.last ?? 0 }
     }
 
+    /// One staff *inside one measure*: the drawn staff plus the x-positions of the
+    /// noteheads that fall on it. Enough to place a caret after the last note (or at
+    /// the staff's left edge when the measure-staff is empty).
+    struct MeasureStaff {
+        let staff: Staff
+        let noteXs: [CGFloat]
+    }
+
+    /// One measure as a column of staves in top-to-bottom (model) order. Verovio
+    /// numbers measures sequentially across systems, so `measures[i]` is model
+    /// measure `i` regardless of where system breaks fall.
+    struct Measure {
+        let staves: [MeasureStaff]
+    }
+
     /// The `viewBox` in Verovio units (origin + size).
     let viewBox: CGRect
     /// The SVG's intrinsic pixel size (`width`/`height` attributes).
     let pixelSize: CGSize
     let notes: [Note]
     let staves: [Staff]
+    let measures: [Measure]
 
     /// Multiply a viewBox-unit length by this to get on-screen pixels at the SVG's
     /// intrinsic size. Callers that display the SVG scaled must combine with their
@@ -61,7 +77,8 @@ struct VerovioSVGGeometry {
             viewBox: viewBox,
             pixelSize: pixelSize,
             notes: parseNotes(svg),
-            staves: parseStaves(svg)
+            staves: parseStaves(svg),
+            measures: parseMeasures(svg)
         )
     }
 
@@ -127,6 +144,62 @@ struct VerovioSVGGeometry {
         return result
     }
 
+    /// Group staves and noteheads by their enclosing `<g class="measure">`, in
+    /// document order. Within a measure the staves come in model order, and each
+    /// notehead is attributed to the staff whose source range encloses it. This is
+    /// what lets a caret land in the exact (measure, staff) the model cursor names.
+    private static func parseMeasures(_ svg: String) -> [Measure] {
+        let ns = svg as NSString
+        let measureRe = try! NSRegularExpression(pattern: #"<g id="[\w\-]+" class="measure">"#)
+        let staffRe = try! NSRegularExpression(pattern: #"<g id="[\w\-]+" class="staff">"#)
+        let lineRe = try! NSRegularExpression(pattern: #"<path d="M([\d.\-]+) ([\d.\-]+) L([\d.\-]+) ([\d.\-]+)""#)
+        let translateRe = try! NSRegularExpression(
+            pattern: #"class="notehead">\s*<use[^>]*translate\(([\d.\-]+),\s*([\d.\-]+)\)"#
+        )
+        let full = NSRange(location: 0, length: ns.length)
+        let measureStarts = measureRe.matches(in: svg, range: full).map { $0.range.location }
+        guard !measureStarts.isEmpty else { return [] }
+
+        var result: [Measure] = []
+        for (i, mStart) in measureStarts.enumerated() {
+            let mEnd = i + 1 < measureStarts.count ? measureStarts[i + 1] : ns.length
+            let mRange = NSRange(location: mStart, length: mEnd - mStart)
+            let staffStarts = staffRe.matches(in: svg, range: mRange).map { $0.range.location }
+            var measureStaves: [MeasureStaff] = []
+            for (j, sStart) in staffStarts.enumerated() {
+                let sEnd = j + 1 < staffStarts.count ? staffStarts[j + 1] : mEnd
+                let sRange = NSRange(location: sStart, length: sEnd - sStart)
+                guard let staff = parseStaff(in: sRange, ns: ns, lineRe: lineRe) else { continue }
+                let noteXs = translateRe.matches(in: svg, range: sRange).compactMap {
+                    Double(ns.substring(with: $0.range(at: 1))).map { CGFloat($0) }
+                }
+                measureStaves.append(MeasureStaff(staff: staff, noteXs: noteXs))
+            }
+            result.append(Measure(staves: measureStaves))
+        }
+        return result
+    }
+
+    /// Parse a single `<g class="staff">` (its five line y's and x-span) from a
+    /// bounded source range. Shared by the flat staff list and measure grouping.
+    private static func parseStaff(in range: NSRange, ns: NSString,
+                                   lineRe: NSRegularExpression) -> Staff? {
+        let lines = lineRe.matches(in: ns as String, range: range).prefix(5)
+        guard lines.count == 5 else { return nil }
+        var ys: [CGFloat] = []
+        var minX = CGFloat.greatestFiniteMagnitude
+        var maxX = -CGFloat.greatestFiniteMagnitude
+        for l in lines {
+            guard let x1 = Double(ns.substring(with: l.range(at: 1))),
+                  let y1 = Double(ns.substring(with: l.range(at: 2))),
+                  let x2 = Double(ns.substring(with: l.range(at: 3))) else { continue }
+            ys.append(CGFloat(y1))
+            minX = min(minX, CGFloat(x1)); maxX = max(maxX, CGFloat(x2))
+        }
+        guard ys.count == 5, minX <= maxX else { return nil }
+        return Staff(lineYs: ys, xRange: minX...maxX)
+    }
+
     private static func firstMatch(_ pattern: String, in s: String) -> [String]? {
         let ns = s as NSString
         guard let re = try? NSRegularExpression(pattern: pattern),
@@ -184,6 +257,21 @@ struct VerovioSVGGeometry {
         let tol = max(staff.staffSpace * 0.5, 1)
         guard let rank = staffBands.firstIndex(where: { abs($0 - staff.top) <= tol }) else { return nil }
         return (staff, rank % staffCount)
+    }
+
+    /// The caret x for the given (measure, staff-in-measure) together with that
+    /// staff. The caret sits a small gap past the last notehead of the measure-staff
+    /// (where an appended note lands), or a small indent from the staff's left edge
+    /// when the measure-staff is empty. nil if the indices fall outside what was
+    /// rendered (e.g. the score re-engraved to fewer measures).
+    func insertionPoint(measureIndex: Int, staffInMeasure: Int) -> (x: CGFloat, staff: Staff)? {
+        guard measureIndex >= 0, measureIndex < measures.count else { return nil }
+        let staves = measures[measureIndex].staves
+        guard staffInMeasure >= 0, staffInMeasure < staves.count else { return nil }
+        let ms = staves[staffInMeasure]
+        let gap = max(ms.staff.staffSpace, 1) * 0.75
+        let x = ms.noteXs.max().map { $0 + gap } ?? (ms.staff.xRange.lowerBound + gap)
+        return (x, ms.staff)
     }
 
     /// Diatonic steps of `y` above the staff's middle (3rd) line — positive is
