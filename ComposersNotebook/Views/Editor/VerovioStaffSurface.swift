@@ -174,7 +174,9 @@ struct VerovioStaffSurface: View {
             if let loc = located { addNote(at: vb, staff: loc.staff) }
         case .rest:
             viewModel.addRest()
-        case .navigate:
+        case .navigate, .repitch:
+            // Re-pitch takes pitch from keyboard/piano only (mouse disabled in
+            // MuseScore); a tap just selects which note to re-pitch.
             break
         }
     }
@@ -202,7 +204,7 @@ struct VerovioStaffSurface: View {
     /// half a staff-space past the top/bottom lines so the caret reads clearly.
     /// nil when the focused staff is not on the current render.
     private func cursorCaret(in geometry: VerovioSVGGeometry) -> (x: CGFloat, top: CGFloat, bottom: CGFloat)? {
-        guard viewModel.inputMode != .navigate,
+        guard (viewModel.inputMode == .note || viewModel.inputMode == .rest),
               let flat = viewModel.flattenedStaffIndex(part: viewModel.selectedPartIndex,
                                                        staff: viewModel.selectedStaffIndex),
               let hit = geometry.insertionPoint(measureIndex: viewModel.selectedMeasureIndex,

@@ -7,6 +7,7 @@ enum InputMode: Equatable {
     case navigate  // Default: tap = select measure, scroll freely
     case note      // Tap = insert note at pitch
     case rest      // Tap = insert rest with selected duration
+    case repitch   // Retype pitch of the selected note, keep duration, advance (MuseScore re-pitch)
 }
 
 // MARK: - Score View Model
@@ -234,6 +235,10 @@ class ScoreViewModel: ObservableObject {
     }
 
     func addNote(pitch: Pitch) {
+        if inputMode == .repitch {
+            repitchSelected(toPitches: [pitch])
+            return
+        }
         guard inputMode == .note else { return }
 
         // Auto-select staff for grand staff instruments (split at middle C = C4)
@@ -294,6 +299,10 @@ class ScoreViewModel: ObservableObject {
 
     func addChord(pitches: [Pitch]) {
         guard !pitches.isEmpty else { return }
+        if inputMode == .repitch {
+            repitchSelected(toPitches: pitches)
+            return
+        }
         saveUndoState()
 
         let duration = makeDuration()
@@ -347,6 +356,35 @@ class ScoreViewModel: ObservableObject {
                 midiEngine.playNote(pitch: pitch, velocity: 80, duration: 0.3, midiProgram: midiProg)
             }
         }
+    }
+
+    /// MuseScore re-pitch: replace the pitch content of the selected note/chord
+    /// with `pitches`, KEEPING its duration and other properties, then advance to
+    /// the next event. Rests are skipped (stepped over without change). No-op when
+    /// nothing is selected or only rests remain ahead.
+    func repitchSelected(toPitches pitches: [Pitch]) {
+        guard !pitches.isEmpty else { return }
+        // Step over rests to the next pitched event; bail if we can't advance.
+        while let ev = selectedEvent, ev.isRest {
+            let before = (selectedMeasureIndex, selectedEventIndex)
+            selectNextEvent()
+            if (selectedMeasureIndex, selectedEventIndex) == before { return }
+        }
+        guard selectedEvent != nil else { return }
+        saveUndoState()
+        mutateSelectedEvent { event in
+            if pitches.count == 1 {
+                event.type = .note(pitch: pitches[0])
+                event.showNatural = (pitches[0].accidental == .natural)
+            } else {
+                event.type = .chord(pitches: pitches.sorted { $0.staffPosition > $1.staffPosition })
+            }
+        }
+        let midiProg = currentPart?.instrument.midiProgram ?? 0
+        for pitch in pitches {
+            midiEngine.playNote(pitch: pitch, velocity: 80, duration: 0.3, midiProgram: midiProg)
+        }
+        selectNextEvent()
     }
 
     private func makeDuration() -> Duration {

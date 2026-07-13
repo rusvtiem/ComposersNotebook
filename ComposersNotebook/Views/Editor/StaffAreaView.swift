@@ -288,6 +288,9 @@ struct StaffAreaView: View {
                             viewModel.addRest()
                         case .navigate:
                             viewModel.cursorPosition = 0
+                        case .repitch:
+                            // Pitch comes from keyboard/piano; a tap only selects.
+                            break
                         }
                     }
             )

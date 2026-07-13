@@ -557,6 +557,13 @@ struct NoteToolbarView: View {
             ) { viewModel.inputMode = .rest }
 
             NoteToolbarButton(
+                icon: "arrow.triangle.2.circlepath",
+                label: "Ре-питч",
+                isActive: viewModel.inputMode == .repitch,
+                tooltip: "Ре-питч: меняет высоту выделенной ноты (буквы/пиано), длительность сохраняется, курсор идёт к следующей (как Re-pitch в MuseScore)"
+            ) { viewModel.inputMode = (viewModel.inputMode == .repitch ? .navigate : .repitch) }
+
+            NoteToolbarButton(
                 icon: "square.stack.3d.up.fill",
                 label: "Аккорд",
                 isActive: viewModel.addToChordMode,
