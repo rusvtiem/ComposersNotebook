@@ -158,6 +158,34 @@ struct VerovioSVGGeometry {
         }
     }
 
+    /// Distinct staff bands (unique top-line y), sorted top→bottom. Verovio draws
+    /// the same staff once per measure, so the raw `staves` list repeats each band;
+    /// this collapses those repeats to one entry per rendered staff row. Systems
+    /// stack vertically, so on a multi-line score the bands stay globally ordered
+    /// by y (system 1's staves, then system 2's, …).
+    var staffBands: [CGFloat] {
+        let tol = (staves.first?.staffSpace ?? 100) * 0.5
+        var bands: [CGFloat] = []
+        for top in staves.map(\.top).sorted() {
+            if let last = bands.last, abs(top - last) <= tol { continue }
+            bands.append(top)
+        }
+        return bands
+    }
+
+    /// The tapped staff together with its position within its system — 0 is the
+    /// topmost model staff (e.g. the treble of a piano grand staff), 1 the next
+    /// down, and so on. Assumes every system renders all `staffCount` model staves
+    /// in order (Verovio's default), so the band's global rank mod `staffCount`
+    /// is the staff's model index. This is what lets a tap on the bass staff read
+    /// the bass clef instead of whichever staff happened to be selected.
+    func nearestStaffWithPosition(toY y: CGFloat, staffCount: Int) -> (staff: Staff, positionInSystem: Int)? {
+        guard staffCount > 0, let staff = nearestStaff(toY: y) else { return nil }
+        let tol = max(staff.staffSpace * 0.5, 1)
+        guard let rank = staffBands.firstIndex(where: { abs($0 - staff.top) <= tol }) else { return nil }
+        return (staff, rank % staffCount)
+    }
+
     /// Diatonic steps of `y` above the staff's middle (3rd) line — positive is
     /// upward (screen-up = smaller y), so a note one line higher than the middle
     /// line is +2 steps. One diatonic step is half a staff-space. Combined with a

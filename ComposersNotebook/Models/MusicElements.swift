@@ -74,6 +74,18 @@ struct KeySignature: Codable, Equatable, Hashable {
 
     static let cMajor = KeySignature(fifths: 0, mode: .major)
     static let aMinor = KeySignature(fifths: 0, mode: .minor)
+
+    /// The accidental this key imposes on a diatonic letter, ignoring octave —
+    /// `.natural` if the letter is unaffected. Sharps accrue in the order F C G D
+    /// A E B, flats in B E A D G C F. Used to spell a note tapped on the staff so
+    /// that, say, an F tapped in G major becomes F♯ automatically.
+    func accidental(for name: PitchName) -> Accidental {
+        let sharps: [PitchName] = [.F, .C, .G, .D, .A, .E, .B]
+        let flats: [PitchName] = [.B, .E, .A, .D, .G, .C, .F]
+        if fifths > 0, sharps.prefix(fifths).contains(name) { return .sharp }
+        if fifths < 0, flats.prefix(-fifths).contains(name) { return .flat }
+        return .natural
+    }
 }
 
 // MARK: - Time Signature

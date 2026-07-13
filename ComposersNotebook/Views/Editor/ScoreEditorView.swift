@@ -63,9 +63,14 @@ struct ScoreEditorView: View {
                             .padding()
                     } else {
                         VerovioStaffSurface(viewModel: viewModel, availableWidth: max(geo.size.width - 32, 300))
-                            .padding()
+                            .padding(.horizontal, 16)
+                            .padding(.vertical, 24)
+                            .frame(maxWidth: .infinity)
                     }
                 }
+                // Neutral "desk" behind the white page, so the sheet reads as a
+                // physical page sitting on a surface (MuseScore/Dorico canvas).
+                .background(useClassicRenderer ? Color.clear : Color(.systemGray5))
                 .simultaneousGesture(
                     MagnifyGesture()
                         .onChanged { value in

@@ -28,11 +28,6 @@ struct VerovioStaffSurface: View {
     /// nested in a ScrollView collapses to zero height).
     let availableWidth: CGFloat
 
-    /// Drives the engraving ink colour explicitly. WKWebView does NOT reliably
-    /// answer `prefers-color-scheme` without a declared `color-scheme`, so we
-    /// resolve the scheme in SwiftUI and pass the ink in — deterministic.
-    @Environment(\.colorScheme) private var colorScheme
-
     @State private var svg: String?
     @State private var geometry: VerovioSVGGeometry?
     @State private var selectedNotePoint: CGPoint?   // viewBox units
@@ -90,8 +85,15 @@ struct VerovioStaffSurface: View {
             return 1
         }()
 
+        // The engraving sits on a real "sheet of paper": a white page with
+        // Verovio's own margins, a soft drop shadow, and a neutral desk behind
+        // it (added by the parent). This is the MuseScore/Dorico look — the score
+        // reads as "notes on a page", not glyphs floating on the app background.
+        // Because the page is always white, the ink is always black (a real sheet
+        // of music is black-on-white regardless of the app's light/dark theme);
+        // the dark-theme staff-visibility path lives on in the classic renderer.
         return ZStack(alignment: .topLeading) {
-            SVGWebView(svg: svg, ink: colorScheme == .dark ? "white" : "black")
+            SVGWebView(svg: svg, ink: "black")
                 .frame(width: contentWidth, height: contentHeight)
 
             if let p = selectedNotePoint {
@@ -112,6 +114,9 @@ struct VerovioStaffSurface: View {
             }
         }
         .frame(width: contentWidth, height: contentHeight)
+        .background(Color.white)
+        .compositingGroup()
+        .shadow(color: .black.opacity(0.22), radius: 9, x: 0, y: 3)
     }
 
     private func handleTap(at location: CGPoint, unitToPoint: CGFloat, geometry: VerovioSVGGeometry) {
@@ -134,16 +139,30 @@ struct VerovioStaffSurface: View {
         selectedNotePoint = note.point
     }
 
-    /// Resolve the tapped vertical position to a pitch — steps from the nearest
-    /// staff's middle line, read through the current clef — and insert it at the
+    /// Resolve the tapped vertical position to a pitch — steps from the tapped
+    /// staff's middle line, read through *that staff's* clef — and insert it at the
     /// cursor. Pitch comes from Y; the note lands at the model cursor.
+    ///
+    /// Mapping the tap to the right staff is what fixes grand-staff input: a tap on
+    /// the bass staff now reads the bass clef (not whichever staff was selected), so
+    /// the pitch is spelled correctly. The staff's key signature is then applied so,
+    /// e.g., an F tapped in G major comes out F♯; an explicit toolbar accidental
+    /// overrides the key.
     private func addNote(at vb: CGPoint, geometry: VerovioSVGGeometry) {
-        guard let staff = geometry.nearestStaff(toY: vb.y),
-              let steps = geometry.diatonicStepsAboveMiddle(ofStaff: staff, y: vb.y) else {
+        guard let hit = geometry.nearestStaffWithPosition(toY: vb.y, staffCount: viewModel.totalStaffCount),
+              let loc = viewModel.partStaff(forFlattenedStaffIndex: hit.positionInSystem),
+              let steps = geometry.diatonicStepsAboveMiddle(ofStaff: hit.staff, y: vb.y) else {
             return
         }
+        viewModel.focusStaff(partIndex: loc.part, staffIndex: loc.staff)
         let position = viewModel.effectiveClef.referencePitch.staffPosition + steps
-        viewModel.insertNoteAtCursor(Pitch.fromStaffPosition(position))
+        var pitch = Pitch.fromStaffPosition(position)
+        let accidental = viewModel.selectedAccidental
+            ?? viewModel.effectiveKeySignature.accidental(for: pitch.name)
+        if accidental != .natural {
+            pitch = Pitch(name: pitch.name, octave: pitch.octave, accidental: accidental)
+        }
+        viewModel.insertNoteAtCursor(pitch)
         selectedNotePoint = nil
     }
 

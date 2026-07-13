@@ -127,6 +127,39 @@ class ScoreViewModel: ObservableObject {
         return staff.clef
     }
 
+    // MARK: - Staff mapping (Verovio tap → model)
+
+    /// Total staves across all parts, in render order. Verovio lays staves out in
+    /// this same part-then-staff order, so a rendered staff's global index maps
+    /// straight back through `partStaff(forFlattenedStaffIndex:)`.
+    var totalStaffCount: Int {
+        score.parts.reduce(0) { $0 + $1.staves.count }
+    }
+
+    /// Resolve a render-order flattened staff index (0 = part 0 / staff 0, then
+    /// that part's next staff, then the next part) to concrete indices.
+    func partStaff(forFlattenedStaffIndex index: Int) -> (part: Int, staff: Int)? {
+        guard index >= 0 else { return nil }
+        var remaining = index
+        for (pi, part) in score.parts.enumerated() {
+            if remaining < part.staves.count { return (pi, remaining) }
+            remaining -= part.staves.count
+        }
+        return nil
+    }
+
+    /// Point the current selection at a specific part+staff (e.g. the staff a
+    /// Verovio tap landed on), so `effectiveClef`/`effectiveKeySignature` read that
+    /// staff. Safe against stale indices.
+    func focusStaff(partIndex: Int, staffIndex: Int) {
+        guard partIndex < score.parts.count,
+              staffIndex < score.parts[partIndex].staves.count else { return }
+        selectedPartIndex = partIndex
+        selectedStaffIndex = staffIndex
+        let measureCount = score.parts[partIndex].staves[staffIndex].measures.count
+        if selectedMeasureIndex >= measureCount { selectedMeasureIndex = max(0, measureCount - 1) }
+    }
+
     // MARK: - Note Input
 
     /// Insert a fresh note at the cursor from the Verovio editing surface, which
