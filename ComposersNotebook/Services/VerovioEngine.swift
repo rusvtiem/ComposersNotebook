@@ -25,8 +25,12 @@ final class VerovioEngine {
 
     /// Options mirror the validated spike: A4 page, auto page height, scale 40,
     /// automatic system breaks, no header/footer chrome.
+    /// `font: Bravura` — the SMuFL reference font (Steinberg), same glyph set the
+    /// professional engravers use; without it Verovio falls back to Leipzig.
+    /// staffLineWidth/stemWidth left at Verovio defaults so it honours Bravura's
+    /// own engravingDefaults.
     private static let options = """
-    {"pageWidth": 2100, "pageHeight": 2970, "adjustPageHeight": true, "scale": 40, "breaks": "auto", "header": "none", "footer": "none"}
+    {"pageWidth": 2100, "pageHeight": 2970, "adjustPageHeight": true, "scale": 40, "breaks": "auto", "header": "none", "footer": "none", "font": "Bravura"}
     """
 
     /// Render a full MusicXML document to a single SVG (page 1).
