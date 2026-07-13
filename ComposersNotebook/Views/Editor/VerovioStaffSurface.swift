@@ -127,30 +127,40 @@ struct VerovioStaffSurface: View {
         .shadow(color: .black.opacity(0.22), radius: 9, x: 0, y: 3)
     }
 
+    /// One tap handler for every mode, matching the classic renderer's contract:
+    ///   1. Move the model focus (part/staff/measure) to the tapped position, so an
+    ///      add lands under the finger and the caret / "current measure" follow the
+    ///      tap even in a wide multi-measure score.
+    ///   2. A tap on an existing notehead selects it (toggles) in EVERY mode — you
+    ///      can pick a note to edit without leaving note/rest input.
+    ///   3. Only a tap on empty staff space acts on the input mode (add note / rest).
     private func handleTap(at location: CGPoint, unitToPoint: CGFloat, geometry: VerovioSVGGeometry) {
         let vb = CGPoint(x: location.x / unitToPoint, y: location.y / unitToPoint)
-        switch viewModel.inputMode {
-        case .note: addNote(at: vb, geometry: geometry)
-        case .rest: viewModel.addRest()
-        case .navigate: selectNote(at: vb, geometry: geometry)
+        let located = geometry.locate(x: vb.x, y: vb.y)
+        if let loc = located, let ps = viewModel.partStaff(forFlattenedStaffIndex: loc.staffInMeasure) {
+            viewModel.focusStaff(partIndex: ps.part, staffIndex: ps.staff)
+            viewModel.selectedMeasureIndex = loc.measureIndex
         }
-    }
 
-    /// Select the tapped note, or deselect if the tap misses every notehead or
-    /// re-taps the already-selected note (parity with the classic renderer). The
-    /// selection ring is derived from `viewModel.selectedEvent`, so no local state
-    /// is written here — the ring follows the model through edits and deletes.
-    private func selectNote(at vb: CGPoint, geometry: VerovioSVGGeometry) {
         let tolerance = (geometry.nearestStaff(toY: vb.y)?.staffSpace ?? 180) * 1.5
-        guard let id = geometry.note(near: vb, tolerance: tolerance) else {
-            viewModel.deselectEvent()
+        if let id = geometry.note(near: vb, tolerance: tolerance) {
+            if selectedExportedID == id {
+                viewModel.deselectEvent()
+            } else {
+                _ = viewModel.selectEvent(byExportedID: id)
+            }
             return
         }
-        if selectedExportedID == id {
-            viewModel.deselectEvent()
-            return
+
+        viewModel.deselectEvent()
+        switch viewModel.inputMode {
+        case .note:
+            if let loc = located { addNote(at: vb, staff: loc.staff) }
+        case .rest:
+            viewModel.addRest()
+        case .navigate:
+            break
         }
-        _ = viewModel.selectEvent(byExportedID: id)
     }
 
     /// The Verovio exported id of the currently selected event, or nil. Mirrors the
@@ -187,22 +197,14 @@ struct VerovioStaffSurface: View {
         return (hit.x, hit.staff.top - overshoot, hit.staff.bottom + overshoot)
     }
 
-    /// Resolve the tapped vertical position to a pitch — steps from the tapped
-    /// staff's middle line, read through *that staff's* clef — and insert it at the
-    /// cursor. Pitch comes from Y; the note lands at the model cursor.
-    ///
-    /// Mapping the tap to the right staff is what fixes grand-staff input: a tap on
-    /// the bass staff now reads the bass clef (not whichever staff was selected), so
-    /// the pitch is spelled correctly. The staff's key signature is then applied so,
-    /// e.g., an F tapped in G major comes out F♯; an explicit toolbar accidental
-    /// overrides the key.
-    private func addNote(at vb: CGPoint, geometry: VerovioSVGGeometry) {
-        guard let hit = geometry.nearestStaffWithPosition(toY: vb.y, staffCount: viewModel.totalStaffCount),
-              let loc = viewModel.partStaff(forFlattenedStaffIndex: hit.positionInSystem),
-              let steps = geometry.diatonicStepsAboveMiddle(ofStaff: hit.staff, y: vb.y) else {
-            return
-        }
-        viewModel.focusStaff(partIndex: loc.part, staffIndex: loc.staff)
+    /// Resolve the tapped vertical position to a pitch — diatonic steps from the
+    /// tapped staff's middle line, read through *that staff's* clef — and insert it
+    /// at the cursor. The model focus (part/staff/measure) was already moved to the
+    /// tapped staff by `handleTap`, so `effectiveClef`/`effectiveKeySignature` read
+    /// the right staff: an F tapped on the bass staff in G major comes out F♯, and
+    /// an explicit toolbar accidental overrides the key.
+    private func addNote(at vb: CGPoint, staff: VerovioSVGGeometry.Staff) {
+        guard let steps = geometry?.diatonicStepsAboveMiddle(ofStaff: staff, y: vb.y) else { return }
         let position = viewModel.effectiveClef.referencePitch.staffPosition + steps
         var pitch = Pitch.fromStaffPosition(position)
         let accidental = viewModel.selectedAccidental

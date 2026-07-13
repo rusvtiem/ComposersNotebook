@@ -274,6 +274,29 @@ struct VerovioSVGGeometry {
         return (x, ms.staff)
     }
 
+    /// Resolve a tapped point to the (measure, staff-in-measure) it lands in, with
+    /// that staff. Horizontal position picks the measure (its staff x-range), vertical
+    /// position picks the staff within it (nearest by line-band, within a staff-space
+    /// of the tap). This is what lets a tap in the 2nd measure of a wide score add
+    /// there — not always in the currently-selected measure. nil for a tap off any
+    /// staff (e.g. in a page margin).
+    func locate(x: CGFloat, y: CGFloat) -> (measureIndex: Int, staffInMeasure: Int, staff: Staff)? {
+        var best: (measureIndex: Int, staffInMeasure: Int, staff: Staff)?
+        var bestDist = CGFloat.greatestFiniteMagnitude
+        for (mi, measure) in measures.enumerated() {
+            for (si, ms) in measure.staves.enumerated() {
+                let s = ms.staff
+                guard x >= s.xRange.lowerBound, x <= s.xRange.upperBound else { continue }
+                let tol = max(s.staffSpace, 1) * 2
+                let dist = y < s.top ? s.top - y : (y > s.bottom ? y - s.bottom : 0)
+                guard dist <= tol, dist < bestDist else { continue }
+                bestDist = dist
+                best = (mi, si, s)
+            }
+        }
+        return best
+    }
+
     /// Diatonic steps of `y` above the staff's middle (3rd) line — positive is
     /// upward (screen-up = smaller y), so a note one line higher than the middle
     /// line is +2 steps. One diatonic step is half a staff-space. Combined with a
