@@ -47,7 +47,9 @@ final class MIDIInputBinder {
 
         // Если выбран input mode = .navigate, не вставляем — а просто играем preview звук.
         switch vm.inputMode {
-        case .note:
+        case .note, .repitch:
+            // .repitch: addNote внутри роутит в repitchSelected (замена высоты
+            // выделенной ноты с сохранением длительности), см. ScoreViewModel.addNote.
             vm.addNote(pitch: pitch)
         case .navigate, .rest:
             MIDIEngine.shared.playNote(pitch: pitch, velocity: velocity, duration: 0.3)

@@ -141,10 +141,21 @@ struct StrumPattern: Codable, Equatable {
     ])
 }
 
+// MARK: - Grace Note
+
+/// Форшлаг. Нота печатается мелким размером и НЕ занимает метрического времени
+/// в такте (actualBeats == 0). Привязывается к следующему за ней событию —
+/// как `<grace>` в MusicXML, который Verovio сам цепляет к идущей после ноте.
+enum GraceType: String, Codable, Equatable {
+    case acciaccatura  // короткий, штиль перечёркнут (slash="yes")
+    case appoggiatura  // длинный, без перечёркивания
+}
+
 struct NoteEvent: Codable, Equatable, Identifiable {
     let id: UUID
     var type: NoteEventType
     var duration: Duration
+    var grace: GraceType?    // форшлаг: мелкая нота, не занимает времени такта
     var articulations: [Articulation]
     var dynamic: DynamicMarking?
     var tiedToNext: Bool     // залиговка (продление звучания)
@@ -163,6 +174,7 @@ struct NoteEvent: Codable, Equatable, Identifiable {
     init(
         type: NoteEventType,
         duration: Duration,
+        grace: GraceType? = nil,
         articulations: [Articulation] = [],
         dynamic: DynamicMarking? = nil,
         tiedToNext: Bool = false,
@@ -181,6 +193,7 @@ struct NoteEvent: Codable, Equatable, Identifiable {
         self.id = UUID()
         self.type = type
         self.duration = duration
+        self.grace = grace
         self.articulations = articulations
         self.dynamic = dynamic
         self.tiedToNext = tiedToNext
@@ -200,7 +213,7 @@ struct NoteEvent: Codable, Equatable, Identifiable {
     // Backward compatibility: старые .cnb файлы без новых полей -> nil по умолчанию.
     // Codable optional обеспечивает миграцию.
     private enum CodingKeys: String, CodingKey {
-        case id, type, duration, articulations, dynamic, tiedToNext, slurStart, slurEnd
+        case id, type, duration, grace, articulations, dynamic, tiedToNext, slurStart, slurEnd
         case stemDirection, showNatural, voice, lyric, technique, strumPattern
         case tuplet, chordSymbol, fingering
     }
@@ -210,6 +223,7 @@ struct NoteEvent: Codable, Equatable, Identifiable {
         self.id = try c.decodeIfPresent(UUID.self, forKey: .id) ?? UUID()
         self.type = try c.decode(NoteEventType.self, forKey: .type)
         self.duration = try c.decode(Duration.self, forKey: .duration)
+        self.grace = try c.decodeIfPresent(GraceType.self, forKey: .grace)
         self.articulations = try c.decodeIfPresent([Articulation].self, forKey: .articulations) ?? []
         self.dynamic = try c.decodeIfPresent(DynamicMarking.self, forKey: .dynamic)
         self.tiedToNext = try c.decodeIfPresent(Bool.self, forKey: .tiedToNext) ?? false
@@ -252,9 +266,14 @@ struct NoteEvent: Codable, Equatable, Identifiable {
     /// базу БЕЗ triplet-флага, иначе старые .cnb с обоими признаками звучали
     /// как ×4/9 вместо ×2/3.
     var actualBeats: Double {
+        // Форшлаг не занимает метрического времени: он не входит в сумму долей
+        // такта, экспорт-`<duration>`, плейбек-раскладку и раскладку по X.
+        if grace != nil { return 0 }
         guard let tuplet = tuplet else { return duration.beats }
         return duration.beatsIgnoringTriplet * tuplet.durationMultiplier
     }
+
+    var isGrace: Bool { grace != nil }
 
     // Convenience constructors
 

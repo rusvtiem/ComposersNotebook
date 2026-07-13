@@ -237,6 +237,10 @@ enum PlaybackScheduler {
 
         for event in measure.events {
             let beats = event.actualBeats
+            // Форшлаг не занимает времени такта (actualBeats == 0, localBeat не
+            // двигается), но должен ЗВУЧАТЬ. Даём ему короткую длительность звука,
+            // не сдвигая метрическую позицию следующей ноты.
+            let soundBeats = event.isGrace ? min(0.125, measureBeats) : beats
 
             // Velocity: либо от dynamic ноты, либо интерполяция hairpin'а
             var vel = event.dynamic?.velocity ?? baseVelocity
@@ -259,7 +263,7 @@ enum PlaybackScheduler {
             case .note(let pitch):
                 events.append(PlaybackEvent(
                     startBeat: globalBeatOffset + localBeat,
-                    durationBeats: beats,
+                    durationBeats: soundBeats,
                     midiNote: clampMIDI(pitch.midiNote + semitoneShift),
                     velocity: vel,
                     partIndex: partIndex,
@@ -271,7 +275,7 @@ enum PlaybackScheduler {
                 for p in pitches {
                     events.append(PlaybackEvent(
                         startBeat: globalBeatOffset + localBeat,
-                        durationBeats: beats,
+                        durationBeats: soundBeats,
                         midiNote: clampMIDI(p.midiNote + semitoneShift),
                         velocity: vel,
                         partIndex: partIndex,

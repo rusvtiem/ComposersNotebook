@@ -182,6 +182,7 @@ class MusicXMLImporter: NSObject, XMLParserDelegate {
     private struct NoteInfo {
         var isRest: Bool = false
         var isChord: Bool = false
+        var grace: GraceType? = nil
         var step: String = "C"
         var octave: Int = 4
         var alter: Int = 0
@@ -308,6 +309,10 @@ class MusicXMLImporter: NSObject, XMLParserDelegate {
         case "chord":
             currentNote?.isChord = true
             isChordNote = true
+
+        case "grace":
+            // slash="yes" — acciaccatura (короткий перечёркнутый), иначе appoggiatura.
+            currentNote?.grace = attributes["slash"] == "yes" ? .acciaccatura : .appoggiatura
 
         case "dot":
             if currentNote?.isDotted == true {
@@ -937,6 +942,7 @@ class MusicXMLImporter: NSObject, XMLParserDelegate {
         event.tuplet = info.tuplet
         event.chordSymbol = info.chordSymbol
         event.fingering = info.fingering
+        event.grace = info.grace
         return event
     }
 
@@ -963,6 +969,7 @@ class MusicXMLImporter: NSObject, XMLParserDelegate {
         event.tuplet = base.tuplet
         event.chordSymbol = base.chordSymbol
         event.fingering = base.fingering
+        event.grace = base.grace
         return event
     }
 

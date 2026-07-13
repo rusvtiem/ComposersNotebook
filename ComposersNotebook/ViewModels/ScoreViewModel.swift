@@ -387,6 +387,17 @@ class ScoreViewModel: ObservableObject {
         selectNextEvent()
     }
 
+    /// MuseScore grace note (клавиша «/»): помечает выбранную ноту/аккорд как
+    /// форшлаг (acciaccatura) или снимает пометку. Паузу форшлагом не делаем.
+    /// Форшлаг не занимает времени такта (actualBeats == 0) и рисуется мелким —
+    /// цепляется к следующему за ним событию, как `<grace>` в MusicXML.
+    func toggleGraceOnSelected() {
+        guard let event = selectedEvent, !event.isRest else { return }
+        saveUndoState()
+        let newValue: GraceType? = event.grace == nil ? .acciaccatura : nil
+        mutateSelectedEvent { $0.grace = newValue }
+    }
+
     private func makeDuration() -> Duration {
         Duration(value: selectedDuration, dotted: isDotted, doubleDotted: isDoubleDotted)
     }

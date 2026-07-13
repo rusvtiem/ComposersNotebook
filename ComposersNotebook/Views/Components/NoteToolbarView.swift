@@ -576,6 +576,13 @@ struct NoteToolbarView: View {
                 isActive: false,
                 tooltip: "Повторить выделенную (или последнюю) ноту той же высоты и длительности (как R в MuseScore)"
             ) { viewModel.repeatLastEvent() }
+
+            NoteToolbarButton(
+                icon: "music.note",
+                label: "Форшлаг",
+                isActive: viewModel.selectedEvent?.isGrace == true,
+                tooltip: "Форшлаг: делает выделенную ноту мелкой (acciaccatura). Не занимает времени такта, цепляется к следующей ноте (как «/» в MuseScore)"
+            ) { viewModel.toggleGraceOnSelected() }
         }
     }
 

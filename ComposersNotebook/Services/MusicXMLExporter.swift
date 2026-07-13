@@ -442,6 +442,12 @@ class MusicXMLExporter {
     private func exportNote(pitch: Pitch, duration: Duration, event: NoteEvent, isChord: Bool = false, staffNumber: Int? = nil, chordIndex: Int = 0, voiceNumber: Int? = nil, multiVoice: Bool = false, beam: String? = nil) -> String {
         var xml = "\n      <note\(Self.idAttribute(event.id, chordIndex: chordIndex))\(colorAttribute(for: event))>"
 
+        // Grace — ПЕРВЫЙ ребёнок <note> по порядку MusicXML, до <chord/> и <pitch>.
+        // slash="yes" — acciaccatura (короткий перечёркнутый), appoggiatura — без.
+        if let grace = event.grace {
+            xml += grace == .acciaccatura ? "\n        <grace slash=\"yes\"/>" : "\n        <grace/>"
+        }
+
         if isChord {
             xml += "\n        <chord/>"
         }
@@ -455,8 +461,9 @@ class MusicXMLExporter {
         xml += "\n          <octave>\(pitch.octave)</octave>"
         xml += "\n        </pitch>"
 
-        // Duration
-        xml += exportDuration(event, voice: voiceNumber ?? staffNumber)
+        // Duration — у форшлага <duration> отсутствует по MusicXML (grace note
+        // не имеет длительности); <voice>/<type>/<dot> сохраняются.
+        xml += exportDuration(event, voice: voiceNumber ?? staffNumber, graceMode: event.isGrace)
 
         // Tuplet time-modification (3:2, 5:4, etc.)
         if let tuplet = event.tuplet {
@@ -662,7 +669,7 @@ class MusicXMLExporter {
 
     // MARK: - Duration
 
-    private func exportDuration(_ event: NoteEvent, voice: Int? = nil) -> String {
+    private func exportDuration(_ event: NoteEvent, voice: Int? = nil, graceMode: Bool = false) -> String {
         // <duration> — звучащая длительность в делениях, с учётом tuplet
         // (event.actualBeats — единый источник тайминга, как в плейбеке). Раньше
         // бралось duration.beats × 4: tuplet игнорировался (триоль занимала полную
@@ -682,7 +689,9 @@ class MusicXMLExporter {
         case .sixtyFourth: typeName = "64th"
         }
 
-        var xml = "\n        <duration>\(divisions)</duration>"
+        // Форшлаг: <duration> опускается (grace note не занимает времени), но
+        // <voice>/<type>/<dot> нужны для правильной отрисовки мелкой ноты.
+        var xml = graceMode ? "" : "\n        <duration>\(divisions)</duration>"
         // <voice> must precede <type> per MusicXML order. Emitted only for grand
         // staff (voice == staff number) so single-staff output stays as validated.
         if let voice = voice {
