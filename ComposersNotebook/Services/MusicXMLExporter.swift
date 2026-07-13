@@ -92,6 +92,14 @@ class MusicXMLExporter {
         // directions, barline). Per-staff notes and clefs come from each staff below.
         let measure = staves[0].measures[index]
 
+        // Effective time signature at this bar — the last one set at or before it,
+        // else the score default. Drives beam grouping (a bar with no <time> change
+        // still needs the inherited meter to beam correctly).
+        var effectiveTS = score.timeSignature
+        for i in 0...index {
+            if let t = staves[0].measures[i].timeSignature { effectiveTS = t }
+        }
+
         var xml = "\n    <measure number=\"\(index + 1)\">"
 
         // Attributes (first measure or when changed)
@@ -284,6 +292,7 @@ class MusicXMLExporter {
                 // Distinct MusicXML voice number: staff 1 → 1…4, staff 2 → 5…8, so voices
                 // never collide across a grand staff. Single-voice keeps voice == staff number.
                 let vNum: Int? = multiVoice ? ((sNum ?? 1) - 1) * 4 + group.voice.rawValue : sNum
+                let beams = beamDirectives(for: group.events, timeSig: effectiveTS)
                 var lastTechnique: PlaybackTechnique?
                 for event in group.events {
                     if let chord = event.chordSymbol {
@@ -302,7 +311,7 @@ class MusicXMLExporter {
                         """
                         lastTechnique = tech
                     }
-                    xml += exportNoteEvent(event, staffNumber: sNum, voiceNumber: vNum, multiVoice: multiVoice)
+                    xml += exportNoteEvent(event, staffNumber: sNum, voiceNumber: vNum, multiVoice: multiVoice, beam: beams[event.id])
                 }
                 previousGroupDivisions = groupDivisions(group.events)
             }
@@ -394,16 +403,16 @@ class MusicXMLExporter {
 
     // MARK: - Note Event
 
-    private func exportNoteEvent(_ event: NoteEvent, staffNumber: Int? = nil, voiceNumber: Int? = nil, multiVoice: Bool = false) -> String {
+    private func exportNoteEvent(_ event: NoteEvent, staffNumber: Int? = nil, voiceNumber: Int? = nil, multiVoice: Bool = false, beam: String? = nil) -> String {
         var xml = ""
 
         switch event.type {
         case .note(let pitch):
-            xml += exportNote(pitch: pitch, duration: event.duration, event: event, staffNumber: staffNumber, voiceNumber: voiceNumber, multiVoice: multiVoice)
+            xml += exportNote(pitch: pitch, duration: event.duration, event: event, staffNumber: staffNumber, voiceNumber: voiceNumber, multiVoice: multiVoice, beam: beam)
 
         case .chord(let pitches):
             for (i, pitch) in pitches.enumerated() {
-                xml += exportNote(pitch: pitch, duration: event.duration, event: event, isChord: i > 0, staffNumber: staffNumber, chordIndex: i, voiceNumber: voiceNumber, multiVoice: multiVoice)
+                xml += exportNote(pitch: pitch, duration: event.duration, event: event, isChord: i > 0, staffNumber: staffNumber, chordIndex: i, voiceNumber: voiceNumber, multiVoice: multiVoice, beam: beam)
             }
 
         case .rest:
@@ -430,7 +439,7 @@ class MusicXMLExporter {
         return " id=\"e\(hex)\(suffix)\""
     }
 
-    private func exportNote(pitch: Pitch, duration: Duration, event: NoteEvent, isChord: Bool = false, staffNumber: Int? = nil, chordIndex: Int = 0, voiceNumber: Int? = nil, multiVoice: Bool = false) -> String {
+    private func exportNote(pitch: Pitch, duration: Duration, event: NoteEvent, isChord: Bool = false, staffNumber: Int? = nil, chordIndex: Int = 0, voiceNumber: Int? = nil, multiVoice: Bool = false, beam: String? = nil) -> String {
         var xml = "\n      <note\(Self.idAttribute(event.id, chordIndex: chordIndex))\(colorAttribute(for: event))>"
 
         if isChord {
@@ -487,6 +496,13 @@ class MusicXMLExporter {
         // Staff assignment (grand staff) — must precede <notations> per MusicXML order.
         if let staffNumber = staffNumber {
             xml += "\n        <staff>\(staffNumber)</staff>"
+        }
+
+        // Beam (begin/continue/end) — grouped by meter in beamDirectives. Emitted on
+        // the primary notehead of a chord only (Verovio reads the beam from the first
+        // note); secondary beamlets for 16th+ Verovio derives from note durations.
+        if !isChord, let beam = beam {
+            xml += "\n        <beam number=\"1\">\(beam)</beam>"
         }
 
         // Notations
@@ -582,6 +598,66 @@ class MusicXMLExporter {
             case .voice2, .voice4: return "down"
             }
         }
+    }
+
+    // MARK: - Beaming
+
+    /// begin/continue/end beam directives keyed by event id, grouping beamable notes
+    /// (eighth and shorter) by the metrical beat, as MuseScore does. A note that
+    /// starts a new metrical group, follows a rest/longer note, or stands alone in
+    /// its group gets no beam (rendered with a flag). Verovio adds the secondary
+    /// beamlets for 16th+ from the note durations, so only the primary level is coded.
+    ///
+    /// Group size (in quarter-beats): 4/4 and 2/2 beam eighths across the half-bar
+    /// (2.0), compound meters (6/8, 9/8, 12/8) by the dotted-quarter beat (1.5), and
+    /// everything else by the beat (1.0). Notes shorter than an eighth always break
+    /// at the beat so a run of sixteenths beams per beat, not across the half-bar.
+    private func beamDirectives(for events: [NoteEvent], timeSig: TimeSignature) -> [UUID: String] {
+        let compound = timeSig.beatValue == 8 && timeSig.beats % 3 == 0 && timeSig.beats > 3
+        let fineBeats = compound ? 1.5 : 1.0
+        let coarseBeats: Double
+        if timeSig.beats == 4 && timeSig.beatValue == 4 { coarseBeats = 2.0 }
+        else if timeSig.beats == 2 && timeSig.beatValue == 2 { coarseBeats = 2.0 }
+        else if compound { coarseBeats = 1.5 }
+        else { coarseBeats = fineBeats }
+
+        // Per-event: metrical offset, whether it can be beamed, and its group size
+        // (eighths use the coarse group, shorter values the fine/beat group).
+        struct Info { let id: UUID; let offset: Double; let beamable: Bool; let boundary: Double }
+        var infos: [Info] = []
+        var offset = 0.0
+        for e in events {
+            let raw = e.duration.value.rawValue           // 8=eighth, 16, 32, 64; ≤4 not beamable
+            let beamable = !e.isRest && raw >= 8
+            infos.append(Info(id: e.id, offset: offset,
+                              beamable: beamable,
+                              boundary: raw == 8 ? coarseBeats : fineBeats))
+            offset += e.actualBeats
+        }
+
+        var directives: [UUID: String] = [:]
+        let eps = 1e-6
+        var i = 0
+        while i < infos.count {
+            guard infos[i].beamable else { i += 1; continue }
+            var j = i
+            while j + 1 < infos.count && infos[j + 1].beamable {
+                let g = min(infos[j].boundary, infos[j + 1].boundary)
+                let gPrev = Int((infos[j].offset / g + eps).rounded(.down))
+                let gNext = Int((infos[j + 1].offset / g + eps).rounded(.down))
+                if gPrev != gNext { break }
+                j += 1
+            }
+            if j > i {   // a run of ≥2 beamable notes → beam them
+                directives[infos[i].id] = "begin"
+                if j > i + 1 {
+                    for k in (i + 1)..<j { directives[infos[k].id] = "continue" }
+                }
+                directives[infos[j].id] = "end"
+            }
+            i = j + 1
+        }
+        return directives
     }
 
     // MARK: - Duration
