@@ -555,6 +555,13 @@ struct NoteToolbarView: View {
                 isActive: viewModel.inputMode == .rest,
                 tooltip: "Ввод пауз (rest) — нажми для вставки"
             ) { viewModel.inputMode = .rest }
+
+            NoteToolbarButton(
+                icon: "square.stack.3d.up.fill",
+                label: "Аккорд",
+                isActive: viewModel.addToChordMode,
+                tooltip: "Режим аккорда: ввод при выделенной ноте добавляет её в аккорд (как Shift в MuseScore)"
+            ) { viewModel.addToChordMode.toggle() }
         }
     }
 

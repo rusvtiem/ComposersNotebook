@@ -36,6 +36,10 @@ class ScoreViewModel: ObservableObject {
     @Published var slurActive: Bool = false
     @Published var stemDirection: StemDirection = .auto
     @Published var zoomScale: CGFloat = 1.0  // pinch-to-zoom
+    // Явный режим «в аккорд» (паритет MuseScore): когда включён, ввод ноты при
+    // выделенном событии наращивает аккорд; когда выключен — ввод создаёт новую
+    // ноту даже при выделении (убирает класс случайных аккордов от неявного тапа).
+    @Published var addToChordMode: Bool = false
 
     // Voice layers
     @Published var selectedVoice: VoiceLayer = .voice1
@@ -178,6 +182,14 @@ class ScoreViewModel: ObservableObject {
     /// mode. Bypasses the `inputMode` guard and deselects first so the tap adds a
     /// standalone note rather than extending the selected event into a chord.
     func insertNoteAtCursor(_ pitch: Pitch) {
+        // В режиме «в аккорд» тап рядом с выделенным событием наращивает аккорд,
+        // а не создаёт отдельную ноту.
+        if addToChordMode, selectedEventIndex != nil {
+            addPitchToSelectedEvent(pitch)
+            let midiProg = currentPart?.instrument.midiProgram ?? 0
+            midiEngine.playNote(pitch: pitch, velocity: 80, duration: 0.3, midiProgram: midiProg)
+            return
+        }
         let previousMode = inputMode
         inputMode = .note
         selectedEventIndex = nil
@@ -194,8 +206,9 @@ class ScoreViewModel: ObservableObject {
             selectedStaffIndex = pitch.midiNote >= middleC ? 0 : 1
         }
 
-        // If a note/chord is selected, add pitch to it (build chord)
-        if selectedEventIndex != nil {
+        // Наращивание аккорда — только в явном режиме «в аккорд». Иначе ввод при
+        // выделенной ноте создаёт новую ноту (паритет MuseScore, без случайных аккордов).
+        if selectedEventIndex != nil && addToChordMode {
             addPitchToSelectedEvent(pitch)
             let midiProg = currentPart?.instrument.midiProgram ?? 0
             midiEngine.playNote(pitch: pitch, velocity: 80, duration: 0.3, midiProgram: midiProg)
