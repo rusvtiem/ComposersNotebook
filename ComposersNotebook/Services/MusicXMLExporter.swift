@@ -10,7 +10,26 @@ class MusicXMLExporter {
     /// (нота исчезала в стороннем редакторе), точки и триоли округлялись в мусор.
     private let divisionsPerQuarter = 480
 
-    func export(score: Score) -> String {
+    /// On-screen only: tint voices 2–4 so multiple voices read at a glance
+    /// (MuseScore's ambient voice-colour cue). Off for PDF/file export so a
+    /// printed or saved sheet is always black ink. Set per `export(...)` call.
+    private var colorizeVoices = false
+
+    /// MuseScore-parity voice colours. Voice 1 stays black (the common single-voice
+    /// case is unchanged); voices 2–4 get green/orange/purple. Verovio honours the
+    /// MusicXML `color` attribute on `<note>`, colouring notehead+stem+flag.
+    private func colorAttribute(for event: NoteEvent) -> String {
+        guard colorizeVoices else { return "" }
+        switch event.voice {
+        case .voice1: return ""
+        case .voice2: return " color=\"#0E8A16\""
+        case .voice3: return " color=\"#D2691E\""
+        case .voice4: return " color=\"#8B2FC9\""
+        }
+    }
+
+    func export(score: Score, colorizeVoices: Bool = false) -> String {
+        self.colorizeVoices = colorizeVoices
         var xml = """
         <?xml version="1.0" encoding="UTF-8"?>
         <!DOCTYPE score-partwise PUBLIC "-//Recordare//DTD MusicXML 4.0 Partwise//EN"
@@ -374,7 +393,7 @@ class MusicXMLExporter {
             }
 
         case .rest:
-            xml += "\n      <note\(Self.idAttribute(event.id))>"
+            xml += "\n      <note\(Self.idAttribute(event.id))\(colorAttribute(for: event))>"
             xml += "\n        <rest/>"
             xml += exportDuration(event, voice: staffNumber)
             if let staffNumber = staffNumber {
@@ -398,7 +417,7 @@ class MusicXMLExporter {
     }
 
     private func exportNote(pitch: Pitch, duration: Duration, event: NoteEvent, isChord: Bool = false, staffNumber: Int? = nil, chordIndex: Int = 0) -> String {
-        var xml = "\n      <note\(Self.idAttribute(event.id, chordIndex: chordIndex))>"
+        var xml = "\n      <note\(Self.idAttribute(event.id, chordIndex: chordIndex))\(colorAttribute(for: event))>"
 
         if isChord {
             xml += "\n        <chord/>"

@@ -258,7 +258,7 @@ struct VerovioStaffSurface: View {
             status = String(localized: "Verovio engine not ready (resources missing).")
             return
         }
-        let xml = MusicXMLExporter().export(score: viewModel.score)
+        let xml = MusicXMLExporter().export(score: viewModel.score, colorizeVoices: true)
         guard let rendered = engine.renderSVG(fromMusicXML: xml) else {
             // Keep the last good SVG (if any) rather than blanking on a transient miss.
             status = "Verovio returned an empty render (MusicXML \(xml.count) chars)."
@@ -295,10 +295,13 @@ private struct SVGWebView: UIViewRepresentable {
     }
 
     private static func html(_ svg: String, ink: String) -> String {
-        // Verovio draws staff lines with `stroke:currentColor` and glyphs with a
-        // default (black) fill. On a dark background black is invisible. We set the
-        // ink colour explicitly (resolved from the SwiftUI colour scheme) and force
-        // BOTH stroke and fill from it, so lines and glyphs are always visible.
+        // Verovio draws staff lines/stems with `stroke:currentColor` and glyphs by
+        // inheriting `fill`. On a dark background the default black is invisible, so
+        // we set ink (resolved from the SwiftUI colour scheme) as the inherited
+        // colour+fill. It is deliberately NOT `!important`: Verovio tints voice 2–4
+        // notes with per-note `color`/`fill` presentation attributes, and inheritance
+        // must LOSE to those so voice colours survive on screen. Verified: uncolored
+        // glyphs render ink, colored notes keep their tint (rsvg cascade check).
         """
         <!DOCTYPE html>
         <html><head><meta charset="utf-8">
@@ -306,7 +309,7 @@ private struct SVGWebView: UIViewRepresentable {
         <style>
             html, body { margin: 0; padding: 0; background: transparent; color: \(ink); }
             svg { width: 100% !important; height: auto !important; display: block; }
-            svg, svg * { fill: \(ink) !important; }
+            svg { color: \(ink); fill: \(ink); }
         </style></head>
         <body>\(svg)</body></html>
         """
