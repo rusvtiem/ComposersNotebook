@@ -392,9 +392,20 @@ class ScoreViewModel: ObservableObject {
     /// Форшлаг не занимает времени такта (actualBeats == 0) и рисуется мелким —
     /// цепляется к следующему за ним событию, как `<grace>` в MusicXML.
     func toggleGraceOnSelected() {
+        setGraceOnSelected(.acciaccatura)
+    }
+
+    /// MuseScore appoggiatura (long grace, no slash). Toggles the selected
+    /// note/chord to an appoggiatura, or off if already one.
+    func toggleAppoggiaturaOnSelected() {
+        setGraceOnSelected(.appoggiatura)
+    }
+
+    /// Set the selected note's grace type, or clear it if it already equals
+    /// `type` (so each grace button toggles its own kind). Rests can't be graces.
+    private func setGraceOnSelected(_ type: GraceType) {
         guard let event = selectedEvent, !event.isRest else { return }
-        saveUndoState()
-        let newValue: GraceType? = event.grace == nil ? .acciaccatura : nil
+        let newValue: GraceType? = event.grace == type ? nil : type
         mutateSelectedEvent { $0.grace = newValue }
     }
 
@@ -647,12 +658,12 @@ class ScoreViewModel: ObservableObject {
             case .note(let pitch):
                 let newMidi = pitch.midiNote + semitones
                 guard newMidi >= 0, newMidi <= 127 else { return }
-                event.type = .note(pitch: Pitch.fromMIDI(newMidi))
+                event.type = .note(pitch: Pitch.fromMIDI(newMidi, preferFlats: semitones < 0))
             case .chord(let pitches):
                 let transposed = pitches.compactMap { p -> Pitch? in
                     let newMidi = p.midiNote + semitones
                     guard newMidi >= 0, newMidi <= 127 else { return nil }
-                    return Pitch.fromMIDI(newMidi)
+                    return Pitch.fromMIDI(newMidi, preferFlats: semitones < 0)
                 }
                 guard transposed.count == pitches.count else { return }
                 event.type = .chord(pitches: transposed)
@@ -672,12 +683,12 @@ class ScoreViewModel: ObservableObject {
             case .note(let pitch):
                 let newMidi = pitch.midiNote + semitones
                 guard newMidi >= 0, newMidi <= 127 else { continue }
-                score.parts[selectedPartIndex].staves[selectedStaffIndex].measures[selectedMeasureIndex].events[i].type = .note(pitch: Pitch.fromMIDI(newMidi))
+                score.parts[selectedPartIndex].staves[selectedStaffIndex].measures[selectedMeasureIndex].events[i].type = .note(pitch: Pitch.fromMIDI(newMidi, preferFlats: semitones < 0))
             case .chord(let pitches):
                 let transposed = pitches.compactMap { p -> Pitch? in
                     let newMidi = p.midiNote + semitones
                     guard newMidi >= 0, newMidi <= 127 else { return nil }
-                    return Pitch.fromMIDI(newMidi)
+                    return Pitch.fromMIDI(newMidi, preferFlats: semitones < 0)
                 }
                 if transposed.count == pitches.count {
                     score.parts[selectedPartIndex].staves[selectedStaffIndex].measures[selectedMeasureIndex].events[i].type = .chord(pitches: transposed)
@@ -715,6 +726,40 @@ class ScoreViewModel: ObservableObject {
         let landing = Pitch.fromStaffPosition(pitch.staffPosition + steps)
         return Pitch(name: landing.name, octave: landing.octave,
                      accidental: key.accidental(for: landing.name))
+    }
+
+    /// MuseScore "J": respell the selected note/chord enharmonically — same sound,
+    /// next notation (C♯ → D♭ → C♯). A chord respells every pitch.
+    func respellSelectedEnharmonic() {
+        mutateSelectedEvent { event in
+            switch event.type {
+            case .note(let p):
+                event.type = .note(pitch: p.respelledEnharmonic())
+            case .chord(let ps):
+                event.type = .chord(pitches: ps.map { $0.respelledEnharmonic() })
+            case .rest:
+                return
+            }
+            event.showNatural = false
+        }
+    }
+
+    /// MuseScore "add interval above" (Alt+3 = third, etc.): stack a note `steps`
+    /// diatonic degrees above the top pitch of the selection, spelled by the key,
+    /// turning a note into a chord. `steps` counts staff degrees (a third = 2).
+    func addDiatonicIntervalAbove(steps: Int) {
+        guard steps > 0 else { return }
+        let key = effectiveKeySignature
+        guard let event = selectedEvent, !event.isRest else { return }
+        let topPitch: Pitch
+        switch event.type {
+        case .note(let p): topPitch = p
+        case .chord(let ps):
+            guard let hi = ps.max(by: { $0.staffPosition < $1.staffPosition }) else { return }
+            topPitch = hi
+        case .rest: return
+        }
+        addPitchToSelectedEvent(Self.diatonicShift(topPitch, steps: steps, key: key))
     }
 
     // MARK: - Delete

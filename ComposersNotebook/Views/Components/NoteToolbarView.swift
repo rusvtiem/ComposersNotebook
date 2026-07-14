@@ -375,6 +375,22 @@ struct NoteToolbarView: View {
                 tooltip: "Диатонический шаг вниз (в тональности)"
             ) { viewModel.transposeSelectedEventDiatonic(steps: -1) }
 
+            // Enharmonic respell (MuseScore J): same sound, next spelling
+            NoteToolbarButton(
+                icon: "arrow.triangle.2.circlepath",
+                label: "♯♭",
+                isActive: false,
+                tooltip: "Переименовать энгармонически (C♯ ↔ D♭)"
+            ) { viewModel.respellSelectedEnharmonic() }
+
+            // Add a diatonic third above → build a chord (MuseScore Alt+3)
+            NoteToolbarButton(
+                icon: "plus.circle",
+                label: "+3",
+                isActive: false,
+                tooltip: "Добавить терцию сверху (в тональности)"
+            ) { viewModel.addDiatonicIntervalAbove(steps: 2) }
+
             Divider().frame(height: 30)
 
             // Chord editing: remove single pitch
@@ -598,9 +614,16 @@ struct NoteToolbarView: View {
             NoteToolbarButton(
                 icon: "music.note",
                 label: "Форшлаг",
-                isActive: viewModel.selectedEvent?.isGrace == true,
-                tooltip: "Форшлаг: делает выделенную ноту мелкой (acciaccatura). Не занимает времени такта, цепляется к следующей ноте (как «/» в MuseScore)"
+                isActive: viewModel.selectedEvent?.grace == .acciaccatura,
+                tooltip: "Форшлаг-аччакатура: мелкая нота с перечёркнутым штилем. Не занимает времени такта, цепляется к следующей ноте (как «/» в MuseScore)"
             ) { viewModel.toggleGraceOnSelected() }
+
+            NoteToolbarButton(
+                icon: "music.note",
+                label: "Аппод.",
+                isActive: viewModel.selectedEvent?.grace == .appoggiatura,
+                tooltip: "Форшлаг-апподжиатура: длинный форшлаг без перечёркивания штиля (как в MuseScore)"
+            ) { viewModel.toggleAppoggiaturaOnSelected() }
         }
     }
 
