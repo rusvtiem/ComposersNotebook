@@ -80,7 +80,16 @@ struct VerovioSVGGeometry {
         // coordinate — otherwise geometry sits `(ox, oy)` off from what's on screen,
         // which breaks tap→pitch, selection and re-pitch, and parks the caret at the
         // left edge. `.zero` when no page-margin is present.
-        let origin = pageMarginOffset(in: svg)
+        //
+        // We ALSO subtract the viewBox origin (minX, minY): the surface maps a tap
+        // as `location / unitToPoint` and draws a note as `coord * unitToPoint`,
+        // both measured from the SVG's top-left — which is viewBox (minX, minY), not
+        // (0, 0). Verovio currently emits `viewBox="0 0 …"`, so this is a no-op today,
+        // but any non-zero origin (option change, future Verovio) would otherwise
+        // shift the whole interaction layer. Normalising here keeps geometry in the
+        // same top-left-relative space the surface already assumes.
+        let margin = pageMarginOffset(in: svg)
+        let origin = CGPoint(x: margin.x - viewBox.minX, y: margin.y - viewBox.minY)
         return VerovioSVGGeometry(
             viewBox: viewBox,
             pixelSize: pixelSize,
