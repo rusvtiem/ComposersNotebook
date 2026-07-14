@@ -116,24 +116,28 @@ struct VerovioStaffSurface: View {
                 Color.clear
                     .contentShape(Rectangle())
                     .frame(width: contentWidth, height: contentHeight)
-                    // Same arbitration as the classic renderer: hold 0.3s then drag
-                    // re-pitches the selected note (vertical drag isn't stolen by the
-                    // surrounding ScrollView because it's a highPriorityGesture); a
-                    // quick tap falls through to the normal tap handler.
+                    // A quick tap must fire reliably (add note / select). Nesting the
+                    // tap inside an ExclusiveGesture behind a sequenced long-press made
+                    // the arbitration swallow single taps, so the two are split:
+                    //   - the tap is a standalone highPriorityGesture so it wins over the
+                    //     surrounding ScrollView's pan/double-tap;
+                    //   - hold-0.3s-then-drag re-pitch is a separate simultaneousGesture
+                    //     that only engages after the long-press, so it never competes
+                    //     with a quick tap.
                     .highPriorityGesture(
-                        ExclusiveGesture(
-                            LongPressGesture(minimumDuration: 0.3)
-                                .sequenced(before: DragGesture(minimumDistance: 0))
-                                .onChanged { value in
-                                    if case .second(true, let drag?) = value {
-                                        handleRepitchDrag(at: drag.location, unitToPoint: unitToPoint, geometry: geometry)
-                                    }
-                                },
-                            SpatialTapGesture()
-                                .onEnded { value in
-                                    handleTap(at: value.location, unitToPoint: unitToPoint, geometry: geometry)
+                        SpatialTapGesture()
+                            .onEnded { value in
+                                handleTap(at: value.location, unitToPoint: unitToPoint, geometry: geometry)
+                            }
+                    )
+                    .simultaneousGesture(
+                        LongPressGesture(minimumDuration: 0.3)
+                            .sequenced(before: DragGesture(minimumDistance: 0))
+                            .onChanged { value in
+                                if case .second(true, let drag?) = value {
+                                    handleRepitchDrag(at: drag.location, unitToPoint: unitToPoint, geometry: geometry)
                                 }
-                        )
+                            }
                     )
             }
         }
@@ -286,6 +290,12 @@ private struct SVGWebView: UIViewRepresentable {
         let webView = WKWebView(frame: .zero, configuration: WKWebViewConfiguration())
         webView.scrollView.isScrollEnabled = false
         webView.scrollView.bouncesZoom = false
+        // Display-only: zoom/scroll/taps are all handled by the SwiftUI parent. The
+        // WKWebView's own gesture recognizers otherwise swallow taps meant for the
+        // transparent tap overlay stacked on top of it, which is what made note
+        // input / selection dead. Turning off its interaction lets every tap reach
+        // the overlay's gesture.
+        webView.isUserInteractionEnabled = false
         webView.isOpaque = false
         webView.backgroundColor = .clear
         webView.scrollView.backgroundColor = .clear

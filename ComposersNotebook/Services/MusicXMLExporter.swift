@@ -318,9 +318,14 @@ class MusicXMLExporter {
             previousStaffTailDivisions = previousGroupDivisions
         }
 
-        // Barline
+        // Barline. The final measure of the piece always closes with a final
+        // (light-heavy) barline by engraving convention — MuseScore/Dorico do this
+        // automatically — unless the user set an explicit barline (repeat, etc.).
+        let isLastMeasure = index == staves[0].measures.count - 1
         if measure.barlineEnd != .regular {
             xml += exportBarline(measure.barlineEnd)
+        } else if isLastMeasure {
+            xml += exportBarline(.final_)
         }
 
         xml += "\n    </measure>"

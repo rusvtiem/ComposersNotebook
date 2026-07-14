@@ -73,13 +73,45 @@ struct VerovioSVGGeometry {
     static func parse(_ svg: String) -> VerovioSVGGeometry? {
         guard let viewBox = firstViewBox(in: svg),
               let pixelSize = firstPixelSize(in: svg) else { return nil }
+        // Verovio wraps all engraved content in `<g class="page-margin"
+        // transform="translate(ox, oy)">`, so every `<path>`/`<use>` coordinate is
+        // in that group's inner space. Taps, the caret and the selection ring live
+        // in the outer viewBox, so we fold the margin translate into every parsed
+        // coordinate — otherwise geometry sits `(ox, oy)` off from what's on screen,
+        // which breaks tap→pitch, selection and re-pitch, and parks the caret at the
+        // left edge. `.zero` when no page-margin is present.
+        let origin = pageMarginOffset(in: svg)
         return VerovioSVGGeometry(
             viewBox: viewBox,
             pixelSize: pixelSize,
-            notes: parseNotes(svg),
-            staves: parseStaves(svg),
-            measures: parseMeasures(svg)
+            notes: (parseNotes(svg) + parseRests(svg)).map { shift($0, by: origin) },
+            staves: parseStaves(svg).map { shift($0, by: origin) },
+            measures: parseMeasures(svg).map { shift($0, by: origin) }
         )
+    }
+
+    /// The `<g class="page-margin">` translate, or `.zero` if absent. Verovio always
+    /// emits one (default 500, 500), but treating a missing one as no offset keeps
+    /// the parser robust to option changes.
+    private static func pageMarginOffset(in svg: String) -> CGPoint {
+        guard let m = firstMatch(#"class="page-margin"\s+transform="translate\(([\d.\-]+),\s*([\d.\-]+)\)""#, in: svg),
+              m.count == 3, let x = Double(m[1]), let y = Double(m[2]) else { return .zero }
+        return CGPoint(x: x, y: y)
+    }
+
+    private static func shift(_ n: Note, by o: CGPoint) -> Note {
+        o == .zero ? n : Note(id: n.id, point: CGPoint(x: n.point.x + o.x, y: n.point.y + o.y))
+    }
+
+    private static func shift(_ s: Staff, by o: CGPoint) -> Staff {
+        o == .zero ? s : Staff(lineYs: s.lineYs.map { $0 + o.y },
+                               xRange: (s.xRange.lowerBound + o.x)...(s.xRange.upperBound + o.x))
+    }
+
+    private static func shift(_ m: Measure, by o: CGPoint) -> Measure {
+        o == .zero ? m : Measure(staves: m.staves.map {
+            MeasureStaff(staff: shift($0.staff, by: o), noteXs: $0.noteXs.map { $0 + o.x })
+        })
     }
 
     private static func firstViewBox(in svg: String) -> CGRect? {
@@ -107,6 +139,31 @@ struct VerovioSVGGeometry {
         for m in noteRe.matches(in: svg, range: full) {
             let id = ns.substring(with: m.range(at: 1))
             // Search a bounded window after the note tag for its notehead translate.
+            let start = m.range.location + m.range.length
+            let window = NSRange(location: start, length: min(400, ns.length - start))
+            guard let t = translateRe.firstMatch(in: svg, range: window),
+                  let x = Double(ns.substring(with: t.range(at: 1))),
+                  let y = Double(ns.substring(with: t.range(at: 2))) else { continue }
+            result.append(Note(id: id, point: CGPoint(x: x, y: y)))
+        }
+        return result
+    }
+
+    /// Rests carry the same exported `NoteEvent.id` as notes (`MusicXMLExporter`
+    /// tags `<note><rest/>` too), so a tap on a rest can select it. Verovio draws a
+    /// rest as `<g id="..." class="rest">` with the glyph `<use transform="translate(
+    /// x, y)">` — no `notehead` wrapper, so it needs its own scan. Returned merged
+    /// into `notes` so hit-testing and selection treat rests exactly like noteheads.
+    private static func parseRests(_ svg: String) -> [Note] {
+        let ns = svg as NSString
+        let restRe = try! NSRegularExpression(pattern: #"<g id="([A-Za-z][\w\-]*)" class="rest">"#)
+        let translateRe = try! NSRegularExpression(
+            pattern: #"<use[^>]*translate\(([\d.\-]+),\s*([\d.\-]+)\)"#
+        )
+        var result: [Note] = []
+        let full = NSRange(location: 0, length: ns.length)
+        for m in restRe.matches(in: svg, range: full) {
+            let id = ns.substring(with: m.range(at: 1))
             let start = m.range.location + m.range.length
             let window = NSRange(location: start, length: min(400, ns.length - start))
             guard let t = translateRe.firstMatch(in: svg, range: window),

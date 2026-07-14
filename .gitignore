@@ -25,3 +25,5 @@ Package.resolved
 # iOS build (agent)
 .build-ios/
 build-ios*.log
+.build-device/
+build-device/

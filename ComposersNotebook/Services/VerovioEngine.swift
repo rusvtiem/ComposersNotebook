@@ -23,14 +23,21 @@ final class VerovioEngine {
         isReady = toolkit.setResourcePath(dataURL.path)
     }
 
-    /// Options mirror the validated spike: A4 page, auto page height, scale 40,
-    /// automatic system breaks, no header/footer chrome.
+    /// Options mirror the validated spike: a full A4 page, scale 40, automatic
+    /// system breaks, no header/footer chrome.
+    /// `adjustPageHeight` is deliberately **false**: with it on, Verovio crops the
+    /// page down to the content, yielding a wide, short letterbox strip (e.g. a
+    /// 21000×2800 viewBox for one measure) — the score then reads as "not A4" and a
+    /// lone measure looks stretched across the strip. false keeps the true A4
+    /// portrait (21000×29700, ratio 210:297), so the staff sits at the top-left of a
+    /// real page like MuseScore/Dorico, and the fixed aspect means zoom no longer
+    /// reshapes the sheet.
     /// `font: Bravura` — the SMuFL reference font (Steinberg), same glyph set the
     /// professional engravers use; without it Verovio falls back to Leipzig.
     /// staffLineWidth/stemWidth left at Verovio defaults so it honours Bravura's
     /// own engravingDefaults.
     private static let options = """
-    {"pageWidth": 2100, "pageHeight": 2970, "adjustPageHeight": true, "scale": 40, "breaks": "auto", "header": "none", "footer": "none", "font": "Bravura"}
+    {"pageWidth": 2100, "pageHeight": 2970, "adjustPageHeight": false, "scale": 40, "breaks": "auto", "header": "none", "footer": "none", "font": "Bravura"}
     """
 
     /// Render a full MusicXML document to a single SVG (page 1).

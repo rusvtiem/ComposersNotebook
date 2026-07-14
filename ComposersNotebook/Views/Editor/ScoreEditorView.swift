@@ -113,6 +113,10 @@ struct ScoreEditorView: View {
         }
         .navigationTitle(viewModel.score.title)
         .navigationBarTitleDisplayMode(.inline)
+        // The classic renderer was migration-time scaffolding; Verovio is the real
+        // staff now. Clear any persisted opt-in so a stale toggle can't leave the
+        // editor on the homemade engine (no paper, measure-collapse bug).
+        .onAppear { if useClassicRenderer { useClassicRenderer = false } }
         .toolbar {
             ToolbarItemGroup(placement: .topBarLeading) {
                 Button {
@@ -139,11 +143,6 @@ struct ScoreEditorView: View {
                     Image(systemName: "eye")
                 }
                 .help("Превью движком Verovio")
-
-                Button { useClassicRenderer.toggle() } label: {
-                    Image(systemName: useClassicRenderer ? "pencil.and.outline" : "music.note")
-                }
-                .help(useClassicRenderer ? "Классический рендер (вкл). Нажми — вернуть Verovio" : "Стан рисует движок Verovio. Нажми — классический рендер")
 
                 Menu {
                     // Save
