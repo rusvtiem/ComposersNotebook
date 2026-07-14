@@ -908,8 +908,12 @@ class MusicXMLImporter: NSObject, XMLParserDelegate {
                     ?? partInfo.measures.first?.clef
                     ?? (staffNumber - 1 < instrument.clefs.count ? instrument.clefs[staffNumber - 1] : instrument.defaultClef)
 
+                // Effective time signature per bar — last <time> at/before it, else
+                // the score default. Drives the pad-to-full normalization below.
+                var effectiveTS = TimeSignature(beats: currentBeats, beatValue: currentBeatType)
                 var staffMeasures: [Measure] = []
                 for measureInfo in partInfo.measures {
+                    if let ts = measureInfo.timeSignature { effectiveTS = ts }
                     var measure = Measure.empty()
                     measure.timeSignature = measureInfo.timeSignature
                     measure.keySignature = measureInfo.keySignature
@@ -934,7 +938,8 @@ class MusicXMLImporter: NSObject, XMLParserDelegate {
                     }
 
                     let staffNotes = measureInfo.events.filter { $0.staff == staffNumber }
-                    measure.events = buildEvents(from: staffNotes)
+                    measure.events = normalizeToFull(buildEvents(from: staffNotes),
+                                                     totalBeats: effectiveTS.totalBeats)
                     staffMeasures.append(measure)
                 }
 
@@ -994,6 +999,28 @@ class MusicXMLImporter: NSObject, XMLParserDelegate {
             events.append(buildChordOrNoteEvent(base: base, pitches: chordPitches, voice: layer(base)))
         }
         return events
+    }
+
+    /// Enforce the MuseScore invariant "a bar is always exactly full of real,
+    /// individually-selectable rests" on an imported staff-measure. A source file
+    /// can leave a staff silent (no notes) or a voice short of the bar length; the
+    /// editor (hit-testing) and exporter both assume full bars, so we pad the tail
+    /// here rather than letting an under-full bar propagate. Only the single-voice
+    /// case is padded — a multi-voice bar already balances each voice via the
+    /// source's <backup>/<forward>, and blindly padding the merged stream would
+    /// corrupt per-voice sums.
+    private func normalizeToFull(_ events: [NoteEvent], totalBeats: Double) -> [NoteEvent] {
+        // Empty staff-measure → one full-measure rest (renders as centred mRest).
+        if events.isEmpty {
+            return Measure.restEvents(fillingBeats: totalBeats, startBeat: 0, voice: .voice1)
+        }
+        let voices = Set(events.map { $0.voice })
+        guard voices.count <= 1 else { return events }
+        let used = events.reduce(0.0) { $0 + max(0, $1.actualBeats) }
+        let remaining = totalBeats - used
+        guard remaining > 0.001 else { return events }
+        let voice = events.first?.voice ?? .voice1
+        return events + Measure.restEvents(fillingBeats: remaining, startBeat: used, voice: voice)
     }
 
     private func pitchFromNote(_ note: NoteInfo) -> Pitch {
