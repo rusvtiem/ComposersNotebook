@@ -11,12 +11,20 @@ class GuitarProImporter {
         case unsupportedFormat
         case invalidFile
         case parseError(String)
+        /// Файл распознан как настоящий Guitar Pro, но разбор нотного содержимого
+        /// (такты/биты/ноты) ещё не реализован. Честная ошибка вместо пустой
+        /// «успешной» партитуры-заглушки, которая молча теряла бы всю музыку.
+        case noteContentUnsupported(format: String, tracks: [String])
 
         var errorDescription: String? {
             switch self {
             case .unsupportedFormat: return "Неподдерживаемый формат Guitar Pro"
             case .invalidFile: return "Повреждённый файл Guitar Pro"
             case .parseError(let msg): return "Ошибка разбора: \(msg)"
+            case .noteContentUnsupported(let format, let tracks):
+                let list = tracks.isEmpty ? "" : " (дорожки: \(tracks.joined(separator: ", ")))"
+                return "Импорт нот из \(format) пока не поддерживается\(list). "
+                    + "Экспортируйте файл в MusicXML или MIDI и откройте его."
             }
         }
     }
@@ -79,20 +87,11 @@ class GuitarProImporter {
         // Triplet feel, lyrics, tempo, key, etc. — skip to tracks
         // For a practical importer, we read what we can and create a basic score
 
-        var score = Score(title: title.isEmpty ? url.deletingPathExtension().lastPathComponent : title)
-
-        // Simplified: create a single guitar part with empty measures
-        // Full GP5 parsing requires handling tempo, key, tracks, measures, beats, notes
-        // which is thousands of bytes of binary format parsing
-        let guitar = Instrument.acousticGuitar
-        score.addPart(instrument: guitar)
-
-        // Add 16 empty measures as placeholder
-        for _ in 0..<15 {
-            score.appendMeasure()
-        }
-
-        return score
+        // Файл подтверждён как GP5 (прошли проверку версии/заголовка), но парсинг
+        // тактов и нот из бинарного формата не реализован. Возвращать партитуру с
+        // пустыми тактами — обман: пользователь думает что импорт удался, а нот нет.
+        _ = title
+        throw GPError.noteContentUnsupported(format: "Guitar Pro 5 (.gp5)", tracks: [])
     }
 
     // MARK: - GPX/GP Format (ZIP + XML)
@@ -159,7 +158,11 @@ class GuitarProImporter {
         guard xmlParser.parse() else {
             throw GPError.parseError("XML parsing failed")
         }
-        return parser.buildScore()
+        // GPIF разобран (получили названия дорожек), но извлечение нот из
+        // <Beats>/<Notes>/<Rhythms> не реализовано. Не подсовываем пустую
+        // партитуру — сообщаем честно, перечислив найденные дорожки.
+        throw GPError.noteContentUnsupported(format: "Guitar Pro 6/7/8 (.gp/.gpx)",
+                                             tracks: parser.discoveredTrackNames)
     }
 
     // MARK: - Binary Helpers
@@ -194,23 +197,7 @@ private class GPIFParser: NSObject, XMLParserDelegate {
     private var inTrack = false
     private var scoreName = ""
 
-    func buildScore() -> Score {
-        var score = Score(title: scoreName.isEmpty ? "Guitar Pro Import" : scoreName)
-        if trackNames.isEmpty {
-            score.addPart(instrument: .acousticGuitar)
-        } else {
-            for name in trackNames {
-                var instrument = Instrument.acousticGuitar
-                instrument.name = name
-                score.addPart(instrument: instrument)
-            }
-        }
-        // Add some empty measures
-        for _ in 0..<15 {
-            score.appendMeasure()
-        }
-        return score
-    }
+    var discoveredTrackNames: [String] { trackNames }
 
     func parser(_ parser: XMLParser, didStartElement elementName: String, namespaceURI: String?,
                 qualifiedName: String?, attributes: [String: String] = [:]) {
