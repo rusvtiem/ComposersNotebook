@@ -72,7 +72,11 @@ class MusicXMLExporter {
         xml += "\n  </part-list>"
 
         // Parts
-        for (index, part) in score.parts.enumerated() {
+        for (index, rawPart) in score.parts.enumerated() {
+            // Выровнять станы grand staff до общей длины перед экспортом —
+            // exportMeasure читает staff.measures[index] у каждого стана по длине
+            // первого; рассинхрон дал бы OOB-краш на пути рендера (см. Part.staffAligned).
+            let part = rawPart.staffAligned()
             let partId = "P\(index + 1)"
             xml += "\n  <part id=\"\(partId)\">"
 

@@ -111,4 +111,25 @@ struct Part: Codable, Equatable, Identifiable {
             staves[i].removeMeasure(at: index)
         }
     }
+
+    /// Копия партии, где все станы grand staff имеют одинаковое число тактов —
+    /// более короткие допаднуты полнотактовыми паузами до самого длинного.
+    /// Экспорт и hit-test предполагают выровненные станы (цикл идёт по длине
+    /// первого стана, а читает `staff.measures[index]` у каждого). Рассинхрон
+    /// длины (незавершённая мутация модели, битый импорт, прямой сеттер
+    /// `measures` только на staff 0) иначе даёт OOB-краш на пути рендера, который
+    /// вызывается на каждую перерисовку. Пустые whole-rest такты семантически
+    /// нейтральны, single-staff партия возвращается без копирования.
+    func staffAligned() -> Part {
+        guard staves.count > 1 else { return self }
+        let maxCount = staves.map(\.measures.count).max() ?? 0
+        guard staves.contains(where: { $0.measures.count < maxCount }) else { return self }
+        var copy = self
+        for i in copy.staves.indices {
+            while copy.staves[i].measures.count < maxCount {
+                copy.staves[i].measures.append(.wholeRest())
+            }
+        }
+        return copy
+    }
 }
