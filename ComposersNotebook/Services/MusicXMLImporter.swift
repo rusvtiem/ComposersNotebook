@@ -86,6 +86,16 @@ class MusicXMLImporter: NSObject, XMLParserDelegate {
     private var currentClef: Clef = .treble
     private var currentTempo: Double = 120
 
+    // Grand-staff / polyphony round-trip (K5)
+    private var currentPartStaffCount: Int = 1     // from <staves> — 1 unless grand staff
+    private var currentClefNumber: Int = 1         // <clef number="N"> — which staff a clef targets
+    private var clefByStaff: [Int: Clef] = [:]     // per-staff clef for the current part
+    private var currentNoteStaff: Int = 1          // <staff> child of current <note>
+    private var currentNoteVoice: Int = 1          // <voice> child of current <note>
+    private var lastBaseStaff: Int = 1             // staff/voice of the last non-chord note,
+    private var lastBaseVoice: Int = 1             // inherited by its chord members
+    private var inBackup = false                   // suppress <duration> handling outside notes
+
     // Element text
     private var currentText = ""
     private var elementStack: [String] = []
@@ -161,6 +171,8 @@ class MusicXMLImporter: NSObject, XMLParserDelegate {
     private struct PartInfo {
         let id: String
         var measures: [MeasureInfo]
+        var staffCount: Int = 1
+        var clefByStaff: [Int: Clef] = [:]
     }
 
     private struct MeasureInfo {
@@ -183,6 +195,10 @@ class MusicXMLImporter: NSObject, XMLParserDelegate {
         var isRest: Bool = false
         var isChord: Bool = false
         var grace: GraceType? = nil
+        // MusicXML <staff>/<voice> — needed to rebuild grand staff and polyphony on
+        // round-trip. Default 1 keeps single-staff files byte-identical.
+        var staff: Int = 1
+        var voice: Int = 1
         var step: String = "C"
         var octave: Int = 4
         var alter: Int = 0
@@ -220,8 +236,23 @@ class MusicXMLImporter: NSObject, XMLParserDelegate {
         case "part":
             currentPartId = attributes["id"]
             currentMeasures = []
+            // Reset per-part staff/clef state — staves don't carry across parts.
+            currentPartStaffCount = 1
+            clefByStaff = [:]
             // Reset per-part open spanners — they don't cross parts.
             closeAllOpenSpanners()
+
+        case "clef":
+            // <clef number="N"> targets staff N of a grand staff; absent → staff 1.
+            currentClefNumber = Int(attributes["number"] ?? "1") ?? 1
+
+        case "backup":
+            // Rewinds the cursor to layer another staff/voice — no note of its own.
+            inBackup = true
+
+        case "forward":
+            // Advances the cursor without a note (skips beats).
+            inBackup = true
 
         case "measure":
             currentMeasure = MeasureInfo()
@@ -302,6 +333,8 @@ class MusicXMLImporter: NSObject, XMLParserDelegate {
             currentTupletStartType = false
             currentTupletStopType = false
             currentNoteFingering = nil
+            currentNoteStaff = 1
+            currentNoteVoice = 1
 
         case "rest":
             currentNote?.isRest = true
@@ -390,7 +423,12 @@ class MusicXMLImporter: NSObject, XMLParserDelegate {
             // Close any spanners still open at end of part.
             closeAllOpenSpanners()
             if let id = currentPartId {
-                parts.append(PartInfo(id: id, measures: currentMeasures))
+                // Staff count = declared <staves>, but never below the highest staff
+                // number actually referenced by a note (robust to a missing <staves>).
+                let maxNoteStaff = currentMeasures.flatMap { $0.events }.map { $0.staff }.max() ?? 1
+                let staffCount = max(currentPartStaffCount, maxNoteStaff)
+                parts.append(PartInfo(id: id, measures: currentMeasures,
+                                      staffCount: staffCount, clefByStaff: clefByStaff))
             }
 
         // Measure
@@ -467,6 +505,36 @@ class MusicXMLImporter: NSObject, XMLParserDelegate {
                     currentMeasure?.clef = .tenor
                 }
             }
+        case "clef":
+            // Remember which staff this clef belongs to (grand staff has one per staff).
+            clefByStaff[currentClefNumber] = currentClef
+
+        // Grand staff / polyphony round-trip (K5)
+        case "staves":
+            if elementStack.contains("attributes") {
+                currentPartStaffCount = max(1, Int(text) ?? 1)
+            }
+        case "staff":
+            if elementStack.contains("note") {
+                currentNoteStaff = max(1, Int(text) ?? 1)
+            }
+        case "voice":
+            if elementStack.contains("note") {
+                currentNoteVoice = max(1, Int(text) ?? 1)
+            }
+        case "duration":
+            // Only <backup>/<forward> durations move the cursor here; note durations
+            // come from <type>. Keep the direction attach-beat sane across staves.
+            if inBackup, let divs = Int(text), currentDivisions > 0 {
+                let beats = Double(divs) / Double(currentDivisions)
+                if elementStack.contains("forward") {
+                    currentBeatInMeasure += beats
+                } else {
+                    currentBeatInMeasure = max(0, currentBeatInMeasure - beats)
+                }
+            }
+        case "backup", "forward":
+            inBackup = false
 
         // Note elements
         case "step":
@@ -576,6 +644,17 @@ class MusicXMLImporter: NSObject, XMLParserDelegate {
             if var note = currentNote {
                 if note.hasFermata {
                     note.articulations.append(.fermata)
+                }
+                // Staff/voice: a chord member inherits its base note's placement
+                // (some exporters omit <staff> on chord tones); a head note keeps its own.
+                if note.isChord {
+                    note.staff = lastBaseStaff
+                    note.voice = lastBaseVoice
+                } else {
+                    note.staff = currentNoteStaff
+                    note.voice = currentNoteVoice
+                    lastBaseStaff = currentNoteStaff
+                    lastBaseVoice = currentNoteVoice
                 }
                 // Apply tuplet info if present.
                 applyTuplet(to: &note)
@@ -816,71 +895,54 @@ class MusicXMLImporter: NSObject, XMLParserDelegate {
                 name: entry?.name ?? "Piano"
             )
 
+            // How many staves: what the source declared, but at least the instrument's
+            // natural count (piano is a grand staff even if the file omitted <staves>).
+            let staffCount = max(partInfo.staffCount, 1)
             var part = Part(instrument: instrument, measures: [])
-            let defaultClef = partInfo.measures.first?.clef ?? instrument.defaultClef
-            part.clef = defaultClef
 
-            for measureInfo in partInfo.measures {
-                var measure = Measure.empty()
-                measure.timeSignature = measureInfo.timeSignature
-                measure.keySignature = measureInfo.keySignature
-                measure.clefChange = measureInfo.clef
+            // Build each staff independently: its measures hold only the notes tagged
+            // with that <staff> number, so a grand staff no longer collapses into one.
+            var builtStaves: [Staff] = []
+            for staffNumber in 1...staffCount {
+                let staffClef = partInfo.clefByStaff[staffNumber]
+                    ?? partInfo.measures.first?.clef
+                    ?? (staffNumber - 1 < instrument.clefs.count ? instrument.clefs[staffNumber - 1] : instrument.defaultClef)
 
-                if let bpm = measureInfo.tempo {
-                    measure.tempoMarking = TempoMarking(bpm: bpm)
-                }
+                var staffMeasures: [Measure] = []
+                for measureInfo in partInfo.measures {
+                    var measure = Measure.empty()
+                    measure.timeSignature = measureInfo.timeSignature
+                    measure.keySignature = measureInfo.keySignature
+                    // Per-staff clef change if the source set one for this staff.
+                    measure.clefChange = staffNumber == 1 ? measureInfo.clef : nil
 
-                // Measure-level Phase 2c data.
-                measure.hairpins = measureInfo.hairpins
-                measure.octaveShifts = measureInfo.octaveShifts
-                measure.rehearsalMark = measureInfo.rehearsalMark
-                measure.expressionTexts = measureInfo.expressionTexts
-                measure.tempoChange = measureInfo.tempoChange
-                measure.navigationMark = measureInfo.navigationMark
-                measure.barlineEnd = measureInfo.barlineEnd
-                measure.volta = measureInfo.volta
-
-                // Group chord notes.
-                var events: [NoteEvent] = []
-                var chordPitches: [Pitch] = []
-                var chordBase: NoteInfo?
-
-                for noteInfo in measureInfo.events {
-                    if noteInfo.isChord, let base = chordBase {
-                        let pitch = pitchFromNote(noteInfo)
-                        chordPitches.append(pitch)
-                        _ = base
-                    } else {
-                        // Flush previous chord/note.
-                        if let base = chordBase, !chordPitches.isEmpty {
-                            let event = buildChordOrNoteEvent(base: base, pitches: chordPitches)
-                            events.append(event)
-                            chordPitches = []
-                            chordBase = nil
-                        }
-
-                        if noteInfo.isRest {
-                            events.append(buildRestEvent(noteInfo))
-                        } else {
-                            chordBase = noteInfo
-                            chordPitches = [pitchFromNote(noteInfo)]
-                        }
+                    if let bpm = measureInfo.tempo {
+                        measure.tempoMarking = TempoMarking(bpm: bpm)
                     }
+
+                    // Measure-level Phase 2c data lives on staff 1 only (shared bar
+                    // content — directions/barline/volta are written once per measure).
+                    if staffNumber == 1 {
+                        measure.hairpins = measureInfo.hairpins
+                        measure.octaveShifts = measureInfo.octaveShifts
+                        measure.rehearsalMark = measureInfo.rehearsalMark
+                        measure.expressionTexts = measureInfo.expressionTexts
+                        measure.tempoChange = measureInfo.tempoChange
+                        measure.navigationMark = measureInfo.navigationMark
+                        measure.barlineEnd = measureInfo.barlineEnd
+                        measure.volta = measureInfo.volta
+                    }
+
+                    let staffNotes = measureInfo.events.filter { $0.staff == staffNumber }
+                    measure.events = buildEvents(from: staffNotes)
+                    staffMeasures.append(measure)
                 }
 
-                // Flush trailing chord/note.
-                if let base = chordBase {
-                    events.append(buildChordOrNoteEvent(base: base, pitches: chordPitches))
-                }
-
-                measure.events = events
-                part.measures.append(measure)
+                if staffMeasures.isEmpty { staffMeasures.append(Measure.empty()) }
+                builtStaves.append(Staff(clef: staffClef, measures: staffMeasures))
             }
 
-            if part.measures.isEmpty {
-                part.measures.append(Measure.empty())
-            }
-
+            part.staves = builtStaves
             score.parts.append(part)
         }
 
@@ -892,6 +954,47 @@ class MusicXMLImporter: NSObject, XMLParserDelegate {
     }
 
     // MARK: - Helpers
+
+    /// Turns one staff's stream of parsed notes into model events: groups chord
+    /// members onto their head note and maps each MusicXML voice number to a model
+    /// VoiceLayer. Voices are remapped *within the staff* (lowest voice number →
+    /// voice1) so a single-voice lower staff, whose notes carry <voice>2</voice> by
+    /// the exporter's convention, still lands on voice1 rather than the green voice2.
+    private func buildEvents(from notes: [NoteInfo]) -> [NoteEvent] {
+        // Local voice remap table: sorted distinct source voices → voice1…voice4.
+        let distinctVoices = Array(Set(notes.filter { !$0.isChord }.map { $0.voice })).sorted()
+        var voiceMap: [Int: VoiceLayer] = [:]
+        for (i, v) in distinctVoices.enumerated() {
+            voiceMap[v] = VoiceLayer(rawValue: min(i + 1, 4)) ?? .voice1
+        }
+        func layer(_ n: NoteInfo) -> VoiceLayer { voiceMap[n.voice] ?? .voice1 }
+
+        var events: [NoteEvent] = []
+        var chordPitches: [Pitch] = []
+        var chordBase: NoteInfo?
+
+        for noteInfo in notes {
+            if noteInfo.isChord, chordBase != nil {
+                chordPitches.append(pitchFromNote(noteInfo))
+            } else {
+                if let base = chordBase, !chordPitches.isEmpty {
+                    events.append(buildChordOrNoteEvent(base: base, pitches: chordPitches, voice: layer(base)))
+                    chordPitches = []
+                    chordBase = nil
+                }
+                if noteInfo.isRest {
+                    events.append(buildRestEvent(noteInfo, voice: layer(noteInfo)))
+                } else {
+                    chordBase = noteInfo
+                    chordPitches = [pitchFromNote(noteInfo)]
+                }
+            }
+        }
+        if let base = chordBase {
+            events.append(buildChordOrNoteEvent(base: base, pitches: chordPitches, voice: layer(base)))
+        }
+        return events
+    }
 
     private func pitchFromNote(_ note: NoteInfo) -> Pitch {
         let name = PitchName.fromEnglishName(note.step) ?? .C
@@ -946,12 +1049,14 @@ class MusicXMLImporter: NSObject, XMLParserDelegate {
         return event
     }
 
-    private func buildRestEvent(_ info: NoteInfo) -> NoteEvent {
+    private func buildRestEvent(_ info: NoteInfo, voice: VoiceLayer = .voice1) -> NoteEvent {
         let duration = durationFromType(info.type, dotted: info.isDotted, doubleDotted: info.isDoubleDotted)
-        return NoteEvent.rest(duration: duration)
+        var event = NoteEvent.rest(duration: duration)
+        event.voice = voice
+        return event
     }
 
-    private func buildChordOrNoteEvent(base: NoteInfo, pitches: [Pitch]) -> NoteEvent {
+    private func buildChordOrNoteEvent(base: NoteInfo, pitches: [Pitch], voice: VoiceLayer = .voice1) -> NoteEvent {
         let duration = durationFromType(base.type, dotted: base.isDotted, doubleDotted: base.isDoubleDotted)
         var event: NoteEvent
         if pitches.count > 1 {
@@ -970,6 +1075,7 @@ class MusicXMLImporter: NSObject, XMLParserDelegate {
         event.chordSymbol = base.chordSymbol
         event.fingering = base.fingering
         event.grace = base.grace
+        event.voice = voice
         return event
     }
 

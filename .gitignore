@@ -27,3 +27,7 @@ Package.resolved
 build-ios*.log
 .build-device/
 build-device/
+
+# Local test/spike harnesses (not shipped)
+.roundtrip-test/
+.geometry-test/
