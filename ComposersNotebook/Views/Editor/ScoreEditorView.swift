@@ -14,6 +14,7 @@ enum InputKeyboardMode: String, CaseIterable {
 
 struct ScoreEditorView: View {
     @EnvironmentObject var appState: AppState
+    @Environment(\.scenePhase) private var scenePhase
     @StateObject private var viewModel: ScoreViewModel
     @StateObject private var midiReceiver = ExternalMIDIReceiver.shared
     @StateObject private var soundFontManager = SoundFontManager.shared
@@ -117,6 +118,12 @@ struct ScoreEditorView: View {
         // staff now. Clear any persisted opt-in so a stale toggle can't leave the
         // editor on the homemade engine (no paper, measure-collapse bug).
         .onAppear { if useClassicRenderer { useClassicRenderer = false } }
+        // The 30 s autosave timer can leave up to half a minute of edits on the
+        // floor if the app is backgrounded or killed between ticks. Flush on every
+        // move away from .active (background/inactive) so no edit outlives its save.
+        .onChange(of: scenePhase) { _, phase in
+            if phase != .active { viewModel.autoSave() }
+        }
         .toolbar {
             ToolbarItemGroup(placement: .topBarLeading) {
                 Button {
