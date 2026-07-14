@@ -49,11 +49,17 @@ enum VoiceLayer: Int, Codable, Equatable, CaseIterable {
     /// Совпадают с цветами нот в экспорте (MusicXMLExporter.colorAttribute) и
     /// с цветом каретки/кольца выделения — единый язык цвета по всему редактору.
     var swiftUIColor: Color {
+        Color(hex: colorHex)
+    }
+
+    /// MuseScore 4 voice colour as a CSS hex string — used both for the SwiftUI
+    /// colour above and for recolouring the selected glyph inside the Verovio SVG.
+    var colorHex: String {
         switch self {
-        case .voice1: return Color(hex: "#0065BF")
-        case .voice2: return Color(hex: "#007F00")
-        case .voice3: return Color(hex: "#C53F00")
-        case .voice4: return Color(hex: "#C31989")
+        case .voice1: return "#0065BF"
+        case .voice2: return "#007F00"
+        case .voice3: return "#C53F00"
+        case .voice4: return "#C31989"
         }
     }
 }

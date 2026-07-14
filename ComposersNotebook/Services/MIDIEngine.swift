@@ -87,6 +87,17 @@ class MIDIEngine: ObservableObject {
         }
     }
 
+    /// Guarantee the engine is running before a note is triggered. AVAudioEngine can
+    /// suspend itself after an interruption, a route change, or media-services reset;
+    /// `startNote` on a stopped engine is silent. Re-activating the session and
+    /// starting the engine on demand keeps input feedback and playback audible without
+    /// waiting for the notification handlers to fire. (Fixes the "no sound" class.)
+    private func ensureEngineRunning() {
+        guard !audioEngine.isRunning else { return }
+        try? AVAudioSession.sharedInstance().setActive(true)
+        startEngine()
+    }
+
     /// Подписка на смену активного SoundFont (через NotificationCenter).
     /// Когда пользователь меняет SF — sampler перезагружается на лету.
     private func subscribeToSoundFontChanges() {
@@ -332,6 +343,7 @@ class MIDIEngine: ObservableObject {
     // MARK: - Play Single Note (for input feedback)
 
     func playNote(pitch: Pitch, velocity: Int = 80, duration: Double = 0.3, midiProgram: Int = 0) {
+        ensureEngineRunning()
         setInstrument(midiProgram: midiProgram)
         let note = UInt8(clamping: pitch.midiNote)
         let vel = UInt8(clamping: velocity)
@@ -351,6 +363,7 @@ class MIDIEngine: ObservableObject {
     /// hairpins (интерполяция velocity), octave shifts, tuplet timing.
     func playScoreExpanded(_ score: Score) {
         stop()
+        ensureEngineRunning()
         isPlaying = true
 
         let plan = PlaybackScheduler.expand(score: score)

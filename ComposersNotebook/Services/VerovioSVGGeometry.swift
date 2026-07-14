@@ -165,7 +165,10 @@ struct VerovioSVGGeometry {
     /// into `notes` so hit-testing and selection treat rests exactly like noteheads.
     private static func parseRests(_ svg: String) -> [Note] {
         let ns = svg as NSString
-        let restRe = try! NSRegularExpression(pattern: #"<g id="([A-Za-z][\w\-]*)" class="rest">"#)
+        // Verovio draws a normal rest as class="rest" but an empty measure as a
+        // centered full-measure rest class="mRest" — match both so a tap on an
+        // empty measure's rest still finds a target (MuseScore mRest is selectable).
+        let restRe = try! NSRegularExpression(pattern: #"<g id="([A-Za-z][\w\-]*)" class="(?:rest|mRest)">"#)
         let translateRe = try! NSRegularExpression(
             pattern: #"<use[^>]*translate\(([\d.\-]+),\s*([\d.\-]+)\)"#
         )

@@ -403,40 +403,31 @@ class ScoreViewModel: ObservableObject {
     }
 
     private func insertEvent(_ event: NoteEvent) {
-        guard isCurrentMeasurePathValid else { return }
-
-        // Clear placeholder whole rest when user starts entering notes
-        clearPlaceholderRest()
-
-        let ts = effectiveTimeSignature
-        let measure = score.parts[selectedPartIndex].staves[selectedStaffIndex].measures[selectedMeasureIndex]
-        let remaining = measure.remainingBeats(timeSignature: ts)
-
-        if event.duration.beats <= remaining + 0.001 {
-            score.parts[selectedPartIndex].staves[selectedStaffIndex].measures[selectedMeasureIndex].events.append(event)
-            cursorPosition += event.duration.beats
-        } else {
-            // Auto-advance to next measure
-            advanceMeasure()
-            clearPlaceholderRest()
-            score.parts[selectedPartIndex].staves[selectedStaffIndex].measures[selectedMeasureIndex].events.append(event)
-            cursorPosition = event.duration.beats
-        }
-
+        placeEvent(event)
         score.touch()
     }
 
-    /// Remove the default whole rest placeholder if that's the only event in the measure
-    private func clearPlaceholderRest() {
+    /// MuseScore step-time placement: overwrite `event` at the cursor, keeping the
+    /// measure exactly full of real (individually selectable) rests, then advance
+    /// the cursor. This is the single source of the "measure always full" invariant
+    /// — no placeholder is silently deleted, the remaining beats become real rests.
+    private func placeEvent(_ event: NoteEvent) {
         guard isCurrentMeasurePathValid else { return }
-        let measure = score.parts[selectedPartIndex].staves[selectedStaffIndex].measures[selectedMeasureIndex]
-        if measure.events.count == 1,
-           measure.events[0].isRest,
-           measure.events[0].duration.value == .whole,
-           !measure.events[0].duration.dotted {
-            score.parts[selectedPartIndex].staves[selectedStaffIndex].measures[selectedMeasureIndex].events.removeAll()
+        let ts = effectiveTimeSignature
+        let total = ts.totalBeats
+        let evBeats = max(0, event.actualBeats)
+
+        // If the event can't fit from the cursor, move to (or create) the next measure.
+        if cursorPosition + evBeats > total + 0.001 {
+            advanceMeasure()
             cursorPosition = 0
         }
+
+        let pi = selectedPartIndex, si = selectedStaffIndex, mi = selectedMeasureIndex
+        let current = score.parts[pi].staves[si].measures[mi].events
+        score.parts[pi].staves[si].measures[mi].events =
+            Measure.overwrite(current, with: event, atBeat: cursorPosition, totalBeats: total)
+        cursorPosition += evBeats
     }
 
     // MARK: - Note Selection & Editing
@@ -641,22 +632,8 @@ class ScoreViewModel: ObservableObject {
     func paste() {
         guard !clipboard.isEmpty, isCurrentMeasurePathValid else { return }
         saveUndoState()
-        clearPlaceholderRest()
-
-        let ts = effectiveTimeSignature
         for event in clipboard {
-            let measure = score.parts[selectedPartIndex].staves[selectedStaffIndex].measures[selectedMeasureIndex]
-            let remaining = measure.remainingBeats(timeSignature: ts)
-
-            if event.duration.beats <= remaining + 0.001 {
-                score.parts[selectedPartIndex].staves[selectedStaffIndex].measures[selectedMeasureIndex].events.append(event)
-                cursorPosition += event.duration.beats
-            } else {
-                advanceMeasure()
-                clearPlaceholderRest()
-                score.parts[selectedPartIndex].staves[selectedStaffIndex].measures[selectedMeasureIndex].events.append(event)
-                cursorPosition = event.duration.beats
-            }
+            placeEvent(event)
         }
         score.touch()
     }
@@ -712,15 +689,32 @@ class ScoreViewModel: ObservableObject {
         score.touch()
     }
 
-    /// Transpose selected event by diatonic steps (positive = up, negative = down)
+    /// Transpose selected event by diatonic steps (positive = up, negative = down).
+    /// MuseScore's Alt+Shift+↑/↓: moves by scale degrees, keeping the note inside the
+    /// current key — a step lands on the next letter and takes that letter's accidental
+    /// from the key signature (in G major, stepping F→G is natural, D→E natural, but a
+    /// note landing on F becomes F♯). This replaces the old fixed C-major table.
     func transposeSelectedEventDiatonic(steps: Int) {
-        // Each diatonic step maps to different semitones depending on key
-        // Simplified: use fixed major scale intervals
-        let semitonesPerStep: [Int] = [0, 2, 4, 5, 7, 9, 11] // C major
-        let octaves = steps / 7
-        let remainder = ((steps % 7) + 7) % 7
-        let semitones = octaves * 12 + semitonesPerStep[remainder] - (steps < 0 && remainder != 0 ? 12 : 0)
-        transposeSelectedEvent(semitones: semitones)
+        guard steps != 0 else { return }
+        let key = effectiveKeySignature
+        mutateSelectedEvent { event in
+            switch event.type {
+            case .note(let p):
+                event.type = .note(pitch: Self.diatonicShift(p, steps: steps, key: key))
+            case .chord(let ps):
+                event.type = .chord(pitches: ps.map { Self.diatonicShift($0, steps: steps, key: key) })
+            case .rest:
+                return
+            }
+        }
+    }
+
+    /// Move a pitch by `steps` diatonic degrees along the staff ladder and spell the
+    /// result with the accidental the key signature imposes on the landing letter.
+    static func diatonicShift(_ pitch: Pitch, steps: Int, key: KeySignature) -> Pitch {
+        let landing = Pitch.fromStaffPosition(pitch.staffPosition + steps)
+        return Pitch(name: landing.name, octave: landing.octave,
+                     accidental: key.accidental(for: landing.name))
     }
 
     // MARK: - Delete

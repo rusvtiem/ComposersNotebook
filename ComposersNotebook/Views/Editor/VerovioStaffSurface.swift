@@ -31,7 +31,8 @@ struct VerovioStaffSurface: View {
     /// MuseScore 4 voice-1 / selection blue (#0065BF), from engravingconfiguration.cpp.
     /// Used for the input caret and selection ring so they match the reference editor
     /// instead of the theme-dependent system accent.
-    private static let museScoreSelectionBlue = Color(hex: "#0065BF")
+    private static let museScoreSelectionBlueHex = "#0065BF"
+    private static let museScoreSelectionBlue = Color(hex: museScoreSelectionBlueHex)
 
     @State private var svg: String?
     @State private var geometry: VerovioSVGGeometry?
@@ -97,7 +98,9 @@ struct VerovioStaffSurface: View {
         // of music is black-on-white regardless of the app's light/dark theme);
         // the dark-theme staff-visibility path lives on in the classic renderer.
         return ZStack(alignment: .topLeading) {
-            SVGWebView(svg: svg, ink: "black")
+            SVGWebView(svg: svg, ink: "black",
+                       highlightID: selectedExportedID,
+                       highlightColor: viewModel.selectedEvent?.voice.colorHex ?? Self.museScoreSelectionBlueHex)
                 .frame(width: contentWidth, height: contentHeight)
 
             if let geometry {
@@ -110,14 +113,6 @@ struct VerovioStaffSurface: View {
                     // system accent — the theme-dependent iOS blue read as an artefact.
                     .stroke(Self.museScoreSelectionBlue.opacity(0.8), lineWidth: 1.5)
                     .allowsHitTesting(false)
-                }
-
-                if let p = selectedNotePoint(in: geometry) {
-                    Circle()
-                        .stroke(Self.museScoreSelectionBlue, lineWidth: 2)
-                        .frame(width: 26, height: 26)
-                        .position(x: p.x * unitToPoint, y: p.y * unitToPoint)
-                        .allowsHitTesting(false)
                 }
 
                 Color.clear
@@ -200,15 +195,6 @@ struct VerovioStaffSurface: View {
     private var selectedExportedID: String? {
         guard let event = viewModel.selectedEvent else { return nil }
         return "e" + event.id.uuidString.replacingOccurrences(of: "-", with: "").lowercased()
-    }
-
-    /// Screen-independent (viewBox-unit) centre of the selected note's notehead, or
-    /// nil if nothing is selected / the note is not on the current render. Derived
-    /// each layout from the model + geometry rather than stored, so it stays correct
-    /// after the score is edited and re-engraved.
-    private func selectedNotePoint(in geometry: VerovioSVGGeometry) -> CGPoint? {
-        guard let base = selectedExportedID else { return nil }
-        return geometry.notes.first(where: { $0.id == base || $0.id.hasPrefix(base + "-") })?.point
     }
 
     /// The insertion caret (viewBox units) at the model's current focus — the
@@ -294,6 +280,17 @@ private struct SVGWebView: UIViewRepresentable {
     let svg: String
     /// CSS colour for the engraving ("white" on dark UI, "black" on light).
     let ink: String
+    /// Verovio id (`e<hex>`) of the selected note/chord, recoloured in place —
+    /// MuseScore recolours the selected glyph itself rather than drawing a ring.
+    var highlightID: String?
+    /// Voice colour applied to the selected glyph.
+    var highlightColor: String = "#0065BF"
+
+    func makeCoordinator() -> Coordinator { Coordinator() }
+
+    final class Coordinator {
+        var lastSVG: String?
+    }
 
     func makeUIView(context: Context) -> WKWebView {
         let webView = WKWebView(frame: .zero, configuration: WKWebViewConfiguration())
@@ -312,10 +309,35 @@ private struct SVGWebView: UIViewRepresentable {
     }
 
     func updateUIView(_ webView: WKWebView, context: Context) {
-        webView.loadHTMLString(Self.html(svg, ink: ink), baseURL: nil)
+        // Reload the whole document only when the engraving itself changed. A mere
+        // selection change updates the highlight <style> via JS, so picking a note
+        // recolours instantly without a full white-flash reload.
+        if context.coordinator.lastSVG != svg {
+            context.coordinator.lastSVG = svg
+            webView.loadHTMLString(Self.html(svg, ink: ink, highlightRule: Self.rule(highlightID, highlightColor)), baseURL: nil)
+        } else {
+            let css = Self.rule(highlightID, highlightColor)
+            let js = "var s=document.getElementById('hl'); if(s){s.textContent=\(Self.jsString(css));}"
+            webView.evaluateJavaScript(js, completionHandler: nil)
+        }
     }
 
-    private static func html(_ svg: String, ink: String) -> String {
+    /// CSS that recolours the selected glyph group (notehead, stem, flags, dots) to
+    /// the voice colour. Empty when nothing is selected. `stroke:currentColor` stems
+    /// follow the `color` override; noteheads follow `fill`.
+    private static func rule(_ id: String?, _ color: String) -> String {
+        guard let id, !id.isEmpty else { return "" }
+        return "#\(id), #\(id) * { fill: \(color) !important; color: \(color) !important; stroke: \(color) !important; }"
+    }
+
+    private static func jsString(_ s: String) -> String {
+        let escaped = s.replacingOccurrences(of: "\\", with: "\\\\")
+            .replacingOccurrences(of: "'", with: "\\'")
+            .replacingOccurrences(of: "\n", with: " ")
+        return "'\(escaped)'"
+    }
+
+    private static func html(_ svg: String, ink: String, highlightRule: String) -> String {
         // Verovio draws staff lines/stems with `stroke:currentColor` and glyphs by
         // inheriting `fill`. On a dark background the default black is invisible, so
         // we set ink (resolved from the SwiftUI colour scheme) as the inherited
@@ -331,7 +353,8 @@ private struct SVGWebView: UIViewRepresentable {
             html, body { margin: 0; padding: 0; background: transparent; color: \(ink); }
             svg { width: 100% !important; height: auto !important; display: block; }
             svg { color: \(ink); fill: \(ink); }
-        </style></head>
+        </style>
+        <style id="hl">\(highlightRule)</style></head>
         <body>\(svg)</body></html>
         """
     }

@@ -75,13 +75,19 @@ class MetronomeEngine: ObservableObject {
     }
 
     /// Без активной `.playback`-сессии AVAudioPlayer молчит в беззвучном режиме
-    /// (переключатель Ring/Silent) — метроном был не слышен. `.mixWithOthers`,
-    /// чтобы клики не глушили одновременное воспроизведение нот (MIDIEngine
-    /// держит свою `.playback`-сессию; категории совместимы).
+    /// (переключатель Ring/Silent) — метроном был не слышен. Категорию/режим держим
+    /// БАЙТ-В-БАЙТ как MIDIEngine (`.playback, mode: .default`, без опций), чтобы
+    /// два владельца сессии не перетирали настройки друг друга: раньше метроном
+    /// ставил `.mixWithOthers` без `mode`, а MIDIEngine — `mode: .default` без опций,
+    /// и последний вызвавший менял конфигурацию у другого. Внутри одного приложения
+    /// sampler и AVAudioPlayer микшируются на системном миксере и без `mixWithOthers`
+    /// (эта опция влияет только на микс с ДРУГИМИ приложениями), поэтому она не нужна.
     private func activateAudioSession() {
         let session = AVAudioSession.sharedInstance()
         do {
-            try session.setCategory(.playback, options: [.mixWithOthers])
+            if session.category != .playback {
+                try session.setCategory(.playback, mode: .default)
+            }
             try session.setActive(true)
         } catch {
             print("Metronome: не удалось активировать аудио-сессию: \(error)")
