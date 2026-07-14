@@ -252,6 +252,17 @@ enum PlaybackScheduler {
                 let velocityDelta = Int(direction * t * 40) // ±40 на длину hairpin
                 vel = max(0, min(127, vel + velocityDelta))
             }
+            // Артикуляции акцент/маркато играются громче (паритет MuseScore 4 §8.3):
+            // marcato — самый сильный удар, accent — заметное усиление. Marcato имеет
+            // приоритет, если проставлены обе.
+            if event.articulations.contains(.marcato) {
+                vel += 25
+            } else if event.articulations.contains(.accent) {
+                vel += 15
+            }
+            // Пол громкости = velocity ppp (16) как в MuseScore: тише — уже неслышимо,
+            // а diminuendo/тихая динамика не должны срываться в MIDI note-off (vel 0).
+            vel = max(16, min(127, vel))
 
             // BPM в этой ноте (учёт tempo change)
             var noteBPM = bpm

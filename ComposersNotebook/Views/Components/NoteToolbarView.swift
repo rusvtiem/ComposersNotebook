@@ -180,10 +180,22 @@ struct NoteToolbarView: View {
             // Phase 2c: Tuplet group menu
             Menu {
                 Button {
+                    viewModel.applyTupletGroupStartingAtSelected(actualCount: 2, normalCount: 3)
+                    HapticManager.success()
+                } label: {
+                    Label(String(localized: "Duplet (2:3)"), systemImage: "2.circle")
+                }
+                Button {
                     viewModel.applyTupletGroupStartingAtSelected(actualCount: 3, normalCount: 2)
                     HapticManager.success()
                 } label: {
                     Label(String(localized: "Triplet (3:2)"), systemImage: "3.circle")
+                }
+                Button {
+                    viewModel.applyTupletGroupStartingAtSelected(actualCount: 4, normalCount: 3)
+                    HapticManager.success()
+                } label: {
+                    Label(String(localized: "Quadruplet (4:3)"), systemImage: "4.circle")
                 }
                 Button {
                     viewModel.applyTupletGroupStartingAtSelected(actualCount: 5, normalCount: 4)
@@ -202,6 +214,12 @@ struct NoteToolbarView: View {
                     HapticManager.success()
                 } label: {
                     Label(String(localized: "Septuplet (7:4)"), systemImage: "7.circle")
+                }
+                Button {
+                    viewModel.applyTupletGroupStartingAtSelected(actualCount: 8, normalCount: 6)
+                    HapticManager.success()
+                } label: {
+                    Label(String(localized: "Octuplet (8:6)"), systemImage: "8.circle")
                 }
                 Button {
                     viewModel.applyTupletGroupStartingAtSelected(actualCount: 9, normalCount: 8)
@@ -871,7 +889,8 @@ struct NoteToolbarView: View {
                     label: "\(voice.rawValue)",
                     isActive: viewModel.selectedVoice == voice,
                     fontSize: 14,
-                    tooltip: "\(voice.displayName) — независимый голос на одном нотоносце"
+                    tooltip: "\(voice.displayName) — независимый голос на одном нотоносце",
+                    activeColor: voice.swiftUIColor
                 ) { viewModel.selectVoice(voice) }
             }
 
@@ -930,6 +949,9 @@ struct NoteToolbarButton: View {
     let isActive: Bool
     var fontSize: CGFloat = 11
     var tooltip: String? = nil
+    /// Цвет активного состояния. По умолчанию — системный акцент; voice-кнопки
+    /// передают точный цвет своего голоса (MuseScore 4) для визуального паритета.
+    var activeColor: Color? = nil
     let action: () -> Void
 
     var body: some View {
@@ -949,9 +971,9 @@ struct NoteToolbarButton: View {
             }
             .frame(minWidth: 32, minHeight: 32)
             .padding(.horizontal, 4)
-            .background(isActive ? Color.accentColor.opacity(0.2) : Color.clear)
+            .background(isActive ? (activeColor ?? .accentColor).opacity(0.2) : Color.clear)
             .clipShape(RoundedRectangle(cornerRadius: 6))
-            .foregroundColor(isActive ? .accentColor : .primary)
+            .foregroundColor(isActive ? (activeColor ?? .accentColor) : .primary)
         }
         .buttonStyle(.plain)
         .help(tooltip ?? label)

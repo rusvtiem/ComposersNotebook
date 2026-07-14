@@ -130,6 +130,32 @@ class MIDIEngine: ObservableObject {
         ) { [weak self] _ in
             Task { @MainActor in self?.handleMediaServicesReset() }
         }
+        nc.addObserver(
+            forName: AVAudioSession.routeChangeNotification,
+            object: nil,
+            queue: .main
+        ) { [weak self] note in
+            Task { @MainActor in self?.handleRouteChange(note) }
+        }
+    }
+
+    /// Смена аудио-маршрута (выдернули наушники / отключился Bluetooth).
+    /// По гайдлайну Apple при пропаже прежнего устройства вывода воспроизведение
+    /// нужно ставить на паузу, а не гнать звук внезапно в динамик; заодно
+    /// поднимаем движок, если система его усыпила при переключении маршрута.
+    private func handleRouteChange(_ note: Notification) {
+        guard let info = note.userInfo,
+              let raw = info[AVAudioSessionRouteChangeReasonKey] as? UInt,
+              let reason = AVAudioSession.RouteChangeReason(rawValue: raw) else { return }
+
+        switch reason {
+        case .oldDeviceUnavailable:
+            stop()
+        case .newDeviceAvailable, .categoryChange, .override:
+            if !audioEngine.isRunning { startEngine() }
+        default:
+            break
+        }
     }
 
     private func handleInterruption(_ note: Notification) {

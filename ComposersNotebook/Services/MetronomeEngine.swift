@@ -68,9 +68,24 @@ class MetronomeEngine: ObservableObject {
 
     func start() {
         guard !isRunning else { return }
+        activateAudioSession()
         isRunning = true
         currentBeat = 0
         scheduleTimer()
+    }
+
+    /// Без активной `.playback`-сессии AVAudioPlayer молчит в беззвучном режиме
+    /// (переключатель Ring/Silent) — метроном был не слышен. `.mixWithOthers`,
+    /// чтобы клики не глушили одновременное воспроизведение нот (MIDIEngine
+    /// держит свою `.playback`-сессию; категории совместимы).
+    private func activateAudioSession() {
+        let session = AVAudioSession.sharedInstance()
+        do {
+            try session.setCategory(.playback, options: [.mixWithOthers])
+            try session.setActive(true)
+        } catch {
+            print("Metronome: не удалось активировать аудио-сессию: \(error)")
+        }
     }
 
     func stop() {

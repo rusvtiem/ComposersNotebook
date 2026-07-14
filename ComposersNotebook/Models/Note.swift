@@ -1,4 +1,5 @@
 import Foundation
+import SwiftUI
 
 // MARK: - Stem Direction
 
@@ -39,6 +40,20 @@ enum VoiceLayer: Int, Codable, Equatable, CaseIterable {
         case .voice2: return "green"
         case .voice3: return "orange"
         case .voice4: return "purple"
+        }
+    }
+
+    /// Точные цвета голосов MuseScore 4 (DEFAULT_VOICE_COLORS из
+    /// engravingconfiguration.cpp): V1 синий, V2 зелёный, V3 оранжевый,
+    /// V4 маджента (у MuseScore 4 голос 4 именно #C31989, а не фиолетовый).
+    /// Совпадают с цветами нот в экспорте (MusicXMLExporter.colorAttribute) и
+    /// с цветом каретки/кольца выделения — единый язык цвета по всему редактору.
+    var swiftUIColor: Color {
+        switch self {
+        case .voice1: return Color(hex: "#0065BF")
+        case .voice2: return Color(hex: "#007F00")
+        case .voice3: return Color(hex: "#C53F00")
+        case .voice4: return Color(hex: "#C31989")
         }
     }
 }
