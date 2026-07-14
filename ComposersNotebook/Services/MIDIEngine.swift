@@ -23,8 +23,13 @@ class MIDIEngine: ObservableObject {
         eqNode = AVAudioUnitEQ(numberOfBands: 3)
 
         wireAudioGraph()
-        startEngine()
+        // Порядок критичен: сначала активируем .playback-сессию, потом стартуем
+        // движок. Если запустить движок под дефолтной (ambient) сессией, на
+        // устройстве в беззвучном режиме звука не будет — .playback игнорирует
+        // mute-переключатель, ambient его уважает. Раньше setupAudioSession() шёл
+        // ПОСЛЕ startEngine() → тишина в silent-mode.
         setupAudioSession()
+        startEngine()
         loadActiveSoundFont()
         subscribeToSoundFontChanges()
         subscribeToAudioInterruptions()
@@ -153,7 +158,7 @@ class MIDIEngine: ObservableObject {
         eqNode = AVAudioUnitEQ(numberOfBands: 3)
         reverbNode = AVAudioUnitReverb()
         wireAudioGraph()
-        setupAudioSession()
+        setupAudioSession()   // сессия ДО старта движка (см. init)
         startEngine()
         loadActiveSoundFont()
     }
@@ -180,7 +185,10 @@ class MIDIEngine: ObservableObject {
     func loadActiveSoundFont() {
         if let sf = SoundFontManager.shared.activeSoundFont {
             loadSoundFont(at: sf.url)
-            return
+            // Активный SF мог быть удалён/битым (loadSoundFont поймал ошибку и
+            // оставил isSoundFontLoaded=false). Раньше в этом случае fallback не
+            // срабатывал → тишина навсегда. Теперь падаем на встроенный GM.
+            if isSoundFontLoaded { return }
         }
         // Fallback: load bundled GM SoundFont
         if let bundledURL = Bundle.main.url(forResource: "TimGM6mb", withExtension: "sf2") {
@@ -204,16 +212,19 @@ class MIDIEngine: ObservableObject {
             eqNode.bands[2].gain = settings.eqHigh + brightnessGain
         }
 
-        // ADSR via MIDI CC (standard controllers)
-        // CC 73 = Attack Time, CC 75 = Decay Time, CC 70 = Sound Variation (sustain level), CC 72 = Release Time
+        // ADSR via MIDI CC (стандартные Sound Controllers SC2–SC6)
+        // CC 73 = Attack Time, CC 75 = Decay Time, CC 72 = Release Time.
+        // ВНИМАНИЕ: «уровня сустейна» стандартного CC НЕ существует. CC70 — это
+        // Sound Variation (SC1), а не sustain level; отправка sustain*127 в CC70
+        // на части SF2-банков переключает тембр/занижает выход (кандидат в «тихо/
+        // нет звука»). Убрано — уровень сустейна берётся из огибающей самого SF2
+        // (профессиональное поведение). [проверить на устройстве: громкость/тембр]
         let attackCC = UInt8(clamping: Int(settings.attack * 127 / 2.0))  // 0..2s -> 0..127
         let decayCC = UInt8(clamping: Int(settings.decay * 127 / 2.0))
-        let sustainCC = UInt8(clamping: Int(settings.sustain * 127))
         let releaseCC = UInt8(clamping: Int(settings.release * 127 / 2.0))
 
         sampler.sendController(73, withValue: attackCC, onChannel: 0)   // Attack
         sampler.sendController(75, withValue: decayCC, onChannel: 0)    // Decay
-        sampler.sendController(70, withValue: sustainCC, onChannel: 0)  // Sound Variation / Sustain level
         sampler.sendController(72, withValue: releaseCC, onChannel: 0)  // Release
 
         // CC 74 = Brightness (Filter Cutoff) — more direct than EQ

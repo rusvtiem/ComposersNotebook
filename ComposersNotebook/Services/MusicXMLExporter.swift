@@ -282,6 +282,20 @@ class MusicXMLExporter {
                 xml += "\n      <backup>\n        <duration>\(previousStaffTailDivisions)</duration>\n      </backup>"
             }
             let sNum = isGrand ? k + 1 : nil
+
+            // Полнотактовая пауза: MusicXML требует <rest measure="yes"/> с
+            // <duration> = длине такта и БЕЗ <type> — тогда Verovio рисует целую
+            // паузу по центру такта в ЛЮБОМ размере. Раньше шла как обычная целая
+            // (<type>whole>, duration=1920) — в 3/4 (такт 1440) это переполняло
+            // такт: сумма <duration> голоса ≠ длине такта → Verovio сдвигал
+            // геометрию → тап промахивался. Длину берём из размера, не из ноты.
+            if staffMeasure.isFullMeasureRest, let restEvent = staffMeasure.events.first {
+                let measureDiv = Int((effectiveTS.totalBeats * Double(divisionsPerQuarter)).rounded())
+                xml += exportMeasureRest(restEvent, staffNumber: sNum, voice: sNum, divisions: measureDiv)
+                previousStaffTailDivisions = measureDiv
+                continue
+            }
+
             let groups = groupEventsByVoice(staffMeasure.events)
             let multiVoice = groups.count > 1
             var previousGroupDivisions = 0
@@ -430,6 +444,24 @@ class MusicXMLExporter {
             xml += "\n      </note>"
         }
 
+        return xml
+    }
+
+    /// Full-measure rest: `<rest measure="yes"/>` with `<duration>` equal to the
+    /// measure length and NO `<type>` — Verovio then centers a whole-rest glyph in
+    /// the bar for ANY meter, and the voice's `<duration>` sum matches the bar so
+    /// the geometry does not shift (a mismatch pushed tap coordinates off-note).
+    private func exportMeasureRest(_ event: NoteEvent, staffNumber: Int? = nil, voice: Int? = nil, divisions: Int) -> String {
+        var xml = "\n      <note\(Self.idAttribute(event.id))\(colorAttribute(for: event))>"
+        xml += "\n        <rest measure=\"yes\"/>"
+        xml += "\n        <duration>\(divisions)</duration>"
+        if let voice = voice {
+            xml += "\n        <voice>\(voice)</voice>"
+        }
+        if let staffNumber = staffNumber {
+            xml += "\n        <staff>\(staffNumber)</staff>"
+        }
+        xml += "\n      </note>"
         return xml
     }
 
