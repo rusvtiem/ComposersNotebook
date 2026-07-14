@@ -729,6 +729,10 @@ class MusicXMLExporter {
         case .sixteenth: typeName = "16th"
         case .thirtySecond: typeName = "32nd"
         case .sixtyFourth: typeName = "64th"
+        case .oneHundredTwentyEighth: typeName = "128th"
+        case .twoHundredFiftySixth: typeName = "256th"
+        case .fiveHundredTwelfth: typeName = "512th"
+        case .oneThousandTwentyFourth: typeName = "1024th"
         }
 
         // Форшлаг: <duration> опускается (grace note не занимает времени), но

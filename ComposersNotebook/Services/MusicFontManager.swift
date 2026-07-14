@@ -68,6 +68,10 @@ enum MusicSymbol {
     static let rest16th = "\u{E4E7}"               // 16th rest
     static let rest32nd = "\u{E4E8}"               // 32nd rest
     static let rest64th = "\u{E4E9}"               // 64th rest
+    static let rest128th = "\u{E4EA}"              // 128th rest
+    static let rest256th = "\u{E4EB}"              // 256th rest
+    static let rest512th = "\u{E4EC}"              // 512th rest
+    static let rest1024th = "\u{E4ED}"             // 1024th rest
 
     // Clefs
     static let gClef = "\u{E050}"                  // Treble clef
@@ -143,6 +147,10 @@ enum MusicSymbol {
         case .sixteenth: return rest16th
         case .thirtySecond: return rest32nd
         case .sixtyFourth: return rest64th
+        case .oneHundredTwentyEighth: return rest128th
+        case .twoHundredFiftySixth: return rest256th
+        case .fiveHundredTwelfth: return rest512th
+        case .oneThousandTwentyFourth: return rest1024th
         }
     }
 
@@ -206,6 +214,9 @@ enum MusicSymbol {
             case .sixteenth: return "𝄿"
             case .thirtySecond: return "𝅀"
             case .sixtyFourth: return "𝅁"
+            // Системные шрифты короче 64-й не рендерят — переиспользуем 64-ю.
+            case .oneHundredTwentyEighth, .twoHundredFiftySixth,
+                 .fiveHundredTwelfth, .oneThousandTwentyFourth: return "𝅁"
             }
         }
     }

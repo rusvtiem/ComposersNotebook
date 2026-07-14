@@ -148,8 +148,9 @@ struct NoteToolbarView: View {
             NoteToolbarButton(
                 icon: "link",
                 label: "Лига",
-                isActive: viewModel.selectedEvent?.tiedToNext == true
-            ) { viewModel.toggleSelectedEventTie() }
+                isActive: viewModel.selectedEvent?.tiedToNext == true,
+                tooltip: "Залиговка (tie, как T в MuseScore): создаёт связанную ноту той же высоты после выделенной"
+            ) { viewModel.tieSelectedIntoNewNote() }
 
             NoteToolbarButton(
                 icon: nil,
@@ -448,6 +449,15 @@ struct NoteToolbarView: View {
     @ViewBuilder
     private var measureShortcutsMenu: some View {
         Menu {
+            Section(String(localized: "Rest")) {
+                Button {
+                    viewModel.makeFullMeasureRest()
+                    HapticManager.success()
+                } label: {
+                    Label(String(localized: "Full-measure rest"), systemImage: "pause.rectangle")
+                }
+            }
+
             Section(String(localized: "Dynamics span")) {
                 Button {
                     addHairpin(.crescendo)
@@ -580,15 +590,15 @@ struct NoteToolbarView: View {
                 icon: "pencil",
                 label: "Нота",
                 isActive: viewModel.inputMode == .note,
-                tooltip: "Ввод нот — нажми на стан для размещения"
-            ) { viewModel.inputMode = .note }
+                tooltip: "Ввод нот — нажми на стан для размещения. Повторный тап выключает режим (как N в MuseScore)"
+            ) { viewModel.inputMode = (viewModel.inputMode == .note ? .navigate : .note) }
 
             NoteToolbarButton(
                 icon: "pause.fill",
                 label: "Пауза",
                 isActive: viewModel.inputMode == .rest,
-                tooltip: "Ввод пауз (rest) — нажми для вставки"
-            ) { viewModel.inputMode = .rest }
+                tooltip: "Ввод пауз (rest) — нажми для вставки. Повторный тап выключает режим"
+            ) { viewModel.inputMode = (viewModel.inputMode == .rest ? .navigate : .rest) }
 
             NoteToolbarButton(
                 icon: "arrow.triangle.2.circlepath",
@@ -631,6 +641,22 @@ struct NoteToolbarView: View {
 
     private var durationButtons: some View {
         HStack(spacing: 2) {
+            NoteToolbarButton(
+                icon: nil,
+                label: "÷2",
+                isActive: false,
+                fontSize: 15,
+                tooltip: "Уменьшить длительность пера вдвое (MuseScore Q)"
+            ) { viewModel.halveDuration(); HapticManager.buttonTap() }
+
+            NoteToolbarButton(
+                icon: nil,
+                label: "×2",
+                isActive: false,
+                fontSize: 15,
+                tooltip: "Увеличить длительность пера вдвое (MuseScore W)"
+            ) { viewModel.doubleDuration(); HapticManager.buttonTap() }
+
             ForEach(DurationValue.allCases, id: \.self) { dur in
                 NoteToolbarButton(
                     icon: nil,
@@ -654,6 +680,10 @@ struct NoteToolbarView: View {
         case .sixteenth: return "Шестнадцатая (semiquaver/semicroma) — ¼ доли"
         case .thirtySecond: return "Тридцать вторая (demisemiquaver/biscroma) — ⅛ доли"
         case .sixtyFourth: return "Шестьдесят четвёртая (hemidemisemiquaver/semibiscroma) — ¹⁄₁₆ доли"
+        case .oneHundredTwentyEighth: return "Сто двадцать восьмая (semihemidemisemiquaver) — ¹⁄₃₂ доли"
+        case .twoHundredFiftySixth: return "Двести пятьдесят шестая — ¹⁄₆₄ доли"
+        case .fiveHundredTwelfth: return "Пятьсот двенадцатая — ¹⁄₁₂₈ доли"
+        case .oneThousandTwentyFourth: return "Тысяча двадцать четвёртая — ¹⁄₂₅₆ доли (предел MusicXML)"
         }
     }
 

@@ -18,6 +18,10 @@ enum DurationValue: Int, Codable, CaseIterable {
     case sixteenth = 16     // шестнадцатая
     case thirtySecond = 32  // тридцать вторая
     case sixtyFourth = 64   // шестьдесят четвёртая
+    case oneHundredTwentyEighth = 128   // сто двадцать восьмая
+    case twoHundredFiftySixth = 256     // двести пятьдесят шестая
+    case fiveHundredTwelfth = 512       // пятьсот двенадцатая
+    case oneThousandTwentyFourth = 1024 // тысяча двадцать четвёртая (предел MusicXML/MuseScore)
 
     var displayName: String {
         switch self {
@@ -30,6 +34,10 @@ enum DurationValue: Int, Codable, CaseIterable {
         case .sixteenth: return "Шестнадцатая"
         case .thirtySecond: return "Тридцать вторая"
         case .sixtyFourth: return "Шестьдесят четвёртая"
+        case .oneHundredTwentyEighth: return "Сто двадцать восьмая"
+        case .twoHundredFiftySixth: return "Двести пятьдесят шестая"
+        case .fiveHundredTwelfth: return "Пятьсот двенадцатая"
+        case .oneThousandTwentyFourth: return "Тысяча двадцать четвёртая"
         }
     }
 
@@ -44,6 +52,10 @@ enum DurationValue: Int, Codable, CaseIterable {
         case .sixteenth: return "¹⁄₁₆"
         case .thirtySecond: return "¹⁄₃₂"
         case .sixtyFourth: return "¹⁄₆₄"
+        case .oneHundredTwentyEighth: return "¹⁄₁₂₈"
+        case .twoHundredFiftySixth: return "¹⁄₂₅₆"
+        case .fiveHundredTwelfth: return "¹⁄₅₁₂"
+        case .oneThousandTwentyFourth: return "¹⁄₁₀₂₄"
         }
     }
 

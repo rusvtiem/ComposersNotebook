@@ -1684,6 +1684,10 @@ struct MeasureView: View {
         case .sixteenth: return "𝄿"
         case .thirtySecond: return "𝅀"
         case .sixtyFourth: return "𝅁"
+        // Короче 64-й системные шрифты не рендерят — переиспользуем 64-ю в
+        // классическом (fallback) рендере. Основной рендер — Verovio.
+        case .oneHundredTwentyEighth, .twoHundredFiftySixth,
+             .fiveHundredTwelfth, .oneThousandTwentyFourth: return "𝅁"
         }
     }
 
@@ -1790,7 +1794,8 @@ struct MeasureView: View {
             tail.addLine(to: CGPoint(x: x - sp * 0.3, y: staffTop + sp * 3.25))
             context.stroke(tail, with: .color(theme.noteHead), lineWidth: scaled(1.0))
 
-        case .sixtyFourth:
+        case .sixtyFourth, .oneHundredTwentyEighth, .twoHundredFiftySixth,
+             .fiveHundredTwelfth, .oneThousandTwentyFourth:
             let dotR: CGFloat = sp * 0.14
             let dotYs = [sp * 0.85, sp * 1.5, sp * 2.15, sp * 2.8].map { staffTop + $0 }
             for dy in dotYs {

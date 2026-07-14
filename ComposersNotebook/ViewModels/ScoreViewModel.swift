@@ -413,6 +413,24 @@ class ScoreViewModel: ObservableObject {
         Duration(value: selectedDuration, dotted: isDotted, doubleDotted: isDoubleDotted)
     }
 
+    /// MuseScore Q — halve the input duration (quarter → eighth). Operates on the
+    /// sticky input pen (`selectedDuration`) only, never the selected event, so the
+    /// measure-full invariant can't break. `allCases` runs longest→shortest, so a
+    /// shorter value is the next index. Clamped at the shortest (1024th).
+    func halveDuration() {
+        let all = DurationValue.allCases
+        guard let idx = all.firstIndex(of: selectedDuration), idx + 1 < all.count else { return }
+        selectedDuration = all[idx + 1]
+    }
+
+    /// MuseScore W — double the input duration (eighth → quarter). Longer value is
+    /// the previous index in `allCases`. Clamped at the longest (longa).
+    func doubleDuration() {
+        let all = DurationValue.allCases
+        guard let idx = all.firstIndex(of: selectedDuration), idx - 1 >= 0 else { return }
+        selectedDuration = all[idx - 1]
+    }
+
     private func insertEvent(_ event: NoteEvent) {
         placeEvent(event)
         score.touch()
@@ -570,6 +588,45 @@ class ScoreViewModel: ObservableObject {
 
     func toggleSelectedEventTie() {
         mutateSelectedEvent { $0.tiedToNext.toggle() }
+    }
+
+    /// MuseScore `T`: tie the selected note into a NEW note of the same pitch(es)
+    /// and duration placed right after it, and link the two. This differs from
+    /// `toggleSelectedEventTie`, which only flips the flag toward an
+    /// already-present next note — the common authoring case is "I just wrote a
+    /// note and want it tied over", which needs the second note created. Rests
+    /// can't be tied. If a real note already follows in the measure, we don't
+    /// clobber it: we just set the tie flag (ties to it when pitches match).
+    func tieSelectedIntoNewNote() {
+        guard let source = selectedEvent, !source.isRest,
+              isCurrentMeasurePathValid, let measure = currentMeasure,
+              let idx = selectedEventIndex else { return }
+        saveUndoState()
+
+        let pi = selectedPartIndex, si = selectedStaffIndex, mi = selectedMeasureIndex
+
+        // If a real (non-rest) note already follows, don't overwrite it — just mark
+        // the tie flag and stop (matches toggle behaviour, ties when pitches match).
+        let following = measure.events.dropFirst(idx + 1).first { $0.actualBeats > 0 }
+        if let f = following, !f.isRest {
+            score.parts[pi].staves[si].measures[mi].events[idx].tiedToNext = true
+            score.touch()
+            return
+        }
+
+        // Otherwise create the continuation note over the trailing rests.
+        var offset = 0.0
+        for e in measure.events.prefix(idx + 1) { offset += max(0, e.actualBeats) }
+        score.parts[pi].staves[si].measures[mi].events[idx].tiedToNext = true
+        let copy = NoteEvent(
+            type: source.type,
+            duration: source.duration,
+            stemDirection: source.stemDirection,
+            voice: source.voice
+        )
+        cursorPosition = offset
+        placeEvent(copy)
+        score.touch()
     }
 
     func toggleSelectedEventSlur() {
@@ -907,6 +964,23 @@ class ScoreViewModel: ObservableObject {
         if selectedMeasureIndex >= score.measureCount {
             selectedMeasureIndex = score.measureCount - 1
         }
+    }
+
+    /// MuseScore Ctrl+Shift+Delete: превратить текущий такт в полнотактовую паузу.
+    /// Всё содержимое такта удаляется и заменяется одной целой паузой, которая
+    /// рисуется по центру такта в любом размере (см. `Measure.isFullMeasureRest`).
+    /// Голос активного ввода сохраняется. Одно действие вместо ручной очистки.
+    func makeFullMeasureRest() {
+        guard isCurrentMeasurePathValid else { return }
+        saveUndoState()
+        let pi = selectedPartIndex, si = selectedStaffIndex, mi = selectedMeasureIndex
+        var rest = NoteEvent(type: .rest, duration: .wholeNote)
+        rest.voice = selectedVoice
+        score.parts[pi].staves[si].measures[mi].events = [rest]
+        selectedEventIndex = nil
+        selectedPitchIndex = nil
+        cursorPosition = 0
+        score.touch()
     }
 
     // MARK: - Time Signature / Key Signature Changes

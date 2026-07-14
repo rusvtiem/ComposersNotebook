@@ -382,6 +382,10 @@ class PDFExporter {
             case .sixteenth: return "𝅀"
             case .thirtySecond: return "𝅁"
             case .sixtyFourth: return "𝅂"
+            case .oneHundredTwentyEighth: return "𝅃"
+            // Юникод не даёт отдельных глифов пауз короче 128-й; в классическом
+            // (fallback) рендере переиспользуем 128-ю. Основной рендер — Verovio.
+            case .twoHundredFiftySixth, .fiveHundredTwelfth, .oneThousandTwentyFourth: return "𝅃"
             }
         }()
 
