@@ -31,3 +31,5 @@ build-device/
 # Local test/spike harnesses (not shipped)
 .roundtrip-test/
 .geometry-test/
+
+.grandstaff-test/
