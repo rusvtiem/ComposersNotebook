@@ -176,11 +176,18 @@ struct LicenseEntry: Identifiable {
 
     static let fonts: [LicenseEntry] = [
         LicenseEntry(
+            resourceName: "Leland",
+            author: "Martin Keary, Simon Smith (MuseScore)",
+            license: "SIL Open Font License 1.1",
+            websiteURL: URL(string: "https://github.com/MuseScoreFonts/Leland"),
+            description: String(localized: "Primary SMuFL music notation font.")
+        ),
+        LicenseEntry(
             resourceName: "Bravura",
             author: "Steinberg Media Technologies",
             license: "SIL Open Font License 1.1",
             websiteURL: URL(string: "https://github.com/steinbergmedia/bravura"),
-            description: String(localized: "SMuFL-compliant music notation font.")
+            description: String(localized: "SMuFL fallback music notation font.")
         )
     ]
 }

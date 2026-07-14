@@ -28,6 +28,11 @@ struct VerovioStaffSurface: View {
     /// nested in a ScrollView collapses to zero height).
     let availableWidth: CGFloat
 
+    /// MuseScore 4 voice-1 / selection blue (#0065BF), from engravingconfiguration.cpp.
+    /// Used for the input caret and selection ring so they match the reference editor
+    /// instead of the theme-dependent system accent.
+    private static let museScoreSelectionBlue = Color(hex: "#0065BF")
+
     @State private var svg: String?
     @State private var geometry: VerovioSVGGeometry?
     /// Human-readable reason the staff is not showing. Surfaced on-screen so a
@@ -101,13 +106,15 @@ struct VerovioStaffSurface: View {
                         path.move(to: CGPoint(x: caret.x * unitToPoint, y: caret.top * unitToPoint))
                         path.addLine(to: CGPoint(x: caret.x * unitToPoint, y: caret.bottom * unitToPoint))
                     }
-                    .stroke(Color.accentColor.opacity(0.7), lineWidth: 1.5)
+                    // MuseScore 4 voice-1 / note-input caret colour (#0065BF), not the
+                    // system accent — the theme-dependent iOS blue read as an artefact.
+                    .stroke(Self.museScoreSelectionBlue.opacity(0.8), lineWidth: 1.5)
                     .allowsHitTesting(false)
                 }
 
                 if let p = selectedNotePoint(in: geometry) {
                     Circle()
-                        .stroke(Color.accentColor, lineWidth: 2)
+                        .stroke(Self.museScoreSelectionBlue, lineWidth: 2)
                         .frame(width: 26, height: 26)
                         .position(x: p.x * unitToPoint, y: p.y * unitToPoint)
                         .allowsHitTesting(false)
@@ -142,7 +149,9 @@ struct VerovioStaffSurface: View {
             }
         }
         .frame(width: contentWidth, height: contentHeight)
-        .background(Color.white)
+        // MuseScore 4 paper is a faint off-white (#F9F9F9), not pure white — softer
+        // on the eye against the desk behind it.
+        .background(Color(hex: "#F9F9F9"))
         .compositingGroup()
         .shadow(color: .black.opacity(0.22), radius: 9, x: 0, y: 3)
     }

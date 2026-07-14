@@ -14,6 +14,14 @@ class MIDIEngine: ObservableObject {
     @Published var isPlaying = false
     @Published var isSoundFontLoaded = false
 
+    /// URL активного SoundFont — нужен чтобы перегружать конкретный пресет (program)
+    /// из того же банка при смене инструмента. Без него setInstrument не мог сменить
+    /// пресет ни на что кроме пиано.
+    private var currentSoundFontURL: URL?
+    /// Пресет (program), реально загруженный в sampler сейчас. Кэш, чтобы не
+    /// перегружать банк на каждую ноту/каждую смену партии впустую.
+    private var loadedProgram: UInt8 = 0
+
     private var playbackTask: Task<Void, Never>?
 
     init() {
@@ -174,6 +182,8 @@ class MIDIEngine: ObservableObject {
                 bankMSB: UInt8(kAUSampler_DefaultMelodicBankMSB),
                 bankLSB: 0
             )
+            currentSoundFontURL = url
+            loadedProgram = program
             isSoundFontLoaded = true
         } catch {
             print("SoundFont загрузка ошибка: \(error)")
@@ -262,14 +272,34 @@ class MIDIEngine: ObservableObject {
     // MARK: - Set Instrument
 
     func setInstrument(midiProgram: Int, channel: UInt8 = 0) {
-        if isSoundFontLoaded {
-            // When SoundFont is loaded, switch program within it
-            sampler.sendProgramChange(UInt8(midiProgram), bankMSB: UInt8(kAUSampler_DefaultMelodicBankMSB),
-                                      bankLSB: 0, onChannel: channel)
+        let program = UInt8(clamping: midiProgram)
+        guard program != loadedProgram else { return }   // уже нужный пресет — не трогаем
+
+        if isSoundFontLoaded, let url = currentSoundFontURL {
+            // КОРЕНЬ бага «нет звука для не-пиано»: sendProgramChange на
+            // AVAudioUnitSampler переключает пресет ТОЛЬКО если он уже присутствует в
+            // загруженном банке. loadSoundBankInstrument грузит из SF2 ровно один
+            // program за раз (при загрузке SF это был program 0 = пиано). Значит для
+            // любого инструмента != пиано канал оставался на несуществующем пресете
+            // → note-on в пустоту → тишина. Грузим нужный пресет из того же SF2.
+            do {
+                try sampler.loadSoundBankInstrument(at: url, program: program,
+                    bankMSB: UInt8(kAUSampler_DefaultMelodicBankMSB), bankLSB: 0)
+                loadedProgram = program
+            } catch {
+                // В этом SF2 нет такого пресета — откат на GM Grand Piano (program 0),
+                // чтобы всегда был звук, а не тишина (эталон MuseScore §4: fallback).
+                if loadedProgram != 0 {
+                    try? sampler.loadSoundBankInstrument(at: url, program: 0,
+                        bankMSB: UInt8(kAUSampler_DefaultMelodicBankMSB), bankLSB: 0)
+                    loadedProgram = 0
+                }
+            }
         } else {
-            // Fallback to default General MIDI
-            sampler.sendProgramChange(UInt8(midiProgram), bankMSB: UInt8(kAUSampler_DefaultMelodicBankMSB),
+            // SoundFont не загружен — пробуем General MIDI напрямую.
+            sampler.sendProgramChange(program, bankMSB: UInt8(kAUSampler_DefaultMelodicBankMSB),
                                       bankLSB: UInt8(kAUSampler_DefaultBankLSB), onChannel: channel)
+            loadedProgram = program
         }
     }
 

@@ -15,16 +15,21 @@ class MusicXMLExporter {
     /// printed or saved sheet is always black ink. Set per `export(...)` call.
     private var colorizeVoices = false
 
-    /// MuseScore-parity voice colours. Voice 1 stays black (the common single-voice
-    /// case is unchanged); voices 2–4 get green/orange/purple. Verovio honours the
-    /// MusicXML `color` attribute on `<note>`, colouring notehead+stem+flag.
+    /// MuseScore 4 voice colours (exact hex from engravingconfiguration.cpp
+    /// DEFAULT_VOICE_COLORS). Voice 1 stays black on screen: MuseScore only tints
+    /// voice 1 blue (#0065BF) in its explicit "show voice colours" mode, not the
+    /// default view, and the common single-voice case must read as plain ink.
+    /// Voices 2–4 use MuseScore's real values — green/orange/magenta (note: v4's
+    /// voice 4 is magenta #C31989, NOT the purple #6038FC, which is the all-voices
+    /// colour). Verovio honours the MusicXML `color` attribute, colouring
+    /// notehead+stem+flag.
     private func colorAttribute(for event: NoteEvent) -> String {
         guard colorizeVoices else { return "" }
         switch event.voice {
         case .voice1: return ""
-        case .voice2: return " color=\"#0E8A16\""
-        case .voice3: return " color=\"#D2691E\""
-        case .voice4: return " color=\"#8B2FC9\""
+        case .voice2: return " color=\"#007F00\""
+        case .voice3: return " color=\"#C53F00\""
+        case .voice4: return " color=\"#C31989\""
         }
     }
 

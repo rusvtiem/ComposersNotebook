@@ -32,12 +32,15 @@ final class VerovioEngine {
     /// portrait (21000×29700, ratio 210:297), so the staff sits at the top-left of a
     /// real page like MuseScore/Dorico, and the fixed aspect means zoom no longer
     /// reshapes the sheet.
-    /// `font: Bravura` — the SMuFL reference font (Steinberg), same glyph set the
-    /// professional engravers use; without it Verovio falls back to Leipzig.
-    /// staffLineWidth/stemWidth left at Verovio defaults so it honours Bravura's
-    /// own engravingDefaults.
+    /// `font: Leland` with `fontFallback: Bravura` — this is exactly MuseScore 4's
+    /// scheme: Leland (by Martin Keary / Simon Smith, SIL OFL) is the primary music
+    /// font, Bravura (Steinberg, SIL OFL) covers any glyph Leland is missing. Leland's
+    /// traditional-engraving contour is what makes a score read as MuseScore 4 rather
+    /// than our earlier Bravura approximation. Both fonts ship in Vendor/verovio/data/.
+    /// staffLineWidth/stemWidth left at Verovio defaults so it honours Leland's own
+    /// engravingDefaults.
     private static let options = """
-    {"pageWidth": 2100, "pageHeight": 2970, "adjustPageHeight": false, "scale": 40, "breaks": "auto", "header": "none", "footer": "none", "font": "Bravura"}
+    {"pageWidth": 2100, "pageHeight": 2970, "adjustPageHeight": false, "scale": 40, "breaks": "auto", "header": "none", "footer": "none", "font": "Leland", "fontFallback": "Bravura"}
     """
 
     /// Render a full MusicXML document to a single SVG (page 1).
