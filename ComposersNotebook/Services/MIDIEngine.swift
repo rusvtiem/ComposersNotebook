@@ -421,86 +421,132 @@ class MIDIEngine: ObservableObject {
 
     // MARK: - Play Score (legacy: без раскрытия повторов)
 
+    /// One note to sound during playback, timed by its absolute onset (seconds from
+    /// the start instant) rather than a running sum of sleeps.
+    struct ScheduledNote: Equatable {
+        let onset: Double        // seconds from playback start
+        let durationSec: Double  // sounding length
+        let midi: UInt8
+        let velocity: UInt8
+        let program: Int
+        let tied: Bool
+    }
+
+    /// Flatten the score into absolutely-timed notes. Resolves per-measure tempo and
+    /// time signature exactly as `PlaybackProgress.build` does (same measure onsets),
+    /// so a note's onset sits on the same timeline the on-screen cursor reads — the
+    /// two can't drift apart. Each event's onset is its measure's onset plus its beat
+    /// offset within the measure; grace notes (0 metric beats) sound but consume no
+    /// grid time. Pure/static (nonisolated) so it's unit-testable without audio.
+    nonisolated static func buildNoteSchedule(score: Score, fromMeasure: Int) -> [ScheduledNote] {
+        let baseBPM = score.tempo.bpm
+        let start = max(0, fromMeasure)
+        guard start < score.measureCount else { return [] }
+        var out: [ScheduledNote] = []
+        var measureStart = 0.0
+        for measureIndex in start..<score.measureCount {
+            var currentBPM = baseBPM
+            for part in score.parts where measureIndex < part.measures.count {
+                if let tempo = part.measures[measureIndex].tempoMarking { currentBPM = tempo.bpm }
+            }
+            let secPerBeat = currentBPM > 0 ? 60.0 / currentBPM : 0.5
+
+            var measureTimeSig = score.timeSignature
+            for part in score.parts {
+                let program = part.effectiveMidiProgram
+                for staff in part.staves where measureIndex < staff.measures.count {
+                    let measure = staff.measures[measureIndex]
+                    if let ts = measure.timeSignature { measureTimeSig = ts }
+                    var beatOffset = 0.0
+                    for event in measure.events {
+                        let onset = measureStart + beatOffset * secPerBeat
+                        // Grace notes carry 0 metric beats — give them their written
+                        // length so they still sound, but don't advance the grid.
+                        let soundBeats = event.actualBeats > 0 ? event.actualBeats : event.duration.beats
+                        let durSec = soundBeats * secPerBeat
+                        switch event.type {
+                        case .note(let pitch):
+                            out.append(ScheduledNote(onset: onset, durationSec: durSec,
+                                                     midi: UInt8(clamping: pitch.midiNote),
+                                                     velocity: UInt8(clamping: event.velocity),
+                                                     program: program, tied: event.tiedToNext))
+                        case .chord(let pitches):
+                            for p in pitches {
+                                out.append(ScheduledNote(onset: onset, durationSec: durSec,
+                                                         midi: UInt8(clamping: p.midiNote),
+                                                         velocity: UInt8(clamping: event.velocity),
+                                                         program: program, tied: event.tiedToNext))
+                            }
+                        case .rest:
+                            break
+                        }
+                        beatOffset += max(0, event.actualBeats)
+                    }
+                }
+            }
+            measureStart += measureTimeSig.totalBeats * secPerBeat
+        }
+        return out
+    }
+
     func playScore(_ score: Score, fromMeasure: Int = 0) {
         stop()
+        ensureEngineRunning()
         isPlaying = true
 
         // Arm the on-screen playback cursor: schedule of measure onsets + the
         // start instant. The surface samples these each frame to place the line.
-        playbackProgress = PlaybackProgress.build(score: score, fromMeasure: fromMeasure)
-        playbackStartDate = Date()
+        let progress = PlaybackProgress.build(score: score, fromMeasure: fromMeasure)
+        let startDate = Date()
+        playbackProgress = progress
+        playbackStartDate = startDate
 
+        // Preload each part's instrument once, before any note fires.
+        for part in score.parts { applySettingsForInstrument(part.instrument) }
+
+        let schedule = MIDIEngine.buildNoteSchedule(score: score, fromMeasure: fromMeasure)
+        guard !schedule.isEmpty else {
+            // Nothing to sound (e.g. all rests) — still let the cursor sweep, then end.
+            playbackTask = Task { @MainActor in
+                let wait = startDate.addingTimeInterval(progress.totalDuration).timeIntervalSinceNow
+                if wait > 0 { try? await Task.sleep(for: .seconds(wait)) }
+                isPlaying = false
+                playbackStartDate = nil
+                playbackProgress = nil
+            }
+            return
+        }
+
+        // Fire every note against the FIXED start instant. Because each onset is
+        // measured from `startDate` (not a running sum), scheduling latency on one
+        // note never pushes the next — the sound stays locked to the wall clock the
+        // cursor uses, instead of sliding progressively behind it.
         playbackTask = Task { @MainActor in
-            let baseBPM = score.tempo.bpm
-
-            for measureIndex in fromMeasure..<score.measureCount {
-                guard isPlaying else { break }
-
-                // Determine current tempo (check for tempo changes)
-                var currentBPM = baseBPM
-                for part in score.parts {
-                    if let tempo = part.measures[measureIndex].tempoMarking {
-                        currentBPM = tempo.bpm
-                    }
-                }
-                let secPerBeat = 60.0 / currentBPM
-
-                // Collect all events across parts for this measure — все партии
-                // играются ПАРАЛЛЕЛЬНО (каждая своей Task), ждём один раз в конце.
-                var measureTimeSig = score.timeSignature
-                // Обходим ВСЕ нотоносцы каждой партии (grand staff = 2 стана: treble+bass).
-                // Раньше брали part.measures (= staves[0]) и bass-стан фортепиано молчал.
-                for part in score.parts {
-                    for staff in part.staves {
-                        guard measureIndex < staff.measures.count else { continue }
-                        let measure = staff.measures[measureIndex]
-                        if let ts = measure.timeSignature { measureTimeSig = ts }
-
-                        Task {
-                            setInstrument(midiProgram: part.effectiveMidiProgram)
-                            applySettingsForInstrument(part.instrument)
-
-                            for event in measure.events {
-                                guard isPlaying else { return }
-
-                                let durationSec = event.duration.beats * secPerBeat
-
-                                switch event.type {
-                                case .note(let pitch):
-                                    let note = UInt8(clamping: pitch.midiNote)
-                                    let vel = UInt8(clamping: event.velocity)
-                                    sampler.startNote(note, withVelocity: vel, onChannel: 0)
-                                    try? await Task.sleep(for: .seconds(durationSec))
-                                    if !event.tiedToNext {
-                                        sampler.stopNote(note, onChannel: 0)
-                                    }
-
-                                case .chord(let pitches):
-                                    let vel = UInt8(clamping: event.velocity)
-                                    for p in pitches {
-                                        sampler.startNote(UInt8(clamping: p.midiNote), withVelocity: vel, onChannel: 0)
-                                    }
-                                    try? await Task.sleep(for: .seconds(durationSec))
-                                    if !event.tiedToNext {
-                                        for p in pitches {
-                                            sampler.stopNote(UInt8(clamping: p.midiNote), onChannel: 0)
-                                        }
-                                    }
-
-                                case .rest:
-                                    try? await Task.sleep(for: .seconds(durationSec))
-                                }
-                            }
+            await withTaskGroup(of: Void.self) { group in
+                for n in schedule {
+                    group.addTask { @MainActor [weak self] in
+                        guard let self else { return }
+                        let wait = startDate.addingTimeInterval(n.onset).timeIntervalSinceNow
+                        if wait > 0 { try? await Task.sleep(for: .seconds(wait)) }
+                        guard self.isPlaying, !Task.isCancelled else { return }
+                        self.setInstrument(midiProgram: n.program)
+                        self.sampler.startNote(n.midi, withVelocity: n.velocity, onChannel: 0)
+                        if !n.tied {
+                            try? await Task.sleep(for: .seconds(n.durationSec))
+                            if self.isPlaying { self.sampler.stopNote(n.midi, onChannel: 0) }
                         }
                     }
                 }
-
-                // Ждём длительность такта ОДИН раз (не N раз на каждую партию).
-                let measureDuration = measureTimeSig.totalBeats * secPerBeat
-                try? await Task.sleep(for: .seconds(measureDuration))
+                // Hold until the last measure's end so the cursor completes its sweep.
+                group.addTask { @MainActor [weak self] in
+                    let wait = startDate.addingTimeInterval(progress.totalDuration).timeIntervalSinceNow
+                    if wait > 0 { try? await Task.sleep(for: .seconds(wait)) }
+                    _ = self
+                }
             }
-
             isPlaying = false
+            playbackStartDate = nil
+            playbackProgress = nil
         }
     }
 
