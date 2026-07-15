@@ -343,6 +343,27 @@ struct VerovioSVGGeometry {
         return (x, ms.staff)
     }
 
+    /// The playback cursor line for `measureIndex` at horizontal `fraction`
+    /// (0…1 across that measure's staff span). Spans vertically from the top of the
+    /// measure's highest staff to the bottom of its lowest — the whole system
+    /// height, as MuseScore's playback cursor does — so on a grand staff the line
+    /// crosses both staves. `width` scales with the staff so the bar reads the same
+    /// at any zoom. All values in viewBox units. nil if the measure was not rendered.
+    func playheadLine(measureIndex: Int, fraction: CGFloat)
+        -> (x: CGFloat, top: CGFloat, bottom: CGFloat, width: CGFloat)? {
+        guard measureIndex >= 0, measureIndex < measures.count else { return nil }
+        let staves = measures[measureIndex].staves.map(\.staff)
+        guard let firstStaff = staves.first else { return nil }
+        let lo = staves.map { $0.xRange.lowerBound }.min() ?? firstStaff.xRange.lowerBound
+        let hi = staves.map { $0.xRange.upperBound }.max() ?? firstStaff.xRange.upperBound
+        let clamped = min(max(fraction, 0), 1)
+        let x = lo + (hi - lo) * clamped
+        let top = staves.map { $0.top }.min() ?? firstStaff.top
+        let bottom = staves.map { $0.bottom }.max() ?? firstStaff.bottom
+        let width = max(firstStaff.staffSpace * 0.28, 1)
+        return (x, top, bottom, width)
+    }
+
     /// Resolve a tapped point to the (measure, staff-in-measure) it lands in, with
     /// that staff. Horizontal position picks the measure (its staff x-range), vertical
     /// position picks the staff within it (nearest by line-band, within a staff-space

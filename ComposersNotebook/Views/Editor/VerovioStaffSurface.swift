@@ -24,6 +24,10 @@ import WebKit
 ///   - Tap misses every notehead (select) -> Detect: `note(near:)` == nil -> Recover: no-op deselect.
 struct VerovioStaffSurface: View {
     @ObservedObject var viewModel: ScoreViewModel
+    /// Observed directly (not through `viewModel`, which stores it as a plain `let`):
+    /// SwiftUI does not track nested ObservableObjects, so without this the playback
+    /// cursor would not appear on Play or disappear on Stop. Same shared instance.
+    @ObservedObject private var midiEngine = MIDIEngine.shared
     /// Width measured by the parent outside the ScrollView (a GeometryReader
     /// nested in a ScrollView collapses to zero height).
     let availableWidth: CGFloat
@@ -33,6 +37,11 @@ struct VerovioStaffSurface: View {
     /// instead of the theme-dependent system accent.
     private static let museScoreSelectionBlueHex = "#0065BF"
     private static let museScoreSelectionBlue = Color(hex: museScoreSelectionBlueHex)
+
+    /// MuseScore 4 accent blue (#2093FE), translucent — the moving playback cursor.
+    /// Deliberately lighter and see-through so it reads as a playing-position sweep
+    /// (like a video scrubber) and never gets confused with the solid input caret.
+    private static let playbackCursor = Color(hex: "#2093FE").opacity(0.45)
 
     @State private var svg: String?
     @State private var geometry: VerovioSVGGeometry?
@@ -113,6 +122,31 @@ struct VerovioStaffSurface: View {
                     // system accent — the theme-dependent iOS blue read as an artefact.
                     .stroke(Self.museScoreSelectionBlue.opacity(0.8), lineWidth: 1.5)
                     .allowsHitTesting(false)
+                }
+
+                // Playback cursor: a translucent vertical bar that sweeps the score
+                // while it plays (MuseScore's playing-position line, separate from the
+                // input caret above). TimelineView(.animation) re-samples every frame,
+                // so the bar moves smoothly; it only exists while `isPlaying`, so it
+                // vanishes on stop/pause.
+                if midiEngine.isPlaying,
+                   let start = midiEngine.playbackStartDate,
+                   let progress = midiEngine.playbackProgress {
+                    TimelineView(.animation) { timeline in
+                        let elapsed = timeline.date.timeIntervalSince(start)
+                        if let loc = progress.locate(elapsed: elapsed),
+                           let line = geometry.playheadLine(measureIndex: loc.measure,
+                                                            fraction: CGFloat(loc.fraction)) {
+                            Path { path in
+                                path.move(to: CGPoint(x: line.x * unitToPoint, y: line.top * unitToPoint))
+                                path.addLine(to: CGPoint(x: line.x * unitToPoint, y: line.bottom * unitToPoint))
+                            }
+                            .stroke(Self.playbackCursor,
+                                    style: StrokeStyle(lineWidth: max(line.width * unitToPoint, 2),
+                                                       lineCap: .round))
+                            .allowsHitTesting(false)
+                        }
+                    }
                 }
 
                 Color.clear

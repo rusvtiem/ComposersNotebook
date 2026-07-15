@@ -14,6 +14,14 @@ class MIDIEngine: ObservableObject {
     @Published var isPlaying = false
     @Published var isSoundFontLoaded = false
 
+    /// Drives the on-screen playback cursor (the moving vertical line that sweeps
+    /// the score during Play). `playbackStartDate` is when the current playback
+    /// began; `playbackProgress` maps elapsed time to a measure+fraction. Both are
+    /// set when `playScore` starts and cleared on stop/pause, so the cursor shows
+    /// only while sound is actually playing.
+    @Published var playbackStartDate: Date?
+    @Published var playbackProgress: PlaybackProgress?
+
     /// URL активного SoundFont — нужен чтобы перегружать конкретный пресет (program)
     /// из того же банка при смене инструмента. Без него setInstrument не мог сменить
     /// пресет ни на что кроме пиано.
@@ -417,6 +425,11 @@ class MIDIEngine: ObservableObject {
         stop()
         isPlaying = true
 
+        // Arm the on-screen playback cursor: schedule of measure onsets + the
+        // start instant. The surface samples these each frame to place the line.
+        playbackProgress = PlaybackProgress.build(score: score, fromMeasure: fromMeasure)
+        playbackStartDate = Date()
+
         playbackTask = Task { @MainActor in
             let baseBPM = score.tempo.bpm
 
@@ -556,6 +569,8 @@ class MIDIEngine: ObservableObject {
         isPlaying = false
         playbackTask?.cancel()
         playbackTask = nil
+        playbackStartDate = nil
+        playbackProgress = nil
         for note: UInt8 in 0...127 {
             sampler.stopNote(note, onChannel: 0)
         }
@@ -573,6 +588,8 @@ class MIDIEngine: ObservableObject {
         isPaused = false
         playbackTask?.cancel()
         playbackTask = nil
+        playbackStartDate = nil
+        playbackProgress = nil
         for note: UInt8 in 0...127 {
             sampler.stopNote(note, onChannel: 0)
         }
