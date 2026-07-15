@@ -649,7 +649,7 @@ struct MeasureView: View {
                     }
                     let isBeamable = event.duration.value == .eighth || event.duration.value == .sixteenth || event.duration.value == .thirtySecond
                     drawNoteHead(context: context, x: noteX, y: y, duration: event.duration.value, stemUp: stemUp, selected: isEventSelected, skipFlags: isBeamable, staffTop: staffTop)
-                    drawAugmentationDots(context: context, x: noteX, y: y, dotted: event.duration.dotted, doubleDotted: event.duration.doubleDotted, staffTop: staffTop)
+                    drawAugmentationDots(context: context, x: noteX, y: y, dots: event.duration.dots, staffTop: staffTop)
                     drawLedgerLines(context: context, pitch: pitch, x: noteX, staffTop: staffTop)
                     drawAccidental(context: context, pitch: pitch, x: noteX, y: y, showNatural: event.showNatural)
                     notePositions.append(NotePosition(x: noteX, y: y, eventIndex: eventIndex))
@@ -673,7 +673,7 @@ struct MeasureView: View {
                             drawSelectionHighlight(context: context, x: noteX, y: y)
                         }
                         drawNoteHead(context: context, x: noteX, y: y, duration: event.duration.value, stemUp: stemUp, selected: isEventSelected, skipFlags: isBeamable, staffTop: staffTop)
-                        drawAugmentationDots(context: context, x: noteX, y: y, dotted: event.duration.dotted, doubleDotted: event.duration.doubleDotted, staffTop: staffTop)
+                        drawAugmentationDots(context: context, x: noteX, y: y, dots: event.duration.dots, staffTop: staffTop)
                         drawLedgerLines(context: context, pitch: pitch, x: noteX, staffTop: staffTop)
                         drawAccidental(context: context, pitch: pitch, x: noteX, y: y, showNatural: event.showNatural)
                     }
@@ -1371,8 +1371,8 @@ struct MeasureView: View {
     /// Draw augmentation dot(s) for dotted/double-dotted notes. Sizes are staff-space
     /// relative (SMuFL: dot ≈ 0.2sp). A dot for a note sitting ON a line moves up into
     /// the space above; a note in a space keeps the dot at its own height.
-    private func drawAugmentationDots(context: GraphicsContext, x: CGFloat, y: CGFloat, dotted: Bool, doubleDotted: Bool, staffTop: CGFloat) {
-        guard dotted || doubleDotted else { return }
+    private func drawAugmentationDots(context: GraphicsContext, x: CGFloat, y: CGFloat, dots: Int, staffTop: CGFloat) {
+        guard dots > 0 else { return }
         let sp = staffLineSpacing
         let headHalf = sp / 2 - 1
         let dotRadius: CGFloat = sp * 0.18
@@ -1382,12 +1382,11 @@ struct MeasureView: View {
         let steps = Int(((y - staffTop) / half).rounded())
         let onLine = steps % 2 == 0
         let dotY = onLine ? y - half : y
-        let dot1 = Path(ellipseIn: CGRect(x: dotX - dotRadius, y: dotY - dotRadius, width: dotRadius * 2, height: dotRadius * 2))
-        context.fill(dot1, with: .color(theme.noteHead))
-        if doubleDotted {
-            let dot2X = dotX + sp * 0.45
-            let dot2 = Path(ellipseIn: CGRect(x: dot2X - dotRadius, y: dotY - dotRadius, width: dotRadius * 2, height: dotRadius * 2))
-            context.fill(dot2, with: .color(theme.noteHead))
+        // One dot per augmentation (MuseScore/MusicXML hold up to 4), spaced evenly.
+        for i in 0..<dots {
+            let cx = dotX + CGFloat(i) * sp * 0.45
+            let dot = Path(ellipseIn: CGRect(x: cx - dotRadius, y: dotY - dotRadius, width: dotRadius * 2, height: dotRadius * 2))
+            context.fill(dot, with: .color(theme.noteHead))
         }
     }
 

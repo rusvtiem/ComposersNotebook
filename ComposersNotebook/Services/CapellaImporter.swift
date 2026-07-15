@@ -265,7 +265,7 @@ private class CapellaXMLParser: NSObject, XMLParserDelegate {
         case 32: durValue = .thirtySecond
         default: durValue = .quarter
         }
-        return Duration(value: durValue, dotted: dots >= 1, doubleDotted: dots >= 2)
+        return Duration(value: durValue, dots: dots)
     }
 
     private func stepToPitchName(_ step: Int) -> PitchName {

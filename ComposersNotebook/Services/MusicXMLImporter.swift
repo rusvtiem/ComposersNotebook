@@ -204,8 +204,7 @@ class MusicXMLImporter: NSObject, XMLParserDelegate {
         var alter: Int = 0
         var duration: Int = 4 // in divisions
         var type: String = "quarter"
-        var isDotted: Bool = false
-        var isDoubleDotted: Bool = false
+        var dotCount: Int = 0
         var tiedStart: Bool = false
         var tiedStop: Bool = false
         var slurStart: Bool = false
@@ -348,11 +347,7 @@ class MusicXMLImporter: NSObject, XMLParserDelegate {
             currentNote?.grace = attributes["slash"] == "yes" ? .acciaccatura : .appoggiatura
 
         case "dot":
-            if currentNote?.isDotted == true {
-                currentNote?.isDoubleDotted = true
-            } else {
-                currentNote?.isDotted = true
-            }
+            currentNote?.dotCount += 1
 
         case "tied":
             if let type = attributes["type"] {
@@ -671,7 +666,7 @@ class MusicXMLImporter: NSObject, XMLParserDelegate {
 
                 // Advance beat counter ONLY for the head of a stack (not chord additions).
                 if !note.isChord {
-                    let baseBeats = beatsForType(note.type, dotted: note.isDotted, doubleDotted: note.isDoubleDotted)
+                    let baseBeats = beatsForType(note.type, dotCount: note.dotCount)
                     let multiplier = note.tuplet?.durationMultiplier ?? 1.0
                     currentBeatInMeasure += baseBeats * multiplier
                 }
@@ -1039,7 +1034,7 @@ class MusicXMLImporter: NSObject, XMLParserDelegate {
         }
     }
 
-    private func durationFromType(_ type: String, dotted: Bool, doubleDotted: Bool) -> Duration {
+    private func durationFromType(_ type: String, dotCount: Int) -> Duration {
         let value: DurationValue = {
             switch type {
             case "long", "longa": return .longa
@@ -1054,15 +1049,15 @@ class MusicXMLImporter: NSObject, XMLParserDelegate {
             default: return .quarter
             }
         }()
-        return Duration(value: value, dotted: dotted, doubleDotted: doubleDotted)
+        return Duration(value: value, dots: dotCount)
     }
 
-    private func beatsForType(_ type: String, dotted: Bool, doubleDotted: Bool) -> Double {
-        return durationFromType(type, dotted: dotted, doubleDotted: doubleDotted).beats
+    private func beatsForType(_ type: String, dotCount: Int) -> Double {
+        return durationFromType(type, dotCount: dotCount).beats
     }
 
     private func buildNoteEvent(_ info: NoteInfo, pitch: Pitch) -> NoteEvent {
-        let duration = durationFromType(info.type, dotted: info.isDotted, doubleDotted: info.isDoubleDotted)
+        let duration = durationFromType(info.type, dotCount: info.dotCount)
         var event = NoteEvent.note(pitch, duration: duration)
         event.articulations = info.articulations
         event.dynamic = info.dynamic
@@ -1077,14 +1072,14 @@ class MusicXMLImporter: NSObject, XMLParserDelegate {
     }
 
     private func buildRestEvent(_ info: NoteInfo, voice: VoiceLayer = .voice1) -> NoteEvent {
-        let duration = durationFromType(info.type, dotted: info.isDotted, doubleDotted: info.isDoubleDotted)
+        let duration = durationFromType(info.type, dotCount: info.dotCount)
         var event = NoteEvent.rest(duration: duration)
         event.voice = voice
         return event
     }
 
     private func buildChordOrNoteEvent(base: NoteInfo, pitches: [Pitch], voice: VoiceLayer = .voice1) -> NoteEvent {
-        let duration = durationFromType(base.type, dotted: base.isDotted, doubleDotted: base.isDoubleDotted)
+        let duration = durationFromType(base.type, dotCount: base.dotCount)
         var event: NoteEvent
         if pitches.count > 1 {
             event = NoteEvent.chord(pitches, duration: duration)

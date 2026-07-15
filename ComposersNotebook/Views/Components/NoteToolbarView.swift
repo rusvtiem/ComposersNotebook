@@ -795,24 +795,34 @@ struct NoteToolbarView: View {
             NoteToolbarButton(
                 icon: nil,
                 label: "•",
-                isActive: viewModel.isDotted,
+                isActive: viewModel.dotCount == 1,
                 fontSize: 20,
-                tooltip: "Точка (dotted) — увеличивает длительность в 1.5 раза"
-            ) {
-                viewModel.isDotted.toggle()
-                if viewModel.isDotted { viewModel.isDoubleDotted = false }
-            }
+                tooltip: "Точка (dotted) — ×1.5 длительности"
+            ) { viewModel.dotCount = viewModel.dotCount == 1 ? 0 : 1 }
 
             NoteToolbarButton(
                 icon: nil,
                 label: "••",
-                isActive: viewModel.isDoubleDotted,
+                isActive: viewModel.dotCount == 2,
                 fontSize: 16,
-                tooltip: "Двойная точка (double dotted) — увеличивает в 1.75 раза"
-            ) {
-                viewModel.isDoubleDotted.toggle()
-                if viewModel.isDoubleDotted { viewModel.isDotted = false }
-            }
+                tooltip: "Двойная точка (double dotted) — ×1.75"
+            ) { viewModel.dotCount = viewModel.dotCount == 2 ? 0 : 2 }
+
+            NoteToolbarButton(
+                icon: nil,
+                label: "•••",
+                isActive: viewModel.dotCount == 3,
+                fontSize: 13,
+                tooltip: "Тройная точка (triple dotted) — ×1.875"
+            ) { viewModel.dotCount = viewModel.dotCount == 3 ? 0 : 3 }
+
+            NoteToolbarButton(
+                icon: nil,
+                label: "••••",
+                isActive: viewModel.dotCount == 4,
+                fontSize: 11,
+                tooltip: "Четверная точка (quadruple dotted) — ×1.9375"
+            ) { viewModel.dotCount = viewModel.dotCount == 4 ? 0 : 4 }
 
             NoteToolbarButton(
                 icon: "link",

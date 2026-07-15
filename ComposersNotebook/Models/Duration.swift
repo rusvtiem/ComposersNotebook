@@ -73,29 +73,46 @@ enum DurationValue: Int, Codable, CaseIterable {
 
 struct Duration: Codable, Equatable {
     var value: DurationValue
-    var dotted: Bool          // точка (x1.5 длительности)
-    var doubleDotted: Bool    // двойная точка (x1.75 длительности)
+    /// Количество точек увеличения (0…4). Источник истины для точек — MuseScore/
+    /// MusicXML держат до 4 (¼.. = ×1.9375). Булевы `dotted`/`doubleDotted` —
+    /// вычисляемые обёртки поверх этого поля для обратной совместимости.
+    var dots: Int
     var triplet: Bool         // триоль (x2/3 длительности)
 
-    init(value: DurationValue, dotted: Bool = false, doubleDotted: Bool = false, triplet: Bool = false) {
+    /// Точка (≥1). get/set совместимы со старым кодом: set true → минимум 1 точка,
+    /// set false → 0 точек.
+    var dotted: Bool {
+        get { dots >= 1 }
+        set { dots = newValue ? max(dots, 1) : 0 }
+    }
+    /// Двойная точка (≥2). set true → ровно 2, set false → срезать до 1.
+    var doubleDotted: Bool {
+        get { dots >= 2 }
+        set { dots = newValue ? 2 : min(dots, 1) }
+    }
+
+    init(value: DurationValue, dots: Int, triplet: Bool = false) {
         self.value = value
-        self.dotted = dotted
-        self.doubleDotted = doubleDotted
+        self.dots = min(max(dots, 0), 4)
         self.triplet = triplet
     }
 
+    init(value: DurationValue, dotted: Bool = false, doubleDotted: Bool = false, triplet: Bool = false) {
+        self.value = value
+        self.dots = doubleDotted ? 2 : (dotted ? 1 : 0)
+        self.triplet = triplet
+    }
+
+    /// Множитель длительности для n точек: ×(2 − 2^(−n)).
+    /// 0 → 1, 1 → 1.5, 2 → 1.75, 3 → 1.875, 4 → 1.9375.
+    static func dotMultiplier(_ dots: Int) -> Double {
+        guard dots > 0 else { return 1.0 }
+        return 2.0 - pow(2.0, Double(-dots))
+    }
+
     /// Actual duration in beats (quarter note = 1.0)
-    ///
-    /// doubleDotted проверяется раньше dotted: импортёры (Capella, MusicXML)
-    /// для двойной точки выставляют ОБА флага (dotted=true, doubleDotted=true).
-    /// При обратном порядке двойная точка ошибочно звучала как ×1.5 вместо ×1.75.
     var beats: Double {
-        var result = value.beats
-        if doubleDotted {
-            result *= 1.75
-        } else if dotted {
-            result *= 1.5
-        }
+        var result = value.beats * Duration.dotMultiplier(dots)
         if triplet {
             result *= 2.0 / 3.0
         }
@@ -107,13 +124,35 @@ struct Duration: Codable, Equatable {
     /// при выставленных ОБОИХ (legacy `triplet` + `NoteEvent.tuplet`) наивный
     /// `beats * multiplier` давал ×4/9 вместо ×2/3.
     var beatsIgnoringTriplet: Double {
-        var result = value.beats
-        if doubleDotted {
-            result *= 1.75
-        } else if dotted {
-            result *= 1.5
+        value.beats * Duration.dotMultiplier(dots)
+    }
+
+    // Хранится `dots: Int`; читаем и старые документы (bool-флаги `dotted`/
+    // `doubleDotted`), и пишем оба представления для forward-совместимости.
+    enum CodingKeys: String, CodingKey {
+        case value, dots, dotted, doubleDotted, triplet
+    }
+
+    init(from decoder: Decoder) throws {
+        let c = try decoder.container(keyedBy: CodingKeys.self)
+        value = try c.decode(DurationValue.self, forKey: .value)
+        triplet = try c.decodeIfPresent(Bool.self, forKey: .triplet) ?? false
+        if let storedDots = try c.decodeIfPresent(Int.self, forKey: .dots) {
+            dots = min(max(storedDots, 0), 4)
+        } else {
+            let legacyDouble = try c.decodeIfPresent(Bool.self, forKey: .doubleDotted) ?? false
+            let legacySingle = try c.decodeIfPresent(Bool.self, forKey: .dotted) ?? false
+            dots = legacyDouble ? 2 : (legacySingle ? 1 : 0)
         }
-        return result
+    }
+
+    func encode(to encoder: Encoder) throws {
+        var c = encoder.container(keyedBy: CodingKeys.self)
+        try c.encode(value, forKey: .value)
+        try c.encode(dots, forKey: .dots)
+        try c.encode(triplet, forKey: .triplet)
+        try c.encode(dots >= 1, forKey: .dotted)
+        try c.encode(dots >= 2, forKey: .doubleDotted)
     }
 
     /// Duration in seconds at given BPM

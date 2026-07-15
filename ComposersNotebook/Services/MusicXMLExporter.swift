@@ -766,12 +766,8 @@ class MusicXMLExporter {
         }
         xml += "\n        <type>\(typeName)</type>"
 
-        // doubleDotted проверяется раньше dotted (как в Duration.beats): импортёры
-        // на двойную точку ставят ОБА флага — иначе экспорт дал бы три <dot/>.
-        if event.duration.doubleDotted {
-            xml += "\n        <dot/>"
-            xml += "\n        <dot/>"
-        } else if event.duration.dotted {
+        // Одна <dot/> на каждую точку увеличения (MusicXML держит до 4).
+        for _ in 0..<event.duration.dots {
             xml += "\n        <dot/>"
         }
 

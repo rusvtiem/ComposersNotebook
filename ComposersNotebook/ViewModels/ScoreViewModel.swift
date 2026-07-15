@@ -34,8 +34,18 @@ class ScoreViewModel: ObservableObject {
     @Published var inputMode: InputMode = .navigate
     @Published var selectedDuration: DurationValue = .quarter
     @Published var selectedAccidental: Accidental? = nil  // nil = без альтерации, .natural = явный бекар
-    @Published var isDotted: Bool = false
-    @Published var isDoubleDotted: Bool = false
+    /// Количество точек увеличения для ввода нот (0…4). Источник истины;
+    /// `isDotted`/`isDoubleDotted` — совместимые обёртки поверх него.
+    @Published var dotCount: Int = 0
+
+    var isDotted: Bool {
+        get { dotCount >= 1 }
+        set { dotCount = newValue ? max(dotCount, 1) : 0 }
+    }
+    var isDoubleDotted: Bool {
+        get { dotCount >= 2 }
+        set { dotCount = newValue ? 2 : min(dotCount, 1) }
+    }
     @Published var selectedArticulation: Articulation?
     @Published var selectedDynamic: DynamicMarking?
     @Published var tieNext: Bool = false
@@ -419,7 +429,7 @@ class ScoreViewModel: ObservableObject {
     }
 
     private func makeDuration() -> Duration {
-        Duration(value: selectedDuration, dotted: isDotted, doubleDotted: isDoubleDotted)
+        Duration(value: selectedDuration, dots: dotCount)
     }
 
     /// The note-input "shadow": a translucent preview of what the pen would drop at
@@ -845,10 +855,7 @@ class ScoreViewModel: ObservableObject {
     func deleteSelectedEvent() {
         // Replace note/chord with rest of same duration (don't shift other notes)
         mutateSelectedEvent { event in
-            var restEvent = NoteEvent(type: .rest, duration: event.duration)
-            restEvent.duration.dotted = event.duration.dotted
-            restEvent.duration.doubleDotted = event.duration.doubleDotted
-            event = restEvent
+            event = NoteEvent(type: .rest, duration: event.duration)
         }
         selectedEventIndex = nil
     }
@@ -1293,10 +1300,7 @@ class ScoreViewModel: ObservableObject {
         guard hasRangeSelection else { deleteSelectedEvent(); return }
         mutateSelectedRange { event in
             guard !event.isRest else { return }
-            var rest = NoteEvent(type: .rest, duration: event.duration)
-            rest.duration.dotted = event.duration.dotted
-            rest.duration.doubleDotted = event.duration.doubleDotted
-            event = rest
+            event = NoteEvent(type: .rest, duration: event.duration)
         }
         clearRangeAnchor()
         selectedEventIndex = nil

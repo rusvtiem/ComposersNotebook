@@ -216,7 +216,7 @@ private class MEIParser: NSObject, XMLParserDelegate {
         case "32": value = .thirtySecond
         default: value = .quarter
         }
-        return Duration(value: value, dotted: dots == 1, doubleDotted: dots >= 2)
+        return Duration(value: value, dots: dots)
     }
 
     private func convertArticulations(_ artic: String) -> [Articulation] {
