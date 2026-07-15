@@ -615,6 +615,13 @@ struct NoteToolbarView: View {
             ) { viewModel.addToChordMode.toggle() }
 
             NoteToolbarButton(
+                icon: "arrow.right.to.line",
+                label: "Вставка",
+                isActive: viewModel.insertMode,
+                tooltip: "Режим вставки: ввод ноты раздвигает музыку вправо, а не перезаписывает (как Ctrl+I в MuseScore)"
+            ) { viewModel.insertMode.toggle() }
+
+            NoteToolbarButton(
                 icon: "repeat",
                 label: "Повтор",
                 isActive: false,

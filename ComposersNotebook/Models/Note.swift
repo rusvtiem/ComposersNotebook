@@ -309,4 +309,30 @@ struct NoteEvent: Codable, Equatable, Identifiable {
     static func chord(_ pitches: [Pitch], duration: Duration) -> NoteEvent {
         NoteEvent(type: .chord(pitches: pitches), duration: duration)
     }
+
+    /// A distinct copy (fresh `id`, no tuplet) of this event carrying `duration` —
+    /// used by Insert-mode reflow to break one event into several individually
+    /// selectable, tie-able pieces. `id` is a `let`, so a piece can't be made by
+    /// mutating a struct copy; the full initializer mints a new identity.
+    func splitPiece(duration: Duration) -> NoteEvent {
+        NoteEvent(
+            type: type,
+            duration: duration,
+            grace: grace,
+            articulations: articulations,
+            dynamic: dynamic,
+            tiedToNext: tiedToNext,
+            slurStart: slurStart,
+            slurEnd: slurEnd,
+            stemDirection: stemDirection,
+            showNatural: showNatural,
+            voice: voice,
+            lyric: lyric,
+            technique: technique,
+            strumPattern: strumPattern,
+            tuplet: nil,
+            chordSymbol: chordSymbol,
+            fingering: fingering
+        )
+    }
 }

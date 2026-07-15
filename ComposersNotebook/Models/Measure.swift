@@ -141,6 +141,20 @@ extension Measure {
     /// grid; anything left below one tick is dropped.
     static func restEvents(fillingBeats beats: Double, startBeat: Double,
                            voice: VoiceLayer = .voice1) -> [NoteEvent] {
+        durationPieces(fillingBeats: beats, startBeat: startBeat).map { v in
+            var ev = NoteEvent(type: .rest, duration: Duration(value: v))
+            ev.voice = voice
+            return ev
+        }
+    }
+
+    /// The binary, individually-notated duration values that exactly fill `beats`
+    /// starting at metric position `startBeat`, choosing at each step the longest
+    /// value that both fits the remainder and aligns to the current tick (a value of
+    /// length L must begin on a multiple of L). Shared by rest fill and note split so
+    /// both decompose spans the same MuseScore-correct way. Fractional (tuplet)
+    /// remainders round to the 1/64 grid; sub-tick tails drop.
+    static func durationPieces(fillingBeats beats: Double, startBeat: Double) -> [DurationValue] {
         var remaining = Int((beats * ticksPerBeat).rounded())
         guard remaining > 0 else { return [] }
         var pos = Int((startBeat * ticksPerBeat).rounded())
@@ -148,7 +162,7 @@ extension Measure {
             (64, .whole), (32, .half), (16, .quarter),
             (8, .eighth), (4, .sixteenth), (2, .thirtySecond), (1, .sixtyFourth)
         ]
-        var out: [NoteEvent] = []
+        var out: [DurationValue] = []
         var safety = 0
         while remaining > 0 && safety < 256 {
             safety += 1
@@ -156,13 +170,104 @@ extension Measure {
             var chosen: (Int, DurationValue)?
             for (t, v) in table where t <= remaining && t <= align { chosen = (t, v); break }
             guard let (t, v) = chosen else { break }
-            var ev = NoteEvent(type: .rest, duration: Duration(value: v))
-            ev.voice = voice
-            out.append(ev)
+            out.append(v)
             remaining -= t
             pos += t
         }
         return out
+    }
+
+    /// MuseScore Insert-mode reflow: lay a flat stream of events into consecutive
+    /// bars of `totalBeats`, splitting any note/rest that crosses a barline into
+    /// tied binary pieces so every bar stays exactly full. Notes get tied across the
+    /// split (`tiedToNext`); the final piece of a note keeps the source event's own
+    /// `tiedToNext`. Rests split without ties. Tuplet events are kept atomic (never
+    /// split): if one can't fit the bar's remaining room it starts the next bar and
+    /// the gap is filled with rests. The last partial bar is padded with rests.
+    static func reflow(_ stream: [NoteEvent], totalBeats: Double) -> [[NoteEvent]] {
+        let tpb = ticksPerBeat
+        let barTicks = Int((totalBeats * tpb).rounded())
+        guard barTicks > 0 else { return [stream] }
+
+        var bars: [[NoteEvent]] = []
+        var bar: [NoteEvent] = []
+        var pos = 0  // tick position within the current bar
+
+        func closeBar() {
+            if pos < barTicks {
+                bar.append(contentsOf: restEvents(
+                    fillingBeats: Double(barTicks - pos) / tpb,
+                    startBeat: Double(pos) / tpb))
+            }
+            bars.append(bar)
+            bar = []
+            pos = 0
+        }
+
+        for event in stream {
+            // Grace notes carry no metric time — ride along with the current bar.
+            if event.actualBeats <= 0 {
+                bar.append(event)
+                continue
+            }
+            // Tuplets stay atomic: their beat span isn't a binary value we can split.
+            if event.tuplet != nil {
+                let len = Int((event.actualBeats * tpb).rounded())
+                if pos + len > barTicks && pos > 0 { closeBar() }
+                bar.append(event)
+                pos += len
+                if pos >= barTicks { closeBar() }
+                continue
+            }
+
+            var remaining = Int((event.actualBeats * tpb).rounded())
+            var isFirstPieceOfEvent = true
+            // Where each notated piece of THIS event landed, so the FINAL piece can
+            // inherit the source event's own tie once the whole event is placed.
+            // bar == -1 marks the still-open current bar; ≥0 an already-closed bar.
+            var placedRefs: [(bar: Int, idx: Int)] = []
+            while remaining > 0 {
+                let room = barTicks - pos
+                let take = min(remaining, room)
+                let pieces = durationPieces(fillingBeats: Double(take) / tpb,
+                                            startBeat: Double(pos) / tpb)
+                for v in pieces {
+                    var piece = event.splitPiece(duration: Duration(value: v))
+                    // A note's pieces are all provisionally tied onward (repeated
+                    // noteheads of one sustained sound); the true final tie is fixed
+                    // after the event is fully placed. Rests never tie.
+                    piece.tiedToNext = event.isRest ? false : true
+                    // Ornaments/lyrics/dynamics belong to the sounding onset only, so
+                    // strip them from every piece after the first to avoid duplicates.
+                    if !isFirstPieceOfEvent {
+                        piece.articulations = []
+                        piece.dynamic = nil
+                        piece.lyric = nil
+                        piece.chordSymbol = nil
+                        piece.slurStart = false
+                    }
+                    isFirstPieceOfEvent = false
+                    bar.append(piece)
+                    placedRefs.append((bar: -1, idx: bar.count - 1))
+                }
+                pos += take
+                remaining -= take
+                if pos >= barTicks {
+                    let closingIndex = bars.count
+                    for i in placedRefs.indices where placedRefs[i].bar == -1 {
+                        placedRefs[i].bar = closingIndex
+                    }
+                    closeBar()
+                }
+            }
+            // The last piece of a note carries the source event's real onward-tie.
+            if !event.isRest, let last = placedRefs.last {
+                if last.bar == -1 { bar[last.idx].tiedToNext = event.tiedToNext }
+                else { bars[last.bar][last.idx].tiedToNext = event.tiedToNext }
+            }
+        }
+        if !bar.isEmpty || bars.isEmpty { closeBar() }
+        return bars
     }
 
     /// MuseScore step-time overwrite: place `newEvent` at `startBeat`, removing

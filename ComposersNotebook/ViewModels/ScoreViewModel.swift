@@ -41,6 +41,10 @@ class ScoreViewModel: ObservableObject {
     // выделенном событии наращивает аккорд; когда выключен — ввод создаёт новую
     // ноту даже при выделении (убирает класс случайных аккордов от неявного тапа).
     @Published var addToChordMode: Bool = false
+    // Режим вставки (MuseScore Ctrl+I): ввод ноты не перезаписывает, а РАЗДВИГАЕТ
+    // музыку вправо — вся последующая музыка стана переливается по тактам с
+    // залиговкой через тактовую черту, при необходимости добавляются такты.
+    @Published var insertMode: Bool = false
 
     // Voice layers
     @Published var selectedVoice: VoiceLayer = .voice1
@@ -442,6 +446,10 @@ class ScoreViewModel: ObservableObject {
     /// — no placeholder is silently deleted, the remaining beats become real rests.
     private func placeEvent(_ event: NoteEvent) {
         guard isCurrentMeasurePathValid else { return }
+        if insertMode {
+            insertEventShiftingRight(event)
+            return
+        }
         let ts = effectiveTimeSignature
         let total = ts.totalBeats
         let evBeats = max(0, event.actualBeats)
@@ -457,6 +465,69 @@ class ScoreViewModel: ObservableObject {
         score.parts[pi].staves[si].measures[mi].events =
             Measure.overwrite(current, with: event, atBeat: cursorPosition, totalBeats: total)
         cursorPosition += evBeats
+    }
+
+    /// MuseScore Insert mode (Ctrl+I): insert `event` at the caret, shoving the whole
+    /// rest of THIS staff rightward. Everything from the caret to the staff's end is
+    /// flattened, the new event spliced in at the caret beat, then re-flowed into full
+    /// bars (notes tied across barlines) — growing the staff by however many bars the
+    /// added time needs. Other staves/parts are padded with empty bars so all stay
+    /// measure-aligned (the render/export path requires equal bar counts).
+    func insertEventShiftingRight(_ event: NoteEvent) {
+        guard isCurrentMeasurePathValid else { return }
+        let pi = selectedPartIndex, si = selectedStaffIndex, mi = selectedMeasureIndex
+        let total = effectiveTimeSignature.totalBeats
+        let insBeats = max(0, event.actualBeats)
+        guard insBeats > 0 else { return }
+
+        let tailMeasures = Array(score.parts[pi].staves[si].measures[mi...])
+        let oldTailCount = tailMeasures.count
+
+        // Flatten the tail, splicing the new event in at the caret beat of measure mi.
+        var stream: [NoteEvent] = []
+        var beat = 0.0
+        var spliced = false
+        for ev in tailMeasures[0].events {
+            if !spliced && beat + 1e-6 >= cursorPosition {
+                stream.append(event)
+                spliced = true
+            }
+            stream.append(ev)
+            beat += max(0, ev.actualBeats)
+        }
+        if !spliced { stream.append(event) }
+        for m in tailMeasures.dropFirst() { stream.append(contentsOf: m.events) }
+
+        let newBars = Measure.reflow(stream, totalBeats: total)
+        guard newBars.count >= oldTailCount else { return }
+
+        saveUndoState()
+
+        // Grow every part/staff so counts stay aligned, then rewrite this staff's tail.
+        let delta = newBars.count - oldTailCount
+        for _ in 0..<delta { score.appendMeasure() }
+
+        for (j, barEvents) in newBars.enumerated() {
+            let target = mi + j
+            if j < oldTailCount {
+                var m = tailMeasures[j]
+                m.events = barEvents
+                score.parts[pi].staves[si].measures[target] = m
+            } else {
+                score.parts[pi].staves[si].measures[target] = Measure(events: barEvents)
+            }
+        }
+
+        // Park the caret just after the inserted note.
+        var mIdx = mi
+        var b = cursorPosition + insBeats
+        let lastMeasure = score.parts[pi].staves[si].measures.count - 1
+        while b >= total - 1e-9 && mIdx < lastMeasure { b -= total; mIdx += 1 }
+        selectedMeasureIndex = mIdx
+        cursorPosition = b
+        selectedEventIndex = nil
+        selectedPitchIndex = nil
+        score.touch()
     }
 
     // MARK: - Note Selection & Editing
