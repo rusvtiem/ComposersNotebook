@@ -468,6 +468,32 @@ class ScoreViewModel: ObservableObject {
         return measure.events[idx]
     }
 
+    /// The event the note-input caret rides: the explicitly selected event, else
+    /// the event whose beat span covers `cursorPosition` on the focused staff — the
+    /// element the next entry will overwrite. MuseScore anchors its caret on the
+    /// actual drawn note/rest at the insertion point, so exposing its id lets the
+    /// caret sit on the rendered element instead of a measure-level indent.
+    private var caretEvent: NoteEvent? {
+        if let selected = selectedEvent { return selected }
+        guard let measure = currentMeasure else { return nil }
+        var offset = 0.0
+        for event in measure.events {
+            let beats = max(0, event.actualBeats)
+            // Skip zero-length events (grace notes) — they carry no beat cell.
+            if beats > 0, cursorPosition < offset + beats - 1e-6 { return event }
+            offset += beats
+        }
+        return measure.events.last
+    }
+
+    /// The Verovio exported id (`e` + dashless-lowercase UUID) of `caretEvent`, or
+    /// nil when the focused measure has no events. Matches the `@xml:id` Verovio drew
+    /// so the caret can be anchored on that rendered element.
+    var caretExportedID: String? {
+        guard let event = caretEvent else { return nil }
+        return "e" + event.id.uuidString.replacingOccurrences(of: "-", with: "").lowercased()
+    }
+
     func selectEvent(at index: Int) {
         guard let measure = currentMeasure, index < measure.events.count else { return }
         selectedEventIndex = index

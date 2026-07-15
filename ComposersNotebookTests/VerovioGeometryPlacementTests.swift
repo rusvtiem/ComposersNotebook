@@ -137,4 +137,43 @@ final class VerovioGeometryPlacementTests: XCTestCase {
         XCTAssertNil(geo.insertionColumn(measureIndex: 5, staffInMeasure: 0))
         XCTAssertNil(geo.insertionColumn(measureIndex: 0, staffInMeasure: 9))
     }
+
+    // MARK: - Event-anchored caret (the MuseScore-faithful root fix)
+
+    /// The real fix for Тимур's repeated "косяк": the caret must ride the *drawn*
+    /// element (the rest/note the cursor sits on), not a measure-level indent that
+    /// floats in the leading whitespace left of the rest. Anchored by the element's
+    /// exported id, the band centre equals that element's x — here the first
+    /// measure's treble whole-rest (mRest "mra", folds to 3401+500 = 3901).
+    func testEventAnchoredCaretSitsOnTheDrawnRest() {
+        guard let geo = VerovioSVGGeometry.parse(emptyPianoSVG()),
+              let caret = geo.insertionColumn(forEventID: "mra") else {
+            return XCTFail("no caret for mra")
+        }
+        XCTAssertEqual(caret.x, 3901, accuracy: 1, "caret centre must equal the drawn rest's x")
+        // Band spans the whole system (both staves of measure 0).
+        let topStaffFirstLine = 540 + margin     // 1040
+        let bottomStaffLastLine = 3060 + margin  // 3560
+        XCTAssertLessThan(caret.top, topStaffFirstLine, "band starts above the treble staff")
+        XCTAssertGreaterThan(caret.bottom, bottomStaffLastLine, "band ends below the bass staff")
+    }
+
+    /// An interior empty measure's caret also rides its own drawn rest (mRest "mrc",
+    /// folds to 5100+500 = 5600) — clearing the barline, band scoped to that measure.
+    func testEventAnchoredCaretForInteriorMeasure() {
+        guard let geo = VerovioSVGGeometry.parse(emptyPianoSVG()),
+              let caret = geo.insertionColumn(forEventID: "mrc") else {
+            return XCTFail("no caret for mrc")
+        }
+        XCTAssertEqual(caret.x, 5600, accuracy: 1, "caret sits on the interior rest")
+        let barline = 4600 + margin  // 5100
+        XCTAssertGreaterThan(caret.x, barline, "caret clears the barline")
+    }
+
+    func testEventAnchoredCaretNilForUnknownID() {
+        guard let geo = VerovioSVGGeometry.parse(emptyPianoSVG()) else {
+            return XCTFail("fixture failed to parse")
+        }
+        XCTAssertNil(geo.insertionColumn(forEventID: "nope"))
+    }
 }

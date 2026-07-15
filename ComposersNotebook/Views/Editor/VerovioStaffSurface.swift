@@ -253,6 +253,14 @@ struct VerovioStaffSurface: View {
                                                        staff: viewModel.selectedStaffIndex) else {
             return nil
         }
+        // Anchor the caret on the rendered element at the cursor beat (MuseScore's
+        // caret rides the drawn note/rest, not a measure-level indent). Fall back to
+        // the indent heuristic only if that event was not drawn — e.g. a measure
+        // mid-re-render.
+        if let id = viewModel.caretExportedID,
+           let band = geometry.insertionColumn(forEventID: id) {
+            return band
+        }
         return geometry.insertionColumn(measureIndex: viewModel.selectedMeasureIndex,
                                         staffInMeasure: flat)
     }

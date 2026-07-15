@@ -403,6 +403,33 @@ struct VerovioSVGGeometry {
         return (x, top, bottom, width)
     }
 
+    /// The note-input caret band anchored on the *rendered element* carrying
+    /// `exportedID` — the note or rest the cursor sits on. This is how MuseScore
+    /// places its caret: the translucent band rides the drawn notehead/rest at the
+    /// insertion beat, so it never floats in the leading whitespace (left of the
+    /// rest) or hugs a barline the way a fixed measure-level indent does. `x` is the
+    /// element's centre; the band spans the whole system — every staff of the
+    /// measure the element belongs to, so on a grand staff it crosses both staves.
+    /// nil if nothing rendered carries that id (caller falls back to the
+    /// measure-level `insertionColumn`).
+    func insertionColumn(forEventID exportedID: String)
+        -> (x: CGFloat, top: CGFloat, bottom: CGFloat, width: CGFloat)? {
+        guard let element = notes.first(where: { $0.id == exportedID }) else { return nil }
+        let x = element.point.x
+        // The band spans the system this element sits in: find the measure whose
+        // staff x-span contains it, then use all that measure's staves' outer lines.
+        let measure = measures.first { m in
+            m.staves.contains { $0.staff.xRange.contains(x) }
+        }
+        let bandStaves = measure.map { $0.staves.map(\.staff) } ?? staves
+        guard let anyStaff = bandStaves.first else { return nil }
+        let overshoot = anyStaff.staffSpace * 0.5
+        let top = (bandStaves.map { $0.top }.min() ?? anyStaff.top) - overshoot
+        let bottom = (bandStaves.map { $0.bottom }.max() ?? anyStaff.bottom) + overshoot
+        let width = max(anyStaff.staffSpace * 1.1, 1)
+        return (x, top, bottom, width)
+    }
+
     /// The playback cursor line for `measureIndex` at horizontal `fraction`
     /// (0…1 across that measure's staff span). Spans vertically from the top of the
     /// measure's highest staff to the bottom of its lowest — the whole system
