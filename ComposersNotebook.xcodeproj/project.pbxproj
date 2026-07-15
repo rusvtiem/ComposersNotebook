@@ -47,18 +47,22 @@
 		988157514CB4E43155945F37 /* InstrumentPickerSheet.swift in Sources */ = {isa = PBXBuildFile; fileRef = 636E287F60233C6FFEB3EC34 /* InstrumentPickerSheet.swift */; };
 		9FA45FA427C22C259C9A19E8 /* MeasurePropertiesView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 7099F4A8DD127C6D22FD41F2 /* MeasurePropertiesView.swift */; };
 		A0B92C12640348F6B6CE1F8B /* ChordSymbolEditor.swift in Sources */ = {isa = PBXBuildFile; fileRef = EE9F96F55499ECA122A5F485 /* ChordSymbolEditor.swift */; };
+		A3A6E0F77E41777EECAF9152 /* MeasureInvariantTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1647BE7619E1738F30A16E51 /* MeasureInvariantTests.swift */; };
 		A576554D32DE2DF5AF3A6567 /* MIDIInputBinder.swift in Sources */ = {isa = PBXBuildFile; fileRef = 2DBDE34D84A6EE8ACDF2DED5 /* MIDIInputBinder.swift */; };
 		A5C447F0166BC8776D4598C2 /* NoteToolbarView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 16488F411B4EA5FB4B977057 /* NoteToolbarView.swift */; };
 		B00A65CB074EC8EFA0E665AA /* HapticManager.swift in Sources */ = {isa = PBXBuildFile; fileRef = 258B049FF3BDAE14219D42FA /* HapticManager.swift */; };
 		B92B212B3BD2A945FA99C721 /* ExternalMIDIReceiver.swift in Sources */ = {isa = PBXBuildFile; fileRef = 068C6D907B670651E82A5C6E /* ExternalMIDIReceiver.swift */; };
+		B99186888ADC5026212D2E7C /* MusicXMLExportTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = A3B7CF0A1580DBF68E28C18F /* MusicXMLExportTests.swift */; };
 		BB881ADB87E40142AE3804C3 /* Pitch.swift in Sources */ = {isa = PBXBuildFile; fileRef = D82806EEF19B77753B5E8F85 /* Pitch.swift */; };
 		BE84974ADBD8C13F7CFD7CBA /* VerovioStaffSurface.swift in Sources */ = {isa = PBXBuildFile; fileRef = BD9C7B9E255C101B3DBF8C0D /* VerovioStaffSurface.swift */; };
 		C0C40345F922A38CC4EF8444 /* AppSupportContacts.swift in Sources */ = {isa = PBXBuildFile; fileRef = CFE90529AD079AAF1ECC7DF9 /* AppSupportContacts.swift */; };
+		C8EC87E02299C86FFC4ADE7E /* DiatonicTransposeTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 172633DDA0CF22BFAB2D4587 /* DiatonicTransposeTests.swift */; };
 		CBD7CC61B245383EF27697B6 /* SoundFontManager.swift in Sources */ = {isa = PBXBuildFile; fileRef = 5E0926F59E024C74C9195BF7 /* SoundFontManager.swift */; };
 		CE08C92988EF4608810D80F1 /* OctaveShift.swift in Sources */ = {isa = PBXBuildFile; fileRef = CF37449983CAD06A212D3231 /* OctaveShift.swift */; };
 		CEFC23B266A4FC844E1DD9F6 /* LetterInputView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 437AEBD2A108F257A1639D28 /* LetterInputView.swift */; };
 		CF0C34584979F0ADEDBD06C9 /* Note.swift in Sources */ = {isa = PBXBuildFile; fileRef = 8589EB828201460A07C202F3 /* Note.swift */; };
 		CF9CA91F7C622F016A451F9D /* ABCNotationImporter.swift in Sources */ = {isa = PBXBuildFile; fileRef = 845182DDC310ED1E6DCF3268 /* ABCNotationImporter.swift */; };
+		D7CAC8B9928E054AFF87A078 /* TupletTimingTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = F8CEA206DDB9A3C9696DDD3D /* TupletTimingTests.swift */; };
 		D83CA4FE19B5B797B3483568 /* MEIImporter.swift in Sources */ = {isa = PBXBuildFile; fileRef = 5812B8630C9063C710A50762 /* MEIImporter.swift */; };
 		D8C547840D8B83B9B860FFD2 /* MusicFontManager.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1612CB53F692E768A4C781C8 /* MusicFontManager.swift */; };
 		D94B51B04E087D92A8F2B211 /* GuitarProImporter.swift in Sources */ = {isa = PBXBuildFile; fileRef = FCB4B56794BAD9F955316678 /* GuitarProImporter.swift */; };
@@ -71,16 +75,29 @@
 		FA88E65596789A4B3D28E3BC /* MIDIFileHandler.swift in Sources */ = {isa = PBXBuildFile; fileRef = B96876E6DC6637C53E496FFA /* MIDIFileHandler.swift */; };
 /* End PBXBuildFile section */
 
+/* Begin PBXContainerItemProxy section */
+		FD7ABBF0AA010554636BA6FF /* PBXContainerItemProxy */ = {
+			isa = PBXContainerItemProxy;
+			containerPortal = 1765FF24E1FFF2682ED1847F /* Project object */;
+			proxyType = 1;
+			remoteGlobalIDString = 57F68D947462549826AA7472;
+			remoteInfo = ComposersNotebook;
+		};
+/* End PBXContainerItemProxy section */
+
 /* Begin PBXFileReference section */
 		068C6D907B670651E82A5C6E /* ExternalMIDIReceiver.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ExternalMIDIReceiver.swift; sourceTree = "<group>"; };
 		093CEAAE8CBA72093B7CC246 /* PDFExporter.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = PDFExporter.swift; sourceTree = "<group>"; };
 		0FA214476FE1FA3A1CD758E1 /* ThemeSettingsView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ThemeSettingsView.swift; sourceTree = "<group>"; };
 		1612CB53F692E768A4C781C8 /* MusicFontManager.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = MusicFontManager.swift; sourceTree = "<group>"; };
+		1647BE7619E1738F30A16E51 /* MeasureInvariantTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = MeasureInvariantTests.swift; sourceTree = "<group>"; };
 		16488F411B4EA5FB4B977057 /* NoteToolbarView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = NoteToolbarView.swift; sourceTree = "<group>"; };
+		172633DDA0CF22BFAB2D4587 /* DiatonicTransposeTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = DiatonicTransposeTests.swift; sourceTree = "<group>"; };
 		190212CA34ECBD03664EF613 /* Theme.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Theme.swift; sourceTree = "<group>"; };
 		1B80768D47A05D75303032ED /* MIDIEngine.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = MIDIEngine.swift; sourceTree = "<group>"; };
 		1BCFB51C3587D8D0E6748278 /* SoundSettingsView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SoundSettingsView.swift; sourceTree = "<group>"; };
 		1C0D6FAE077C7817273CB5E0 /* Measure.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Measure.swift; sourceTree = "<group>"; };
+		252D17B58E43F076623BD687 /* ComposersNotebookTests.xctest */ = {isa = PBXFileReference; includeInIndex = 0; lastKnownFileType = wrapper.cfbundle; path = ComposersNotebookTests.xctest; sourceTree = BUILT_PRODUCTS_DIR; };
 		258B049FF3BDAE14219D42FA /* HapticManager.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = HapticManager.swift; sourceTree = "<group>"; };
 		283B65C3125C9250B0E8AB52 /* ScoreValidator.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ScoreValidator.swift; sourceTree = "<group>"; };
 		287E43EA5C25B87FEF4570C3 /* MusicXMLImporter.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = MusicXMLImporter.swift; sourceTree = "<group>"; };
@@ -109,6 +126,7 @@
 		8767746B686DE77B5255977D /* EngravingEngine.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = EngravingEngine.swift; sourceTree = "<group>"; };
 		916C434B9E290052E7B7D88F /* ValidationView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ValidationView.swift; sourceTree = "<group>"; };
 		96555FF85927B90F1BE79A91 /* CNBFileManager.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = CNBFileManager.swift; sourceTree = "<group>"; };
+		A3B7CF0A1580DBF68E28C18F /* MusicXMLExportTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = MusicXMLExportTests.swift; sourceTree = "<group>"; };
 		A65DF18F2909BED9D221FE36 /* ContentView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ContentView.swift; sourceTree = "<group>"; };
 		A6B17635FA7B1DC13D45F669 /* Localizable.xcstrings */ = {isa = PBXFileReference; lastKnownFileType = text.json.xcstrings; path = Localizable.xcstrings; sourceTree = "<group>"; };
 		A79528689BF95ABCA43E9C29 /* ChordSymbol.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ChordSymbol.swift; sourceTree = "<group>"; };
@@ -132,6 +150,7 @@
 		EE9F96F55499ECA122A5F485 /* ChordSymbolEditor.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ChordSymbolEditor.swift; sourceTree = "<group>"; };
 		F180ED3F1454863D8676C257 /* MusicXMLExporter.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = MusicXMLExporter.swift; sourceTree = "<group>"; };
 		F85D1C62DDC7A2564A387949 /* ComposersNotebook.app */ = {isa = PBXFileReference; includeInIndex = 0; lastKnownFileType = wrapper.application; path = ComposersNotebook.app; sourceTree = BUILT_PRODUCTS_DIR; };
+		F8CEA206DDB9A3C9696DDD3D /* TupletTimingTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = TupletTimingTests.swift; sourceTree = "<group>"; };
 		FCB4B56794BAD9F955316678 /* GuitarProImporter.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = GuitarProImporter.swift; sourceTree = "<group>"; };
 		FCCF3E43EA929CF6D0795C46 /* VerovioPreviewView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = VerovioPreviewView.swift; sourceTree = "<group>"; };
 		FDA522273EC144D26A43A262 /* Instrument.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Instrument.swift; sourceTree = "<group>"; };
@@ -161,6 +180,7 @@
 			isa = PBXGroup;
 			children = (
 				FFCAB689CE24864CB8CC0655 /* ComposersNotebook */,
+				0B3F2360EB9914FAE641C4B3 /* ComposersNotebookTests */,
 				05540A17D3C38A3F1DB7D22F /* Packages */,
 				547C23BA537A07C8322E68AE /* Products */,
 			);
@@ -172,6 +192,17 @@
 				BDDD972C2349864CBA4F7648 /* ScoreViewModel.swift */,
 			);
 			path = ViewModels;
+			sourceTree = "<group>";
+		};
+		0B3F2360EB9914FAE641C4B3 /* ComposersNotebookTests */ = {
+			isa = PBXGroup;
+			children = (
+				172633DDA0CF22BFAB2D4587 /* DiatonicTransposeTests.swift */,
+				1647BE7619E1738F30A16E51 /* MeasureInvariantTests.swift */,
+				A3B7CF0A1580DBF68E28C18F /* MusicXMLExportTests.swift */,
+				F8CEA206DDB9A3C9696DDD3D /* TupletTimingTests.swift */,
+			);
+			path = ComposersNotebookTests;
 			sourceTree = "<group>";
 		};
 		12CBBAA7E874FA21075EE967 /* Editor */ = {
@@ -209,6 +240,7 @@
 			isa = PBXGroup;
 			children = (
 				F85D1C62DDC7A2564A387949 /* ComposersNotebook.app */,
+				252D17B58E43F076623BD687 /* ComposersNotebookTests.xctest */,
 			);
 			name = Products;
 			sourceTree = "<group>";
@@ -337,6 +369,24 @@
 			productReference = F85D1C62DDC7A2564A387949 /* ComposersNotebook.app */;
 			productType = "com.apple.product-type.application";
 		};
+		632FC8690EE08616FA3CCF3E /* ComposersNotebookTests */ = {
+			isa = PBXNativeTarget;
+			buildConfigurationList = 32542282667C76B93043B047 /* Build configuration list for PBXNativeTarget "ComposersNotebookTests" */;
+			buildPhases = (
+				ABB6DA973233728ADD98EF7C /* Sources */,
+			);
+			buildRules = (
+			);
+			dependencies = (
+				F0B284E5DE7E8A22E7F0927A /* PBXTargetDependency */,
+			);
+			name = ComposersNotebookTests;
+			packageProductDependencies = (
+			);
+			productName = ComposersNotebookTests;
+			productReference = 252D17B58E43F076623BD687 /* ComposersNotebookTests.xctest */;
+			productType = "com.apple.product-type.bundle.unit-test";
+		};
 /* End PBXNativeTarget section */
 
 /* Begin PBXProject section */
@@ -347,6 +397,10 @@
 				LastUpgradeCheck = 1600;
 				TargetAttributes = {
 					57F68D947462549826AA7472 = {
+						DevelopmentTeam = 65XX29Q6DL;
+						ProvisioningStyle = Automatic;
+					};
+					632FC8690EE08616FA3CCF3E = {
 						DevelopmentTeam = 65XX29Q6DL;
 						ProvisioningStyle = Automatic;
 					};
@@ -371,6 +425,7 @@
 			projectRoot = "";
 			targets = (
 				57F68D947462549826AA7472 /* ComposersNotebook */,
+				632FC8690EE08616FA3CCF3E /* ComposersNotebookTests */,
 			);
 		};
 /* End PBXProject section */
@@ -390,6 +445,17 @@
 /* End PBXResourcesBuildPhase section */
 
 /* Begin PBXSourcesBuildPhase section */
+		ABB6DA973233728ADD98EF7C /* Sources */ = {
+			isa = PBXSourcesBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+				C8EC87E02299C86FFC4ADE7E /* DiatonicTransposeTests.swift in Sources */,
+				A3A6E0F77E41777EECAF9152 /* MeasureInvariantTests.swift in Sources */,
+				B99186888ADC5026212D2E7C /* MusicXMLExportTests.swift in Sources */,
+				D7CAC8B9928E054AFF87A078 /* TupletTimingTests.swift in Sources */,
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
 		EAE87665F9FD6C7FEB56B961 /* Sources */ = {
 			isa = PBXSourcesBuildPhase;
 			buildActionMask = 2147483647;
@@ -456,7 +522,57 @@
 		};
 /* End PBXSourcesBuildPhase section */
 
+/* Begin PBXTargetDependency section */
+		F0B284E5DE7E8A22E7F0927A /* PBXTargetDependency */ = {
+			isa = PBXTargetDependency;
+			target = 57F68D947462549826AA7472 /* ComposersNotebook */;
+			targetProxy = FD7ABBF0AA010554636BA6FF /* PBXContainerItemProxy */;
+		};
+/* End PBXTargetDependency section */
+
 /* Begin XCBuildConfiguration section */
+		25370238BCAAA4F39F56A919 /* Debug */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				BUNDLE_LOADER = "$(TEST_HOST)";
+				CODE_SIGN_STYLE = Automatic;
+				DEVELOPMENT_TEAM = 65XX29Q6DL;
+				GCC_TREAT_WARNINGS_AS_ERRORS = NO;
+				GENERATE_INFOPLIST_FILE = YES;
+				LD_RUNPATH_SEARCH_PATHS = (
+					"$(inherited)",
+					"@executable_path/Frameworks",
+					"@loader_path/Frameworks",
+				);
+				PRODUCT_BUNDLE_IDENTIFIER = com.timshega.composersnotebook.tests;
+				SDKROOT = iphoneos;
+				SWIFT_VERSION = 5;
+				TARGETED_DEVICE_FAMILY = "1,2";
+				TEST_HOST = "$(BUILT_PRODUCTS_DIR)/Composer's Notebook.app/Composer's Notebook";
+			};
+			name = Debug;
+		};
+		31AC05A4A80C840518034665 /* Release */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				BUNDLE_LOADER = "$(TEST_HOST)";
+				CODE_SIGN_STYLE = Automatic;
+				DEVELOPMENT_TEAM = 65XX29Q6DL;
+				GCC_TREAT_WARNINGS_AS_ERRORS = NO;
+				GENERATE_INFOPLIST_FILE = YES;
+				LD_RUNPATH_SEARCH_PATHS = (
+					"$(inherited)",
+					"@executable_path/Frameworks",
+					"@loader_path/Frameworks",
+				);
+				PRODUCT_BUNDLE_IDENTIFIER = com.timshega.composersnotebook.tests;
+				SDKROOT = iphoneos;
+				SWIFT_VERSION = 5;
+				TARGETED_DEVICE_FAMILY = "1,2";
+				TEST_HOST = "$(BUILT_PRODUCTS_DIR)/Composer's Notebook.app/Composer's Notebook";
+			};
+			name = Release;
+		};
 		3696518FBE5F7BD1B9A92432 /* Release */ = {
 			isa = XCBuildConfiguration;
 			buildSettings = {
@@ -634,6 +750,15 @@
 			buildConfigurations = (
 				5AB636ECF80C65D98DF3404A /* Debug */,
 				AA257A93A31DE5543D15451E /* Release */,
+			);
+			defaultConfigurationIsVisible = 0;
+			defaultConfigurationName = Debug;
+		};
+		32542282667C76B93043B047 /* Build configuration list for PBXNativeTarget "ComposersNotebookTests" */ = {
+			isa = XCConfigurationList;
+			buildConfigurations = (
+				25370238BCAAA4F39F56A919 /* Debug */,
+				31AC05A4A80C840518034665 /* Release */,
 			);
 			defaultConfigurationIsVisible = 0;
 			defaultConfigurationName = Debug;

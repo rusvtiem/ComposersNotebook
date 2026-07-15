@@ -316,6 +316,7 @@ class MusicXMLExporter {
                 // never collide across a grand staff. Single-voice keeps voice == staff number.
                 let vNum: Int? = multiVoice ? ((sNum ?? 1) - 1) * 4 + group.voice.rawValue : sNum
                 let beams = beamDirectives(for: group.events, timeSig: effectiveTS)
+                let divMap = prefixRoundedDivisions(group.events)
                 var lastTechnique: PlaybackTechnique?
                 for event in group.events {
                     if let chord = event.chordSymbol {
@@ -334,7 +335,7 @@ class MusicXMLExporter {
                         """
                         lastTechnique = tech
                     }
-                    xml += exportNoteEvent(event, staffNumber: sNum, voiceNumber: vNum, multiVoice: multiVoice, beam: beams[event.id])
+                    xml += exportNoteEvent(event, staffNumber: sNum, voiceNumber: vNum, multiVoice: multiVoice, beam: beams[event.id], divisions: divMap[event.id])
                 }
                 previousGroupDivisions = groupDivisions(group.events)
             }
@@ -431,22 +432,22 @@ class MusicXMLExporter {
 
     // MARK: - Note Event
 
-    private func exportNoteEvent(_ event: NoteEvent, staffNumber: Int? = nil, voiceNumber: Int? = nil, multiVoice: Bool = false, beam: String? = nil) -> String {
+    private func exportNoteEvent(_ event: NoteEvent, staffNumber: Int? = nil, voiceNumber: Int? = nil, multiVoice: Bool = false, beam: String? = nil, divisions: Int? = nil) -> String {
         var xml = ""
 
         switch event.type {
         case .note(let pitch):
-            xml += exportNote(pitch: pitch, duration: event.duration, event: event, staffNumber: staffNumber, voiceNumber: voiceNumber, multiVoice: multiVoice, beam: beam)
+            xml += exportNote(pitch: pitch, duration: event.duration, event: event, staffNumber: staffNumber, voiceNumber: voiceNumber, multiVoice: multiVoice, beam: beam, divisions: divisions)
 
         case .chord(let pitches):
             for (i, pitch) in pitches.enumerated() {
-                xml += exportNote(pitch: pitch, duration: event.duration, event: event, isChord: i > 0, staffNumber: staffNumber, chordIndex: i, voiceNumber: voiceNumber, multiVoice: multiVoice, beam: beam)
+                xml += exportNote(pitch: pitch, duration: event.duration, event: event, isChord: i > 0, staffNumber: staffNumber, chordIndex: i, voiceNumber: voiceNumber, multiVoice: multiVoice, beam: beam, divisions: divisions)
             }
 
         case .rest:
             xml += "\n      <note\(Self.idAttribute(event.id))\(colorAttribute(for: event))>"
             xml += "\n        <rest/>"
-            xml += exportDuration(event, voice: voiceNumber ?? staffNumber)
+            xml += exportDuration(event, voice: voiceNumber ?? staffNumber, precomputed: divisions)
             if let staffNumber = staffNumber {
                 xml += "\n        <staff>\(staffNumber)</staff>"
             }
@@ -485,7 +486,7 @@ class MusicXMLExporter {
         return " id=\"e\(hex)\(suffix)\""
     }
 
-    private func exportNote(pitch: Pitch, duration: Duration, event: NoteEvent, isChord: Bool = false, staffNumber: Int? = nil, chordIndex: Int = 0, voiceNumber: Int? = nil, multiVoice: Bool = false, beam: String? = nil) -> String {
+    private func exportNote(pitch: Pitch, duration: Duration, event: NoteEvent, isChord: Bool = false, staffNumber: Int? = nil, chordIndex: Int = 0, voiceNumber: Int? = nil, multiVoice: Bool = false, beam: String? = nil, divisions: Int? = nil) -> String {
         var xml = "\n      <note\(Self.idAttribute(event.id, chordIndex: chordIndex))\(colorAttribute(for: event))>"
 
         // Grace — ПЕРВЫЙ ребёнок <note> по порядку MusicXML, до <chord/> и <pitch>.
@@ -509,7 +510,7 @@ class MusicXMLExporter {
 
         // Duration — у форшлага <duration> отсутствует по MusicXML (grace note
         // не имеет длительности); <voice>/<type>/<dot> сохраняются.
-        xml += exportDuration(event, voice: voiceNumber ?? staffNumber, graceMode: event.isGrace)
+        xml += exportDuration(event, voice: voiceNumber ?? staffNumber, graceMode: event.isGrace, precomputed: divisions)
 
         // Tuplet time-modification (3:2, 5:4, etc.)
         if let tuplet = event.tuplet {
@@ -715,13 +716,16 @@ class MusicXMLExporter {
 
     // MARK: - Duration
 
-    private func exportDuration(_ event: NoteEvent, voice: Int? = nil, graceMode: Bool = false) -> String {
+    private func exportDuration(_ event: NoteEvent, voice: Int? = nil, graceMode: Bool = false, precomputed: Int? = nil) -> String {
         // <duration> — звучащая длительность в делениях, с учётом tuplet
         // (event.actualBeats — единый источник тайминга, как в плейбеке). Раньше
         // бралось duration.beats × 4: tuplet игнорировался (триоль занимала полную
         // долю → переполнение такта у стороннего читателя), а 32-я × 4 = 0 → нота
         // пропадала. max(1) — страховка, чтобы duration никогда не был нулевым.
-        let divisions = max(1, Int((event.actualBeats * Double(divisionsPerQuarter)).rounded()))
+        // precomputed — префиксно-округлённое значение из prefixRoundedDivisions:
+        // сумма нот такта телескопирует в точную длину такта (нет дрейфа туплета).
+        // nil (нет контекста voice-стрима) → откат на независимое округление.
+        let divisions = precomputed ?? max(1, Int((event.actualBeats * Double(divisionsPerQuarter)).rounded()))
         let typeName: String
         switch event.duration.value {
         case .longa: typeName = "long"
@@ -789,12 +793,33 @@ class MusicXMLExporter {
 
     /// Sounding divisions for an arbitrary event stream (a voice group or a whole
     /// measure). Sizes the <backup> that rewinds the cursor to the measure start.
+    /// Rounds the *total* once (not each note) so it equals the telescoped sum of
+    /// the per-note `<duration>` values from `prefixRoundedDivisions` — otherwise a
+    /// tuplet's drift would desync the backup from the emitted durations.
     private func groupDivisions(_ events: [NoteEvent]) -> Int {
-        var total = 0
+        let exact = events.reduce(0.0) { $0 + $1.actualBeats * Double(divisionsPerQuarter) }
+        return max(0, Int(exact.rounded()))
+    }
+
+    /// Per-event `<duration>` in divisions for a voice stream, keyed by event id.
+    /// Rounds the *running offset* instead of each note independently, so the
+    /// per-note values telescope to the exact bar total: a 7:4 septuplet of eighths
+    /// sums to 1920, not 1919 (independent rounding gave 7×137=959 per 2 beats).
+    /// That drift shifted Verovio's geometry and pushed taps off-note. Binary
+    /// durations land on integer offsets, so their result is byte-identical to the
+    /// old rounding. Grace notes (actualBeats 0) keep the offset put and emit no
+    /// `<duration>`; their map entry is unused.
+    private func prefixRoundedDivisions(_ events: [NoteEvent]) -> [UUID: Int] {
+        var map: [UUID: Int] = [:]
+        var exactOffset = 0.0
+        var roundedOffset = 0
         for event in events {
-            total += max(1, Int((event.actualBeats * Double(divisionsPerQuarter)).rounded()))
+            exactOffset += event.actualBeats * Double(divisionsPerQuarter)
+            let nextRounded = Int(exactOffset.rounded())
+            map[event.id] = max(1, nextRounded - roundedOffset)
+            roundedOffset = nextRounded
         }
-        return total
+        return map
     }
 
     /// Partition a staff-measure's events into per-voice streams for polyphonic

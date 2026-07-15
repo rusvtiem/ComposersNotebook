@@ -108,3 +108,43 @@ targets:
         CODE_SIGNING_ALLOWED: "YES"
         CODE_SIGN_IDENTITY: "Apple Development"
         GCC_TREAT_WARNINGS_AS_ERRORS: "NO"
+
+  ComposersNotebookTests:
+    type: bundle.unit-test
+    platform: iOS
+    sources:
+      - ComposersNotebookTests
+    dependencies:
+      - target: ComposersNotebook
+    settings:
+      base:
+        SWIFT_VERSION: "5"
+        GENERATE_INFOPLIST_FILE: "YES"
+        PRODUCT_BUNDLE_IDENTIFIER: com.timshega.composersnotebook.tests
+        DEVELOPMENT_TEAM: 65XX29Q6DL
+        CODE_SIGN_STYLE: Automatic
+        GCC_TREAT_WARNINGS_AS_ERRORS: "NO"
+        # App PRODUCT_NAME is "Composer's Notebook" (with space/apostrophe), so the
+        # host bundle/executable are not the target name. Point TEST_HOST at the real
+        # product path or XcodeGen's target-name default ("ComposersNotebook.app") is wrong.
+        TEST_HOST: "$(BUILT_PRODUCTS_DIR)/Composer's Notebook.app/Composer's Notebook"
+        BUNDLE_LOADER: "$(TEST_HOST)"
+
+schemes:
+  ComposersNotebook:
+    build:
+      targets:
+        ComposersNotebook: all
+        ComposersNotebookTests: [test]
+    test:
+      config: Debug
+      targets:
+        - ComposersNotebookTests
+    run:
+      config: Debug
+    profile:
+      config: Release
+    analyze:
+      config: Debug
+    archive:
+      config: Release
