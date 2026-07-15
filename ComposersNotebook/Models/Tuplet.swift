@@ -10,6 +10,22 @@ import Foundation
 // `Duration.beats` под tuplet'ом вычисляется через множитель
 // `normalCount / actualCount`.
 
+/// Показ скобки над группой (MuseScore Tuplet Properties → Bracket).
+/// `nil`/`.auto` = как решит движок гравировки (скобка на небитованных, без — на
+/// битованных). `.shown`/`.hidden` — принудительно.
+enum TupletBracket: String, Codable, Hashable {
+    case auto, shown, hidden
+}
+
+/// Что печатать над группой (MuseScore Tuplet Properties → Number).
+/// `nil`/`.count` = только actual (3, 5). `.ratio` = пара actual:normal (3:2).
+/// `.noNumber` = ничего. Кейс НЕ называем `none`: в контексте `TupletNumberStyle?`
+/// литерал `.none` резолвится в `Optional.none` (nil), а не в кейс enum — молчаливая
+/// ловушка, из-за которой любой вызов `numberStyle: .none` терял выбор пользователя.
+enum TupletNumberStyle: String, Codable, Hashable {
+    case count, ratio, noNumber
+}
+
 struct Tuplet: Codable, Equatable, Hashable {
     /// Количество нот в фактическом исполнении (3 для триоли, 5 для квинтоли).
     var actualCount: Int
@@ -24,11 +40,21 @@ struct Tuplet: Codable, Equatable, Hashable {
     /// (рисовать скобку только над первой/последней, цифру над средней).
     var positionInGroup: Int
 
-    init(actualCount: Int, normalCount: Int, groupID: UUID = UUID(), positionInGroup: Int = 0) {
+    /// Стиль скобки. Опционально — старые .cnb без ключа декодируются как nil (= auto),
+    /// поэтому синтезированный Decodable не падает на файлах до этого поля.
+    var bracket: TupletBracket?
+
+    /// Стиль числа над группой. Опционально по той же причине совместимости.
+    var numberStyle: TupletNumberStyle?
+
+    init(actualCount: Int, normalCount: Int, groupID: UUID = UUID(), positionInGroup: Int = 0,
+         bracket: TupletBracket? = nil, numberStyle: TupletNumberStyle? = nil) {
         self.actualCount = actualCount
         self.normalCount = normalCount
         self.groupID = groupID
         self.positionInGroup = positionInGroup
+        self.bracket = bracket
+        self.numberStyle = numberStyle
     }
 
     /// Множитель длительности (например, 2/3 для триоли = 0.666...).
@@ -38,18 +64,43 @@ struct Tuplet: Codable, Equatable, Hashable {
     }
 
     /// Отображаемая надпись (3, 5, 6, 7:8, и т.д.).
-    /// Для классических соотношений (3:2, 5:4) показываем только actual.
-    /// Для нестандартных (7:8, 11:8) — пара.
+    /// Явный `numberStyle` побеждает автоматику: `.noNumber` → пусто, `.ratio` → пара,
+    /// `.count` → только actual. При nil (наследие) — авто: классические соотношения
+    /// (3:2, 5:4) показывают только actual, нестандартные (7:8, 11:8) — пару.
     var displayLabel: String {
-        let isClassic = (actualCount == 3 && normalCount == 2) ||
-                        (actualCount == 5 && normalCount == 4) ||
-                        (actualCount == 6 && normalCount == 4) ||
-                        (actualCount == 7 && normalCount == 4) ||
-                        (actualCount == 9 && normalCount == 8)
-        if isClassic {
-            return "\(actualCount)"
+        switch numberStyle {
+        case .some(.noNumber): return ""
+        case .some(.ratio): return "\(actualCount):\(normalCount)"
+        case .some(.count): return "\(actualCount)"
+        case .none:  // no explicit style — auto
+            let isClassic = (actualCount == 3 && normalCount == 2) ||
+                            (actualCount == 5 && normalCount == 4) ||
+                            (actualCount == 6 && normalCount == 4) ||
+                            (actualCount == 7 && normalCount == 4) ||
+                            (actualCount == 9 && normalCount == 8)
+            return isClassic ? "\(actualCount)" : "\(actualCount):\(normalCount)"
         }
-        return "\(actualCount):\(normalCount)"
+    }
+
+    /// MusicXML `bracket` attribute value for `<tuplet>`, or nil to omit (auto —
+    /// let Verovio's default engraving rule decide).
+    var musicXMLBracketAttr: String? {
+        switch bracket {
+        case .shown: return "yes"
+        case .hidden: return "no"
+        case .auto, nil: return nil
+        }
+    }
+
+    /// MusicXML `show-number` attribute value for `<tuplet>`, or nil to omit.
+    /// count → "actual", ratio → "both", none → "none".
+    var musicXMLShowNumberAttr: String? {
+        switch numberStyle {
+        case .some(.count): return "actual"
+        case .some(.ratio): return "both"
+        case .some(.noNumber): return "none"
+        case .none: return nil
+        }
     }
 
     var isFirstInGroup: Bool { positionInGroup == 0 }

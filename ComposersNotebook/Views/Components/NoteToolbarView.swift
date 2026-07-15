@@ -7,6 +7,7 @@ struct NoteToolbarView: View {
     @EnvironmentObject var themeManager: ThemeManager
 
     @State private var showChordSymbolEditor = false
+    @State private var showTupletDialog = false
 
     private var isEditing: Bool {
         viewModel.selectedEventIndex != nil
@@ -77,6 +78,10 @@ struct NoteToolbarView: View {
         .sheet(isPresented: $showChordSymbolEditor) {
             ChordSymbolEditor(viewModel: viewModel)
                 .presentationDetents([.medium, .large])
+        }
+        .sheet(isPresented: $showTupletDialog) {
+            TupletDialog(viewModel: viewModel)
+                .presentationDetents([.medium])
         }
     }
 
@@ -229,7 +234,45 @@ struct NoteToolbarView: View {
                     Label(String(localized: "Nonuplet (9:8)"), systemImage: "9.circle")
                 }
 
+                Divider()
+                Button {
+                    showTupletDialog = true
+                    HapticManager.buttonTap()
+                } label: {
+                    Label(String(localized: "Other…"), systemImage: "ellipsis.circle")
+                }
+
                 if selectedHasTuplet {
+                    Menu {
+                        Button(String(localized: "Bracket: auto")) {
+                            viewModel.setTupletDisplayForSelectedGroup(
+                                bracket: nil, numberStyle: viewModel.selectedEvent?.tuplet?.numberStyle)
+                        }
+                        Button(String(localized: "Bracket: shown")) {
+                            viewModel.setTupletDisplayForSelectedGroup(
+                                bracket: .shown, numberStyle: viewModel.selectedEvent?.tuplet?.numberStyle)
+                        }
+                        Button(String(localized: "Bracket: hidden")) {
+                            viewModel.setTupletDisplayForSelectedGroup(
+                                bracket: .hidden, numberStyle: viewModel.selectedEvent?.tuplet?.numberStyle)
+                        }
+                        Divider()
+                        Button(String(localized: "Number: count")) {
+                            viewModel.setTupletDisplayForSelectedGroup(
+                                bracket: viewModel.selectedEvent?.tuplet?.bracket, numberStyle: .count)
+                        }
+                        Button(String(localized: "Number: ratio")) {
+                            viewModel.setTupletDisplayForSelectedGroup(
+                                bracket: viewModel.selectedEvent?.tuplet?.bracket, numberStyle: .ratio)
+                        }
+                        Button(String(localized: "Number: none")) {
+                            viewModel.setTupletDisplayForSelectedGroup(
+                                bracket: viewModel.selectedEvent?.tuplet?.bracket, numberStyle: .noNumber)
+                        }
+                    } label: {
+                        Label(String(localized: "Bracket & number"), systemImage: "textformat.123")
+                    }
+
                     Divider()
                     Button(role: .destructive) {
                         viewModel.removeTupletGroupFromSelected()
@@ -1069,5 +1112,78 @@ struct NoteToolbarButton: View {
         }
         .buttonStyle(.plain)
         .help(tooltip ?? label)
+    }
+}
+
+// MARK: - Custom tuplet dialog ("Other…")
+
+/// MuseScore's Tuplet → Other… dialog: a free ratio (N notes in the space of M) plus
+/// bracket/number display choices, applied as a group starting at the selected event.
+struct TupletDialog: View {
+    @ObservedObject var viewModel: ScoreViewModel
+    @Environment(\.dismiss) private var dismiss
+
+    @State private var actual: Int = 3
+    @State private var normal: Int = 2
+    @State private var bracket: TupletBracket = .auto
+    @State private var numberStyle: TupletNumberStyle = .count
+
+    var body: some View {
+        NavigationStack {
+            Form {
+                Section(String(localized: "Ratio")) {
+                    Stepper(value: $actual, in: 2...99) {
+                        Text(String(localized: "Notes (actual): \(actual)"))
+                    }
+                    Stepper(value: $normal, in: 1...99) {
+                        Text(String(localized: "In the space of (normal): \(normal)"))
+                    }
+                    Text(verbatim: "\(actual):\(normal)")
+                        .font(.headline)
+                        .foregroundStyle(.secondary)
+                }
+                Section(String(localized: "Bracket")) {
+                    Picker(String(localized: "Bracket"), selection: $bracket) {
+                        Text(String(localized: "Auto")).tag(TupletBracket.auto)
+                        Text(String(localized: "Shown")).tag(TupletBracket.shown)
+                        Text(String(localized: "Hidden")).tag(TupletBracket.hidden)
+                    }
+                    .pickerStyle(.segmented)
+                }
+                Section(String(localized: "Number")) {
+                    Picker(String(localized: "Number"), selection: $numberStyle) {
+                        Text(String(localized: "Count")).tag(TupletNumberStyle.count)
+                        Text(String(localized: "Ratio")).tag(TupletNumberStyle.ratio)
+                        Text(String(localized: "None")).tag(TupletNumberStyle.noNumber)
+                    }
+                    .pickerStyle(.segmented)
+                }
+            }
+            .navigationTitle(String(localized: "Custom tuplet"))
+            .toolbar {
+                ToolbarItem(placement: .cancellationAction) {
+                    Button(String(localized: "Cancel")) { dismiss() }
+                }
+                ToolbarItem(placement: .confirmationAction) {
+                    Button(String(localized: "Apply")) {
+                        viewModel.applyTupletGroupStartingAtSelected(
+                            actualCount: actual,
+                            normalCount: normal,
+                            bracket: bracket == .auto ? nil : bracket,
+                            numberStyle: numberStyle)
+                        HapticManager.success()
+                        dismiss()
+                    }
+                }
+            }
+        }
+        .onAppear {
+            if let t = viewModel.selectedEvent?.tuplet {
+                actual = t.actualCount
+                normal = t.normalCount
+                bracket = t.bracket ?? .auto
+                numberStyle = t.numberStyle ?? .count
+            }
+        }
     }
 }

@@ -1623,19 +1623,51 @@ class ScoreViewModel: ObservableObject {
     /// Применить tuplet-группу начиная с выбранного события и захватывая
     /// следующие `actualCount - 1` событий в том же такте. Если событий не
     /// хватает — группа сокращается до доступных.
-    func applyTupletGroupStartingAtSelected(actualCount: Int, normalCount: Int) {
+    func applyTupletGroupStartingAtSelected(actualCount: Int, normalCount: Int,
+                                            bracket: TupletBracket? = nil,
+                                            numberStyle: TupletNumberStyle? = nil) {
         guard let start = selectedEventIndex,
-              actualCount > 1 else { return }
+              let (actual, normal) = Self.normalizedTupletRatio(actual: actualCount, normal: normalCount)
+        else { return }
         mutateCurrentMeasure { measure in
             let groupID = UUID()
-            let end = min(start + actualCount, measure.events.count)
+            let end = min(start + actual, measure.events.count)
             for (i, idx) in (start..<end).enumerated() {
                 measure.events[idx].tuplet = Tuplet(
-                    actualCount: actualCount,
-                    normalCount: normalCount,
+                    actualCount: actual,
+                    normalCount: normal,
                     groupID: groupID,
-                    positionInGroup: i
+                    positionInGroup: i,
+                    bracket: bracket,
+                    numberStyle: numberStyle
                 )
+            }
+        }
+    }
+
+    /// Validate/clamp a custom tuplet ratio from the "Other…" dialog. A tuplet needs
+    /// at least 2 actual notes and a positive normal count; the pair is capped at
+    /// MuseScore's practical ceiling (99) so a fat-fingered stepper can't produce a
+    /// group that would never fit a bar. nil when the ratio is unusable (actual < 2),
+    /// so the caller leaves the music untouched rather than making a 1-note "tuplet".
+    static func normalizedTupletRatio(actual: Int, normal: Int) -> (actual: Int, normal: Int)? {
+        guard actual >= 2 else { return nil }
+        let a = min(actual, 99)
+        let n = max(1, min(normal, 99))
+        return (a, n)
+    }
+
+    /// Change only the bracket/number display of the selected event's whole tuplet
+    /// group (MuseScore Tuplet Properties), leaving the ratio and timing intact.
+    func setTupletDisplayForSelectedGroup(bracket: TupletBracket?, numberStyle: TupletNumberStyle?) {
+        guard let idx = selectedEventIndex,
+              let measure = currentMeasure,
+              idx < measure.events.count,
+              let groupID = measure.events[idx].tuplet?.groupID else { return }
+        mutateCurrentMeasure { measure in
+            for i in measure.events.indices where measure.events[i].tuplet?.groupID == groupID {
+                measure.events[i].tuplet?.bracket = bracket
+                measure.events[i].tuplet?.numberStyle = numberStyle
             }
         }
     }

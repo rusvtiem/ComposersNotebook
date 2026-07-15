@@ -589,10 +589,16 @@ class MusicXMLExporter {
             }
         }
 
-        // Tuplet bracket on notations (start/stop on first/last note in group)
+        // Tuplet bracket on notations (start/stop on first/last note in group).
+        // The start element carries the user's bracket/number choices (MuseScore
+        // Tuplet Properties) as `bracket`/`show-number` attrs; omitted when auto so
+        // Verovio keeps its default engraving and output stays byte-identical.
         if let tuplet = event.tuplet {
             if tuplet.isFirstInGroup {
-                notations.append("          <tuplet number=\"1\" type=\"start\"/>")
+                var attrs = "number=\"1\" type=\"start\""
+                if let b = tuplet.musicXMLBracketAttr { attrs += " bracket=\"\(b)\"" }
+                if let n = tuplet.musicXMLShowNumberAttr { attrs += " show-number=\"\(n)\"" }
+                notations.append("          <tuplet \(attrs)/>")
             }
             if tuplet.isLastInGroup {
                 notations.append("          <tuplet number=\"1\" type=\"stop\"/>")
