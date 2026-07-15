@@ -132,4 +132,74 @@ final class RangeSelectionInvariantTests: XCTestCase {
         XCTAssertEqual(measures(vm)[0].events[2].pitches.first?.midiNote, 63, "only the focus moved")
         XCTAssertEqual(measures(vm)[0].events[0].pitches.first?.midiNote, 60, "others intact")
     }
+
+    // MARK: - Range copy / cut / paste (parity point 3)
+
+    /// Bar 0: four quarters C D E F. Bar 1: a whole rest (the paste target).
+    private func copyPasteVM() -> ScoreViewModel {
+        let b0 = Measure(events: [
+            .note(Pitch.fromMIDI(60), duration: Duration(value: .quarter)),
+            .note(Pitch.fromMIDI(62), duration: Duration(value: .quarter)),
+            .note(Pitch.fromMIDI(64), duration: Duration(value: .quarter)),
+            .note(Pitch.fromMIDI(65), duration: Duration(value: .quarter)),
+        ], timeSignature: .fourFour)
+        let part = Part(instrument: .flute, measures: [b0, .wholeRest()])
+        let score = Score(parts: [part], timeSignature: .fourFour)
+        let vm = ScoreViewModel(score: score)
+        vm.selectedPartIndex = 0
+        vm.selectedStaffIndex = 0
+        vm.selectedMeasureIndex = 0
+        vm.selectedEventIndex = 0
+        return vm
+    }
+
+    private func focusEmptyBar1(_ vm: ScoreViewModel) {
+        vm.clearRangeAnchor()
+        vm.selectedEventIndex = nil
+        vm.selectedMeasureIndex = 1
+        vm.cursorPosition = 0
+    }
+
+    /// Copying a two-note range and pasting into an empty bar reproduces the notes in
+    /// order, leaving the originals untouched.
+    func testCopyRangePastesDuplicateNotes() {
+        let vm = copyPasteVM()
+        vm.extendSelectionForward()          // range covers C,D
+        vm.copySelection()
+        focusEmptyBar1(vm)
+        vm.paste()
+        let pasted = measures(vm)[1].events.filter { !$0.isRest }.map { $0.pitches.first?.midiNote }
+        XCTAssertEqual(Array(pasted.prefix(2)), [60, 62], "pasted C,D in order")
+        let originals = measures(vm)[0].events.prefix(2).map { $0.pitches.first?.midiNote }
+        XCTAssertEqual(Array(originals), [60, 62], "source notes untouched by copy")
+    }
+
+    /// Pasted notes must carry brand-new ids so they never collide with the source
+    /// glyphs' Verovio ids (which the selection/highlight resolve by id).
+    func testPasteMintsFreshIDs() {
+        let vm = copyPasteVM()
+        vm.extendSelectionForward()
+        let sourceIDs = vm.selectedEventIDs
+        vm.copySelection()
+        focusEmptyBar1(vm)
+        vm.paste()
+        let pastedIDs = Set(measures(vm)[1].events.filter { !$0.isRest }.map { $0.id })
+        XCTAssertEqual(pastedIDs.count, 2, "two fresh events")
+        XCTAssertTrue(sourceIDs.isDisjoint(with: pastedIDs), "no id collision with the source")
+    }
+
+    /// Cut blanks the source range to rests, keeps the run on the clipboard, and paste
+    /// restores it elsewhere.
+    func testCutRangeBlanksOriginalsThenPasteRestores() {
+        let vm = copyPasteVM()
+        vm.extendSelectionForward()          // C,D
+        vm.cutSelection()
+        let blanked = measures(vm)[0].events.prefix(2).map { $0.isRest }
+        XCTAssertEqual(Array(blanked), [true, true], "cut turns the source range to rests")
+        XCTAssertTrue(vm.hasClipboardContent, "clipboard holds the cut run")
+        focusEmptyBar1(vm)
+        vm.paste()
+        let restored = measures(vm)[1].events.filter { !$0.isRest }.map { $0.pitches.first?.midiNote }
+        XCTAssertEqual(Array(restored.prefix(2)), [60, 62], "cut run pasted back")
+    }
 }

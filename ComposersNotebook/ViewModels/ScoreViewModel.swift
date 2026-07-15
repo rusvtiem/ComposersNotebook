@@ -827,6 +827,21 @@ class ScoreViewModel: ObservableObject {
         hasClipboardContent = true
     }
 
+    /// MuseScore `Ctrl+C` on a range: copy every event of the current selection (a
+    /// single focus or a multi-event span, in order) to the clipboard.
+    func copySelection() {
+        guard let staff = currentStaff else { return }
+        let positions = selectedRangePositions
+        var events: [NoteEvent] = []
+        for pos in positions where pos.measure < staff.measures.count {
+            let evs = staff.measures[pos.measure].events
+            if pos.event < evs.count { events.append(evs[pos.event]) }
+        }
+        guard !events.isEmpty else { return }
+        clipboard = events
+        hasClipboardContent = true
+    }
+
     /// Copy all events in the current measure to clipboard
     func copyMeasure() {
         guard let measure = currentMeasure else { return }
@@ -840,12 +855,20 @@ class ScoreViewModel: ObservableObject {
         deleteSelectedEvent()
     }
 
-    /// Paste clipboard contents at cursor position
+    /// MuseScore `Ctrl+X` on a range: copy the whole selection, then blank it to rests.
+    func cutSelection() {
+        copySelection()
+        deleteSelection()
+    }
+
+    /// Paste clipboard contents at the cursor. Every pasted event gets a fresh identity
+    /// (`withFreshID`) so a duplicated run never collides with the originals' Verovio
+    /// ids — otherwise selection/highlight would jump between the twin glyphs.
     func paste() {
         guard !clipboard.isEmpty, isCurrentMeasurePathValid else { return }
         saveUndoState()
         for event in clipboard {
-            placeEvent(event)
+            placeEvent(event.withFreshID())
         }
         score.touch()
     }

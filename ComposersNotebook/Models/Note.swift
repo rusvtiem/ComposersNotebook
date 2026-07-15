@@ -335,4 +335,29 @@ struct NoteEvent: Codable, Equatable, Identifiable {
             fingering: fingering
         )
     }
+
+    /// A structural twin carrying a brand-new identity, preserving duration and tuplet.
+    /// Paste mints fresh ids so the duplicated notes don't collide with the originals'
+    /// Verovio `xml:id` — which selection and the blue highlight look up by id.
+    func withFreshID() -> NoteEvent {
+        NoteEvent(
+            type: type,
+            duration: duration,
+            grace: grace,
+            articulations: articulations,
+            dynamic: dynamic,
+            tiedToNext: tiedToNext,
+            slurStart: slurStart,
+            slurEnd: slurEnd,
+            stemDirection: stemDirection,
+            showNatural: showNatural,
+            voice: voice,
+            lyric: lyric,
+            technique: technique,
+            strumPattern: strumPattern,
+            tuplet: tuplet,
+            chordSymbol: chordSymbol,
+            fingering: fingering
+        )
+    }
 }

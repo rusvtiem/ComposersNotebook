@@ -296,15 +296,15 @@ struct NoteToolbarView: View {
                 icon: "doc.on.doc",
                 label: "Коп.",
                 isActive: false,
-                tooltip: "Копировать выбранную ноту"
-            ) { viewModel.copySelectedEvent() }
+                tooltip: "Копировать выделение (ноту или диапазон)"
+            ) { viewModel.copySelection() }
 
             NoteToolbarButton(
                 icon: "scissors",
                 label: "Выр.",
                 isActive: false,
-                tooltip: "Вырезать выбранную ноту"
-            ) { viewModel.cutSelectedEvent() }
+                tooltip: "Вырезать выделение (ноту или диапазон)"
+            ) { viewModel.cutSelection() }
 
             NoteToolbarButton(
                 icon: "doc.on.clipboard",
