@@ -33,10 +33,15 @@ struct VerovioStaffSurface: View {
     let availableWidth: CGFloat
 
     /// MuseScore 4 voice-1 / selection blue (#0065BF), from engravingconfiguration.cpp.
-    /// Used for the input caret and selection ring so they match the reference editor
-    /// instead of the theme-dependent system accent.
+    /// Used for the selection ring so it matches the reference editor instead of the
+    /// theme-dependent system accent.
     private static let museScoreSelectionBlueHex = "#0065BF"
     private static let museScoreSelectionBlue = Color(hex: museScoreSelectionBlueHex)
+
+    /// MuseScore 4 note-input caret fill — the selection blue at low opacity, so it
+    /// reads as the translucent vertical band MuseScore paints on the insertion beat
+    /// (a soft blue column, not a hairline).
+    private static let noteInputCaret = Color(hex: museScoreSelectionBlueHex).opacity(0.22)
 
     /// MuseScore 4 accent blue (#2093FE), translucent — the moving playback cursor.
     /// Deliberately lighter and see-through so it reads as a playing-position sweep
@@ -114,13 +119,18 @@ struct VerovioStaffSurface: View {
 
             if let geometry {
                 if let caret = cursorCaret(in: geometry) {
+                    // MuseScore paints the note-input caret as a translucent blue band
+                    // sitting on the insertion beat (full system height), not a hairline.
+                    let w = max(caret.width * unitToPoint, 2)
+                    let rect = CGRect(x: caret.x * unitToPoint - w / 2,
+                                      y: caret.top * unitToPoint,
+                                      width: w,
+                                      height: (caret.bottom - caret.top) * unitToPoint)
                     Path { path in
-                        path.move(to: CGPoint(x: caret.x * unitToPoint, y: caret.top * unitToPoint))
-                        path.addLine(to: CGPoint(x: caret.x * unitToPoint, y: caret.bottom * unitToPoint))
+                        path.addRoundedRect(in: rect,
+                                            cornerSize: CGSize(width: w * 0.2, height: w * 0.2))
                     }
-                    // MuseScore 4 voice-1 / note-input caret colour (#0065BF), not the
-                    // system accent — the theme-dependent iOS blue read as an artefact.
-                    .stroke(Self.museScoreSelectionBlue.opacity(0.8), lineWidth: 1.5)
+                    .fill(Self.noteInputCaret)
                     .allowsHitTesting(false)
                 }
 
@@ -231,21 +241,20 @@ struct VerovioStaffSurface: View {
         return "e" + event.id.uuidString.replacingOccurrences(of: "-", with: "").lowercased()
     }
 
-    /// The insertion caret (viewBox units) at the model's current focus — the
-    /// vertical line marking where an appended note/rest lands. Shown only in the
-    /// add modes (`.note`/`.rest`) so navigation stays uncluttered; the ends run
-    /// half a staff-space past the top/bottom lines so the caret reads clearly.
-    /// nil when the focused staff is not on the current render.
-    private func cursorCaret(in geometry: VerovioSVGGeometry) -> (x: CGFloat, top: CGFloat, bottom: CGFloat)? {
+    /// The insertion caret band (viewBox units) at the model's current focus — the
+    /// translucent blue column marking where an appended note/rest lands, matching
+    /// MuseScore's note-input caret. Shown only in the add modes (`.note`/`.rest`) so
+    /// navigation stays uncluttered. nil when the focused staff is not on the current
+    /// render.
+    private func cursorCaret(in geometry: VerovioSVGGeometry)
+        -> (x: CGFloat, top: CGFloat, bottom: CGFloat, width: CGFloat)? {
         guard (viewModel.inputMode == .note || viewModel.inputMode == .rest),
               let flat = viewModel.flattenedStaffIndex(part: viewModel.selectedPartIndex,
-                                                       staff: viewModel.selectedStaffIndex),
-              let hit = geometry.insertionPoint(measureIndex: viewModel.selectedMeasureIndex,
-                                                staffInMeasure: flat) else {
+                                                       staff: viewModel.selectedStaffIndex) else {
             return nil
         }
-        let overshoot = hit.staff.staffSpace * 0.5
-        return (hit.x, hit.staff.top - overshoot, hit.staff.bottom + overshoot)
+        return geometry.insertionColumn(measureIndex: viewModel.selectedMeasureIndex,
+                                        staffInMeasure: flat)
     }
 
     /// Resolve the tapped vertical position to a pitch — diatonic steps from the

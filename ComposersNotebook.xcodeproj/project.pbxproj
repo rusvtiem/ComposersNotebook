@@ -40,6 +40,7 @@
 		86C71629511E39A92B889D68 /* ScoreViewModel.swift in Sources */ = {isa = PBXBuildFile; fileRef = BDDD972C2349864CBA4F7648 /* ScoreViewModel.swift */; };
 		89F96B7D788401039B4EF4E3 /* VerovioPreviewView.swift in Sources */ = {isa = PBXBuildFile; fileRef = FCCF3E43EA929CF6D0795C46 /* VerovioPreviewView.swift */; };
 		8A0C37E370752650D55BA831 /* Theme.swift in Sources */ = {isa = PBXBuildFile; fileRef = 190212CA34ECBD03664EF613 /* Theme.swift */; };
+		8A920099C04B1E42DF2DC7BD /* PlaybackProgress.swift in Sources */ = {isa = PBXBuildFile; fileRef = 68B0BCC88D8709505D1A9FEF /* PlaybackProgress.swift */; };
 		907461038486626BD35EB5C9 /* EngravingEngine.swift in Sources */ = {isa = PBXBuildFile; fileRef = 8767746B686DE77B5255977D /* EngravingEngine.swift */; };
 		91DFDF6B0CB652E9CF19B6AA /* ThemeSettingsView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 0FA214476FE1FA3A1CD758E1 /* ThemeSettingsView.swift */; };
 		9678856E6C434F7C662756C5 /* StrumPatternEditorSheet.swift in Sources */ = {isa = PBXBuildFile; fileRef = 629565F33832C6910AD12E85 /* StrumPatternEditorSheet.swift */; };
@@ -69,6 +70,7 @@
 		DBA22A99739E70267608FA4C /* ValidationView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 916C434B9E290052E7B7D88F /* ValidationView.swift */; };
 		E2580C41C84115D1BB8CC857 /* Duration.swift in Sources */ = {isa = PBXBuildFile; fileRef = 416F6A4FA620714487C9D02C /* Duration.swift */; };
 		E3E97175137C3AED59E3A557 /* Bravura.otf in Resources */ = {isa = PBXBuildFile; fileRef = 49AF52E54BA47DD449ED89A8 /* Bravura.otf */; };
+		E45007FF9390A9021062FDAA /* PlaybackProgressTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 312F0BDA76BEEE0CDE54A2BE /* PlaybackProgressTests.swift */; };
 		E49A1C810CB8801B28DBDCED /* ChordSymbol.swift in Sources */ = {isa = PBXBuildFile; fileRef = A79528689BF95ABCA43E9C29 /* ChordSymbol.swift */; };
 		EB47F76217867C2E337264A6 /* Localizable.xcstrings in Resources */ = {isa = PBXBuildFile; fileRef = A6B17635FA7B1DC13D45F669 /* Localizable.xcstrings */; };
 		FA705DE93A1865976F671DF6 /* ContentView.swift in Sources */ = {isa = PBXBuildFile; fileRef = A65DF18F2909BED9D221FE36 /* ContentView.swift */; };
@@ -104,6 +106,7 @@
 		2994638C367DA9CF18556A26 /* ScoreEditorView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ScoreEditorView.swift; sourceTree = "<group>"; };
 		2DBDE34D84A6EE8ACDF2DED5 /* MIDIInputBinder.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = MIDIInputBinder.swift; sourceTree = "<group>"; };
 		2E920D069D49DC524D2C9B3F /* MeasureText.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = MeasureText.swift; sourceTree = "<group>"; };
+		312F0BDA76BEEE0CDE54A2BE /* PlaybackProgressTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = PlaybackProgressTests.swift; sourceTree = "<group>"; };
 		3597BACFD67D58C734C7E184 /* TimGM6mb.sf2 */ = {isa = PBXFileReference; path = TimGM6mb.sf2; sourceTree = "<group>"; };
 		416F6A4FA620714487C9D02C /* Duration.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Duration.swift; sourceTree = "<group>"; };
 		41CC1828389F747C1307D5D9 /* MusicElements.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = MusicElements.swift; sourceTree = "<group>"; };
@@ -115,6 +118,7 @@
 		629565F33832C6910AD12E85 /* StrumPatternEditorSheet.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = StrumPatternEditorSheet.swift; sourceTree = "<group>"; };
 		636E287F60233C6FFEB3EC34 /* InstrumentPickerSheet.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = InstrumentPickerSheet.swift; sourceTree = "<group>"; };
 		68512AB05D9BE0C4BF62EB1C /* Score.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Score.swift; sourceTree = "<group>"; };
+		68B0BCC88D8709505D1A9FEF /* PlaybackProgress.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = PlaybackProgress.swift; sourceTree = "<group>"; };
 		6DB29E2A4F0338EE1C46AA96 /* ComposersNotebookApp.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ComposersNotebookApp.swift; sourceTree = "<group>"; };
 		7099F4A8DD127C6D22FD41F2 /* MeasurePropertiesView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = MeasurePropertiesView.swift; sourceTree = "<group>"; };
 		7E2571DAF48F482D437CD5BF /* Part.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Part.swift; sourceTree = "<group>"; };
@@ -200,6 +204,7 @@
 				172633DDA0CF22BFAB2D4587 /* DiatonicTransposeTests.swift */,
 				1647BE7619E1738F30A16E51 /* MeasureInvariantTests.swift */,
 				A3B7CF0A1580DBF68E28C18F /* MusicXMLExportTests.swift */,
+				312F0BDA76BEEE0CDE54A2BE /* PlaybackProgressTests.swift */,
 				F8CEA206DDB9A3C9696DDD3D /* TupletTimingTests.swift */,
 			);
 			path = ComposersNotebookTests;
@@ -307,6 +312,7 @@
 				F180ED3F1454863D8676C257 /* MusicXMLExporter.swift */,
 				287E43EA5C25B87FEF4570C3 /* MusicXMLImporter.swift */,
 				093CEAAE8CBA72093B7CC246 /* PDFExporter.swift */,
+				68B0BCC88D8709505D1A9FEF /* PlaybackProgress.swift */,
 				C14D67B6647B9BC7E49E7743 /* PlaybackScheduler.swift */,
 				C332283252D17AF92A4994C9 /* PluginManager.swift */,
 				283B65C3125C9250B0E8AB52 /* ScoreValidator.swift */,
@@ -452,6 +458,7 @@
 				C8EC87E02299C86FFC4ADE7E /* DiatonicTransposeTests.swift in Sources */,
 				A3A6E0F77E41777EECAF9152 /* MeasureInvariantTests.swift in Sources */,
 				B99186888ADC5026212D2E7C /* MusicXMLExportTests.swift in Sources */,
+				E45007FF9390A9021062FDAA /* PlaybackProgressTests.swift in Sources */,
 				D7CAC8B9928E054AFF87A078 /* TupletTimingTests.swift in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
@@ -498,6 +505,7 @@
 				55AC7CBDB15EF5343AB32436 /* Part.swift in Sources */,
 				46DCD35DD9C81C1BF12F9D4A /* PianoKeyboardView.swift in Sources */,
 				BB881ADB87E40142AE3804C3 /* Pitch.swift in Sources */,
+				8A920099C04B1E42DF2DC7BD /* PlaybackProgress.swift in Sources */,
 				19FCD0B26A41002969D5CDC5 /* PlaybackScheduler.swift in Sources */,
 				1AEEF7BF0A66A7A3C3149A96 /* PluginManager.swift in Sources */,
 				591358A9C10D7A3284BC13DB /* Score.swift in Sources */,

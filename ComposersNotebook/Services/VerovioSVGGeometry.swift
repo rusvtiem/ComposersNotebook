@@ -333,14 +333,27 @@ struct VerovioSVGGeometry {
     /// (where an appended note lands), or a small indent from the staff's left edge
     /// when the measure-staff is empty. nil if the indices fall outside what was
     /// rendered (e.g. the score re-engraved to fewer measures).
-    func insertionPoint(measureIndex: Int, staffInMeasure: Int) -> (x: CGFloat, staff: Staff)? {
+    /// The note-input caret band (viewBox units) at `staffInMeasure` of `measureIndex`.
+    /// MuseScore draws the note-input caret not as a hairline but as a translucent
+    /// vertical band sitting on the insertion beat, spanning the full system height —
+    /// so on a grand staff it crosses both staves. `x` is the band centre (the
+    /// insertion point on the active staff), `width` is roughly one beat-cell, and
+    /// top/bottom run half a staff-space past the system's outer lines so the band
+    /// reads clearly. nil if the measure/staff was not rendered.
+    func insertionColumn(measureIndex: Int, staffInMeasure: Int)
+        -> (x: CGFloat, top: CGFloat, bottom: CGFloat, width: CGFloat)? {
         guard measureIndex >= 0, measureIndex < measures.count else { return nil }
         let staves = measures[measureIndex].staves
         guard staffInMeasure >= 0, staffInMeasure < staves.count else { return nil }
         let ms = staves[staffInMeasure]
         let gap = max(ms.staff.staffSpace, 1) * 0.75
         let x = ms.noteXs.max().map { $0 + gap } ?? (ms.staff.xRange.lowerBound + gap)
-        return (x, ms.staff)
+        let allStaves = staves.map(\.staff)
+        let overshoot = ms.staff.staffSpace * 0.5
+        let top = (allStaves.map { $0.top }.min() ?? ms.staff.top) - overshoot
+        let bottom = (allStaves.map { $0.bottom }.max() ?? ms.staff.bottom) + overshoot
+        let width = max(ms.staff.staffSpace * 1.1, 1)
+        return (x, top, bottom, width)
     }
 
     /// The playback cursor line for `measureIndex` at horizontal `fraction`
