@@ -24,6 +24,11 @@ class ScoreViewModel: ObservableObject {
     // Selection state
     @Published var selectedEventIndex: Int? = nil  // index of selected note in current measure
     @Published var selectedPitchIndex: Int? = nil   // index of selected pitch within chord
+    // Диапазонное выделение (MuseScore Shift+стрелки / Ctrl+A). Якорь — неподвижный
+    // конец диапазона; selectedMeasureIndex/selectedEventIndex — подвижный «фокус».
+    // nil-якорь = обычное одиночное выделение. Диапазон всегда в пределах текущего стана.
+    @Published var selectionAnchorMeasureIndex: Int? = nil
+    @Published var selectionAnchorEventIndex: Int? = nil
 
     // Input state
     @Published var inputMode: InputMode = .navigate
@@ -567,10 +572,12 @@ class ScoreViewModel: ObservableObject {
 
     func selectEvent(at index: Int) {
         guard let measure = currentMeasure, index < measure.events.count else { return }
+        clearRangeAnchor()
         selectedEventIndex = index
     }
 
     func deselectEvent() {
+        clearRangeAnchor()
         selectedEventIndex = nil
         selectedPitchIndex = nil
     }
@@ -581,6 +588,7 @@ class ScoreViewModel: ObservableObject {
     /// Returns true if found. The id is `e<uuidHex>` with an optional `-N` chord suffix.
     @discardableResult
     func selectEvent(byExportedID exportedID: String) -> Bool {
+        clearRangeAnchor()
         var hex = exportedID
         if hex.hasPrefix("e") { hex.removeFirst() }
         // The `-N` suffix (N>0) marks a specific notehead of a chord, so a tap on
@@ -992,7 +1000,20 @@ class ScoreViewModel: ObservableObject {
 
     /// MuseScore `→`: move the selection one note/rest forward, crossing into the
     /// next measure of the SAME staff at a bar boundary. No-op at the score end.
+    /// Plain arrow drops any range — the moving focus becomes a single selection.
     func selectNextEvent() {
+        clearRangeAnchor()
+        moveFocusForward()
+    }
+
+    /// MuseScore `←`: move the selection one note/rest back, crossing into the
+    /// previous measure of the SAME staff at a bar boundary. No-op at the score start.
+    func selectPreviousEvent() {
+        clearRangeAnchor()
+        moveFocusBackward()
+    }
+
+    private func moveFocusForward() {
         guard let staff = currentStaff else { return }
         guard let idx = selectedEventIndex else {
             if let m = currentMeasure, !m.events.isEmpty {
@@ -1019,9 +1040,7 @@ class ScoreViewModel: ObservableObject {
         }
     }
 
-    /// MuseScore `←`: move the selection one note/rest back, crossing into the
-    /// previous measure of the SAME staff at a bar boundary. No-op at the score start.
-    func selectPreviousEvent() {
+    private func moveFocusBackward() {
         guard let staff = currentStaff else { return }
         guard let idx = selectedEventIndex else {
             if let m = currentMeasure, !m.events.isEmpty {
@@ -1046,6 +1065,157 @@ class ScoreViewModel: ObservableObject {
             }
             mi -= 1
         }
+    }
+
+    // MARK: - Range selection (MuseScore Shift+arrows / Ctrl+A / select measure)
+
+    func clearRangeAnchor() {
+        selectionAnchorMeasureIndex = nil
+        selectionAnchorEventIndex = nil
+    }
+
+    private func ensureRangeAnchorAtFocus() {
+        guard selectionAnchorMeasureIndex == nil else { return }
+        selectionAnchorMeasureIndex = selectedMeasureIndex
+        selectionAnchorEventIndex = selectedEventIndex
+    }
+
+    /// MuseScore `Shift+→`: grow the range one event forward, anchoring at the
+    /// current focus on the first press. With no focus yet, seeds a selection.
+    func extendSelectionForward() {
+        guard selectedEventIndex != nil else { moveFocusForward(); return }
+        ensureRangeAnchorAtFocus()
+        moveFocusForward()
+    }
+
+    /// MuseScore `Shift+←`: grow the range one event backward.
+    func extendSelectionBackward() {
+        guard selectedEventIndex != nil else { moveFocusBackward(); return }
+        ensureRangeAnchorAtFocus()
+        moveFocusBackward()
+    }
+
+    /// MuseScore `Ctrl+Shift+Home/End`-style "select the whole current bar": anchor
+    /// the range across every event of the focused measure.
+    func selectCurrentMeasure() {
+        guard let m = currentMeasure, !m.events.isEmpty else { return }
+        selectionAnchorMeasureIndex = selectedMeasureIndex
+        selectionAnchorEventIndex = 0
+        selectedEventIndex = m.events.count - 1
+        selectedPitchIndex = nil
+    }
+
+    /// MuseScore `Ctrl+A`: select the whole focused staff from its first event to
+    /// its last, so copy/transpose/delete act on everything.
+    func selectAll() {
+        guard let staff = currentStaff, !staff.measures.isEmpty else { return }
+        guard let firstM = staff.measures.firstIndex(where: { !$0.events.isEmpty }),
+              let lastM = staff.measures.lastIndex(where: { !$0.events.isEmpty }) else { return }
+        selectionAnchorMeasureIndex = firstM
+        selectionAnchorEventIndex = 0
+        selectedMeasureIndex = lastM
+        selectedEventIndex = staff.measures[lastM].events.count - 1
+        selectedPitchIndex = nil
+    }
+
+    /// Whether a multi-event range is active (not just a single focused event).
+    var hasRangeSelection: Bool {
+        guard let am = selectionAnchorMeasureIndex, let ae = selectionAnchorEventIndex,
+              let fe = selectedEventIndex else { return false }
+        return !(am == selectedMeasureIndex && ae == fe)
+    }
+
+    /// The `(measure, event)` positions covered by the current selection on the
+    /// focused staff, ordered start→end. A single focused event yields one position;
+    /// no focus yields none. Foundation for range copy/paste and multi-glyph highlight.
+    var selectedRangePositions: [(measure: Int, event: Int)] {
+        guard let staff = currentStaff, let fe = selectedEventIndex else { return [] }
+        let fm = selectedMeasureIndex
+        guard let am = selectionAnchorMeasureIndex, let ae = selectionAnchorEventIndex else {
+            return [(fm, fe)]
+        }
+        // Order the two endpoints (measure-major, then event).
+        let ordered = (am, ae) <= (fm, fe) ? ((am, ae), (fm, fe)) : ((fm, fe), (am, ae))
+        let (lo, hi) = ordered
+        var out: [(measure: Int, event: Int)] = []
+        var mi = lo.0
+        while mi <= hi.0 && mi < staff.measures.count {
+            let count = staff.measures[mi].events.count
+            let startE = mi == lo.0 ? lo.1 : 0
+            let endE = mi == hi.0 ? hi.1 : count - 1
+            if count > 0 {
+                for e in max(0, startE)...min(count - 1, endE) { out.append((mi, e)) }
+            }
+            mi += 1
+        }
+        return out
+    }
+
+    /// Ids of every event in the current selection — used to recolour all selected
+    /// glyphs in the Verovio SVG (MuseScore's blue range highlight).
+    var selectedEventIDs: Set<UUID> {
+        guard let staff = currentStaff else { return [] }
+        var ids = Set<UUID>()
+        for pos in selectedRangePositions where pos.measure < staff.measures.count {
+            let events = staff.measures[pos.measure].events
+            if pos.event < events.count { ids.insert(events[pos.event].id) }
+        }
+        return ids
+    }
+
+    /// Apply a mutation to every event in the current selection (a single focus or a
+    /// whole range) on the focused staff, under one undo step. Foundation for range
+    /// transpose/delete so MuseScore's "act on the blue range" holds.
+    func mutateSelectedRange(_ mutate: (inout NoteEvent) -> Void) {
+        let positions = selectedRangePositions
+        guard !positions.isEmpty, isCurrentMeasurePathValid else { return }
+        let p = selectedPartIndex, s = selectedStaffIndex
+        saveUndoState()
+        for pos in positions {
+            guard pos.measure < score.parts[p].staves[s].measures.count,
+                  pos.event < score.parts[p].staves[s].measures[pos.measure].events.count else { continue }
+            mutate(&score.parts[p].staves[s].measures[pos.measure].events[pos.event])
+        }
+        score.touch()
+    }
+
+    /// MuseScore `↑/↓` on a selection: transpose every note/chord in the range by
+    /// semitones together. Single focus falls through to the one-event path.
+    func transposeSelection(semitones: Int) {
+        guard hasRangeSelection else { transposeSelectedEvent(semitones: semitones); return }
+        mutateSelectedRange { event in
+            switch event.type {
+            case .note(let pitch):
+                let newMidi = pitch.midiNote + semitones
+                guard newMidi >= 0, newMidi <= 127 else { return }
+                event.type = .note(pitch: Pitch.fromMIDI(newMidi, preferFlats: semitones < 0))
+            case .chord(let pitches):
+                let transposed = pitches.compactMap { p -> Pitch? in
+                    let newMidi = p.midiNote + semitones
+                    guard newMidi >= 0, newMidi <= 127 else { return nil }
+                    return Pitch.fromMIDI(newMidi, preferFlats: semitones < 0)
+                }
+                guard transposed.count == pitches.count else { return }
+                event.type = .chord(pitches: transposed)
+            case .rest:
+                return
+            }
+        }
+    }
+
+    /// MuseScore `Delete` on a selection: replace every note/chord in the range with a
+    /// rest of the same duration (rhythm preserved). Single focus falls through.
+    func deleteSelection() {
+        guard hasRangeSelection else { deleteSelectedEvent(); return }
+        mutateSelectedRange { event in
+            guard !event.isRest else { return }
+            var rest = NoteEvent(type: .rest, duration: event.duration)
+            rest.duration.dotted = event.duration.dotted
+            rest.duration.doubleDotted = event.duration.doubleDotted
+            event = rest
+        }
+        clearRangeAnchor()
+        selectedEventIndex = nil
     }
 
     func selectPart(at index: Int) {

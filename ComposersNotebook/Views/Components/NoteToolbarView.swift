@@ -332,34 +332,66 @@ struct NoteToolbarView: View {
 
             Divider().frame(height: 30)
 
+            // Range selection (MuseScore Shift+←/→, select bar, Ctrl+A): grow the
+            // blue range so copy/transpose/delete act on many notes at once.
+            NoteToolbarButton(
+                icon: "chevron.left.2",
+                label: "Расш.←",
+                isActive: viewModel.hasRangeSelection,
+                tooltip: "Расширить выделение влево (Shift+←)"
+            ) { viewModel.extendSelectionBackward() }
+
+            NoteToolbarButton(
+                icon: "chevron.right.2",
+                label: "Расш.→",
+                isActive: viewModel.hasRangeSelection,
+                tooltip: "Расширить выделение вправо (Shift+→)"
+            ) { viewModel.extendSelectionForward() }
+
+            NoteToolbarButton(
+                icon: "rectangle.dashed",
+                label: "Такт",
+                isActive: false,
+                tooltip: "Выделить весь такт"
+            ) { viewModel.selectCurrentMeasure() }
+
+            NoteToolbarButton(
+                icon: "square.dashed.inset.filled",
+                label: "Всё",
+                isActive: false,
+                tooltip: "Выделить весь нотоносец (Ctrl+A)"
+            ) { viewModel.selectAll() }
+
+            Divider().frame(height: 30)
+
             // Transpose
             NoteToolbarButton(
                 icon: "arrow.up",
                 label: "+1",
                 isActive: false,
                 tooltip: "Транспозиция вверх на полутон"
-            ) { viewModel.transposeSelectedEvent(semitones: 1) }
+            ) { viewModel.transposeSelection(semitones: 1) }
 
             NoteToolbarButton(
                 icon: "arrow.down",
                 label: "-1",
                 isActive: false,
                 tooltip: "Транспозиция вниз на полутон"
-            ) { viewModel.transposeSelectedEvent(semitones: -1) }
+            ) { viewModel.transposeSelection(semitones: -1) }
 
             NoteToolbarButton(
                 icon: "arrow.up.to.line",
                 label: "Окт↑",
                 isActive: false,
                 tooltip: "Транспозиция вверх на октаву"
-            ) { viewModel.transposeSelectedEvent(semitones: 12) }
+            ) { viewModel.transposeSelection(semitones: 12) }
 
             NoteToolbarButton(
                 icon: "arrow.down.to.line",
                 label: "Окт↓",
                 isActive: false,
                 tooltip: "Транспозиция вниз на октаву"
-            ) { viewModel.transposeSelectedEvent(semitones: -12) }
+            ) { viewModel.transposeSelection(semitones: -12) }
 
             // Diatonic step (MuseScore Alt+Shift+↑/↓): move within the key
             NoteToolbarButton(
@@ -408,9 +440,9 @@ struct NoteToolbarView: View {
                 }
             }
 
-            // Delete selected note
+            // Delete selected note (or the whole range when one is active)
             Button {
-                viewModel.deleteSelectedEvent()
+                viewModel.deleteSelection()
             } label: {
                 Image(systemName: "trash")
                     .foregroundColor(.red)

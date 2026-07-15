@@ -113,7 +113,7 @@ struct VerovioStaffSurface: View {
         // the dark-theme staff-visibility path lives on in the classic renderer.
         return ZStack(alignment: .topLeading) {
             SVGWebView(svg: svg, ink: "black",
-                       highlightID: selectedExportedID,
+                       highlightIDs: selectedExportedIDs,
                        highlightColor: viewModel.selectedEvent?.voice.colorHex ?? Self.museScoreSelectionBlueHex)
                 .frame(width: contentWidth, height: contentHeight)
 
@@ -241,6 +241,14 @@ struct VerovioStaffSurface: View {
         return "e" + event.id.uuidString.replacingOccurrences(of: "-", with: "").lowercased()
     }
 
+    /// Every selected event's Verovio id — one for a single selection, many for a
+    /// range (MuseScore recolours the whole blue range, not just one glyph).
+    private var selectedExportedIDs: [String] {
+        viewModel.selectedEventIDs.map {
+            "e" + $0.uuidString.replacingOccurrences(of: "-", with: "").lowercased()
+        }
+    }
+
     /// The insertion caret band (viewBox units) at the model's current focus — the
     /// translucent blue column marking where an appended note/rest lands, matching
     /// MuseScore's note-input caret. Shown only in the add modes (`.note`/`.rest`) so
@@ -331,9 +339,9 @@ private struct SVGWebView: UIViewRepresentable {
     let svg: String
     /// CSS colour for the engraving ("white" on dark UI, "black" on light).
     let ink: String
-    /// Verovio id (`e<hex>`) of the selected note/chord, recoloured in place —
-    /// MuseScore recolours the selected glyph itself rather than drawing a ring.
-    var highlightID: String?
+    /// Verovio ids (`e<hex>`) of every selected note/chord, recoloured in place —
+    /// MuseScore recolours the selected glyphs themselves rather than drawing a ring.
+    var highlightIDs: [String] = []
     /// Voice colour applied to the selected glyph.
     var highlightColor: String = "#0065BF"
 
@@ -365,20 +373,22 @@ private struct SVGWebView: UIViewRepresentable {
         // recolours instantly without a full white-flash reload.
         if context.coordinator.lastSVG != svg {
             context.coordinator.lastSVG = svg
-            webView.loadHTMLString(Self.html(svg, ink: ink, highlightRule: Self.rule(highlightID, highlightColor)), baseURL: nil)
+            webView.loadHTMLString(Self.html(svg, ink: ink, highlightRule: Self.rule(highlightIDs, highlightColor)), baseURL: nil)
         } else {
-            let css = Self.rule(highlightID, highlightColor)
+            let css = Self.rule(highlightIDs, highlightColor)
             let js = "var s=document.getElementById('hl'); if(s){s.textContent=\(Self.jsString(css));}"
             webView.evaluateJavaScript(js, completionHandler: nil)
         }
     }
 
-    /// CSS that recolours the selected glyph group (notehead, stem, flags, dots) to
+    /// CSS that recolours every selected glyph group (notehead, stem, flags, dots) to
     /// the voice colour. Empty when nothing is selected. `stroke:currentColor` stems
     /// follow the `color` override; noteheads follow `fill`.
-    private static func rule(_ id: String?, _ color: String) -> String {
-        guard let id, !id.isEmpty else { return "" }
-        return "#\(id), #\(id) * { fill: \(color) !important; color: \(color) !important; stroke: \(color) !important; }"
+    private static func rule(_ ids: [String], _ color: String) -> String {
+        let clean = ids.filter { !$0.isEmpty }
+        guard !clean.isEmpty else { return "" }
+        let selector = clean.flatMap { ["#\($0)", "#\($0) *"] }.joined(separator: ", ")
+        return "\(selector) { fill: \(color) !important; color: \(color) !important; stroke: \(color) !important; }"
     }
 
     private static func jsString(_ s: String) -> String {
