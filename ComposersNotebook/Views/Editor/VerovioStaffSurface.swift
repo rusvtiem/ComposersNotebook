@@ -235,6 +235,10 @@ struct VerovioStaffSurface: View {
             if let loc = located { addNote(at: vb, staff: loc.staff) }
         case .rest:
             viewModel.addRest()
+        case .rhythm:
+            // Rhythm mode: the tap only marks time — pitch is the last entered one,
+            // not where the finger landed, so no geometry/staff resolution needed.
+            viewModel.addRhythmNote()
         case .navigate, .repitch:
             // Re-pitch takes pitch from keyboard/piano only (mouse disabled in
             // MuseScore); a tap just selects which note to re-pitch.
@@ -265,7 +269,7 @@ struct VerovioStaffSurface: View {
     /// render.
     private func cursorCaret(in geometry: VerovioSVGGeometry)
         -> (x: CGFloat, top: CGFloat, bottom: CGFloat, width: CGFloat)? {
-        guard (viewModel.inputMode == .note || viewModel.inputMode == .rest),
+        guard (viewModel.inputMode == .note || viewModel.inputMode == .rest || viewModel.inputMode == .rhythm),
               let flat = viewModel.flattenedStaffIndex(part: viewModel.selectedPartIndex,
                                                        staff: viewModel.selectedStaffIndex) else {
             return nil

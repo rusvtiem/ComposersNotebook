@@ -7,6 +7,7 @@
 	objects = {
 
 /* Begin PBXBuildFile section */
+		00DB3CAED5724781A913DA3F /* RhythmInputTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 891D0701BC04925EF149C247 /* RhythmInputTests.swift */; };
 		098029A71190BFCD796DFF6C /* MusicOMREngine.swift in Sources */ = {isa = PBXBuildFile; fileRef = BB67B46759B5D181F577F39F /* MusicOMREngine.swift */; };
 		0AD1568203A9C361204D8C3A /* NoteScheduleTimingTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = B3E2A202918393709B512932 /* NoteScheduleTimingTests.swift */; };
 		121EB957457578E1602D39E9 /* VerovioSVGGeometry.swift in Sources */ = {isa = PBXBuildFile; fileRef = 7F3541B9B25E1253FC8BBBB5 /* VerovioSVGGeometry.swift */; };
@@ -140,6 +141,7 @@
 		845182DDC310ED1E6DCF3268 /* ABCNotationImporter.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ABCNotationImporter.swift; sourceTree = "<group>"; };
 		8589EB828201460A07C202F3 /* Note.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Note.swift; sourceTree = "<group>"; };
 		8767746B686DE77B5255977D /* EngravingEngine.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = EngravingEngine.swift; sourceTree = "<group>"; };
+		891D0701BC04925EF149C247 /* RhythmInputTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = RhythmInputTests.swift; sourceTree = "<group>"; };
 		8BFE91DB72874BD613B4A176 /* DurationEditInvariantTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = DurationEditInvariantTests.swift; sourceTree = "<group>"; };
 		916C434B9E290052E7B7D88F /* ValidationView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ValidationView.swift; sourceTree = "<group>"; };
 		96555FF85927B90F1BE79A91 /* CNBFileManager.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = CNBFileManager.swift; sourceTree = "<group>"; };
@@ -230,6 +232,7 @@
 				B3E2A202918393709B512932 /* NoteScheduleTimingTests.swift */,
 				312F0BDA76BEEE0CDE54A2BE /* PlaybackProgressTests.swift */,
 				64C7187511EB8D40EA4ED899 /* RangeSelectionInvariantTests.swift */,
+				891D0701BC04925EF149C247 /* RhythmInputTests.swift */,
 				32273611E98AD6FD4EE37BDC /* SlurFlipTests.swift */,
 				F8CEA206DDB9A3C9696DDD3D /* TupletTimingTests.swift */,
 				F6BF5A299815EBE448D95D45 /* VerovioGeometryPlacementTests.swift */,
@@ -493,6 +496,7 @@
 				0AD1568203A9C361204D8C3A /* NoteScheduleTimingTests.swift in Sources */,
 				E45007FF9390A9021062FDAA /* PlaybackProgressTests.swift in Sources */,
 				2EE4AF1624CE05053877CBE5 /* RangeSelectionInvariantTests.swift in Sources */,
+				00DB3CAED5724781A913DA3F /* RhythmInputTests.swift in Sources */,
 				91C38E8DC8C08F4989D7F1A6 /* SlurFlipTests.swift in Sources */,
 				D7CAC8B9928E054AFF87A078 /* TupletTimingTests.swift in Sources */,
 				840D1672890090864A1107F6 /* VerovioGeometryPlacementTests.swift in Sources */,

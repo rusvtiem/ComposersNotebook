@@ -8,6 +8,7 @@ enum InputMode: Equatable {
     case note      // Tap = insert note at pitch
     case rest      // Tap = insert rest with selected duration
     case repitch   // Retype pitch of the selected note, keep duration, advance (MuseScore re-pitch)
+    case rhythm    // Tap = lay down the current duration at the last pitch (MuseScore Rhythm), re-pitch later
 }
 
 // MARK: - Score View Model
@@ -308,6 +309,20 @@ class ScoreViewModel: ObservableObject {
         midiEngine.playNote(pitch: pitch, velocity: 80, duration: 0.3, midiProgram: midiProg)
     }
 
+    /// Rhythm-input mode (MuseScore "Rhythm"): a tap lays down a note of the current
+    /// duration without aiming — it reuses the last entered pitch (or the clef's
+    /// middle line on an empty staff), so the composer taps out a rhythm and
+    /// re-pitches later. The tap's staff Y is ignored; pitch comes from `previewPitch`.
+    func addRhythmNote() {
+        guard inputMode == .rhythm else { return }
+        let pitch = previewPitch
+        let previousMode = inputMode
+        inputMode = .note          // reuse the full note-entry path (undo, fill, sound, cursor advance)
+        selectedEventIndex = nil
+        addNote(pitch: pitch)
+        inputMode = previousMode
+    }
+
     func addRest() {
         guard inputMode == .rest else { return }
         saveUndoState()
@@ -445,7 +460,7 @@ class ScoreViewModel: ObservableObject {
 
     var noteInputPreview: NoteInputPreview? {
         switch inputMode {
-        case .note:
+        case .note, .rhythm:
             let steps = previewPitch.staffPosition - effectiveClef.referencePitch.staffPosition
             return NoteInputPreview(duration: makeDuration(), isRest: false, stepsAboveMiddle: steps)
         case .rest:

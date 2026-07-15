@@ -702,6 +702,13 @@ struct NoteToolbarView: View {
             ) { viewModel.inputMode = (viewModel.inputMode == .repitch ? .navigate : .repitch) }
 
             NoteToolbarButton(
+                icon: "metronome",
+                label: "Ритм",
+                isActive: viewModel.inputMode == .rhythm,
+                tooltip: "Ввод по ритму: тап кладёт ноту текущей длительности на последней высоте — набираешь ритм, высоту правишь потом (как Rhythm в MuseScore). Повторный тап выключает режим"
+            ) { viewModel.inputMode = (viewModel.inputMode == .rhythm ? .navigate : .rhythm) }
+
+            NoteToolbarButton(
                 icon: "square.stack.3d.up.fill",
                 label: "Аккорд",
                 isActive: viewModel.addToChordMode,

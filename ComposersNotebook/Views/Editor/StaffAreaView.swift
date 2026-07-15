@@ -286,6 +286,9 @@ struct StaffAreaView: View {
                             }
                         case .rest:
                             viewModel.addRest()
+                        case .rhythm:
+                            // Tap lays down the current duration at the last pitch; Y ignored.
+                            viewModel.addRhythmNote()
                         case .navigate:
                             viewModel.cursorPosition = 0
                         case .repitch:
