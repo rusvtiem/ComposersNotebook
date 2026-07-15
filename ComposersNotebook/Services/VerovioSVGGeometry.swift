@@ -47,6 +47,11 @@ struct VerovioSVGGeometry {
         /// x of the leading glyphs (clef / key / time) drawn before the note area.
         /// Their rightmost x anchors beat 1 for an empty measure that carries them.
         let leadingXs: [CGFloat]
+        /// x of the centred whole-measure rest, when the measure-staff is empty.
+        /// Anchors the caret on the measure's content for an interior empty measure
+        /// (which Verovio renders compact — a fixed indent past the barline would
+        /// otherwise hug it).
+        let mRestXs: [CGFloat]
     }
 
     /// One measure as a column of staves in top-to-bottom (model) order. Verovio
@@ -124,7 +129,8 @@ struct VerovioSVGGeometry {
         o == .zero ? m : Measure(staves: m.staves.map {
             MeasureStaff(staff: shift($0.staff, by: o),
                          noteXs: $0.noteXs.map { $0 + o.x },
-                         leadingXs: $0.leadingXs.map { $0 + o.x })
+                         leadingXs: $0.leadingXs.map { $0 + o.x },
+                         mRestXs: $0.mRestXs.map { $0 + o.x })
         })
     }
 
@@ -235,6 +241,10 @@ struct VerovioSVGGeometry {
         let leadingRe = try! NSRegularExpression(
             pattern: #"class="(?:clef|keySig|meterSig)">\s*<use[^>]*translate\(([\d.\-]+),\s*([\d.\-]+)\)"#
         )
+        // The centred full-measure rest anchors the caret in an interior empty measure.
+        let mRestRe = try! NSRegularExpression(
+            pattern: #"class="mRest">\s*<use[^>]*translate\(([\d.\-]+),\s*([\d.\-]+)\)"#
+        )
         let full = NSRange(location: 0, length: ns.length)
         let measureStarts = measureRe.matches(in: svg, range: full).map { $0.range.location }
         guard !measureStarts.isEmpty else { return [] }
@@ -255,7 +265,11 @@ struct VerovioSVGGeometry {
                 let leadingXs = leadingRe.matches(in: svg, range: sRange).compactMap {
                     Double(ns.substring(with: $0.range(at: 1))).map { CGFloat($0) }
                 }
-                measureStaves.append(MeasureStaff(staff: staff, noteXs: noteXs, leadingXs: leadingXs))
+                let mRestXs = mRestRe.matches(in: svg, range: sRange).compactMap {
+                    Double(ns.substring(with: $0.range(at: 1))).map { CGFloat($0) }
+                }
+                measureStaves.append(MeasureStaff(staff: staff, noteXs: noteXs,
+                                                  leadingXs: leadingXs, mRestXs: mRestXs))
             }
             result.append(Measure(staves: measureStaves))
         }
@@ -361,15 +375,23 @@ struct VerovioSVGGeometry {
         let ms = staves[staffInMeasure]
         let ss = max(ms.staff.staffSpace, 1)
         // Where the next note lands (all offsets measured against Verovio's default
-        // spacing, verified against rendered noteheads — see PlacementTests):
+        // spacing, verified against rendered noteheads/rests — see PlacementTests):
         //   • notes present → just past the last notehead (append point)
         //   • empty but carrying clef/key/time → beat 1 sits ~3.1 sp past them
-        //   • empty interior measure → beat 1 sits 1 sp past the barline
+        //     (matches MuseScore's caret just right of the time signature)
+        //   • empty interior measure → sit on the centred whole-rest. Verovio renders
+        //     empty measures compact, so the true 1-sp beat-1 point would hug the
+        //     barline; the whole-rest is the measure's drawn content, so the band
+        //     lands on it (translucent, so the rest shows through — as MuseScore
+        //     highlights the active element).
+        //   • last-ditch (no rest either) → 1 sp past the barline.
         let x: CGFloat
         if let lastNote = ms.noteXs.max() {
             x = lastNote + ss * 0.75
         } else if let leadRight = ms.leadingXs.max() {
             x = leadRight + ss * 3.1
+        } else if let mRest = ms.mRestXs.max() {
+            x = mRest
         } else {
             x = ms.staff.xRange.lowerBound + ss * 1.0
         }

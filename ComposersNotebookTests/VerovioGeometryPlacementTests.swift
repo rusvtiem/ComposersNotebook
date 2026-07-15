@@ -99,17 +99,21 @@ final class VerovioGeometryPlacementTests: XCTestCase {
         XCTAssertEqual(caret.x, 3356, accuracy: 90, "caret ≈ real beat-1 notehead x")
     }
 
-    /// A bare interior measure carries no clef/meter and no notes — beat 1 is a small
-    /// indent past the barline (staff left edge), the third branch of insertionColumn.
-    func testCaretOnBeatOneOfInteriorMeasure() {
+    /// A bare interior measure carries no clef/meter and no notes. Verovio renders it
+    /// compact, so the true 1-sp beat-1 point would hug the barline; the caret instead
+    /// sits on the centred whole-rest (the measure's drawn content), clearing the
+    /// barline — the fix for Тимур's "опять косяк" (caret glued to the barline).
+    func testCaretOnWholeRestOfInteriorMeasureNotHuggingBarline() {
         guard let geo = VerovioSVGGeometry.parse(emptyPianoSVG()),
               let caret = geo.insertionColumn(measureIndex: 1, staffInMeasure: 0) else {
             return XCTFail("no caret")
         }
-        // staff xRange folds to (4600+500)…(5800+500); beat 1 = 5100 + 1.0*180 = 5280.
-        XCTAssertEqual(caret.x, 5280, accuracy: 1)
-        XCTAssertGreaterThan(caret.x, 4600 + margin, "caret inside the measure span")
-        XCTAssertLessThan(caret.x, 5800 + margin)
+        // mRest folds to 5100+500 = 5600 (staff span 5100…6300, so it clears the barline).
+        XCTAssertEqual(caret.x, 5600, accuracy: 1, "caret sits on the whole-rest")
+        let barline = 4600 + margin  // 5100
+        XCTAssertGreaterThan(caret.x - caret.width / 2, barline + 180,
+                             "caret must clear the barline by more than a staff-space, not hug it")
+        XCTAssertLessThan(caret.x, 5800 + margin, "still inside the measure span")
     }
 
     /// The band spans the whole system: from above the top staff's first line to
