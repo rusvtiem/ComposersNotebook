@@ -575,8 +575,47 @@ class ScoreViewModel: ObservableObject {
         mutateSelectedEvent { $0.type = .note(pitch: pitch) }
     }
 
+    /// Change the selected event's duration the way MuseScore does: overwrite from
+    /// the event's own start beat and refill the rest of the measure so it stays
+    /// exactly full. In-place mutation of only `duration.value` left the measure
+    /// short when shrinking (the freed time vanished) or over-full when growing
+    /// past the room to the barline (a 1/4 appearing where only a 1/8 fit). Routing
+    /// through `Measure.overwrite` restores the "measure always full of real,
+    /// selectable rests" invariant; a duration longer than the room left is clamped
+    /// to the largest value that fits, so it can never spill past the barline.
     func updateSelectedEventDuration(_ duration: DurationValue) {
-        mutateSelectedEvent { $0.duration.value = duration }
+        guard let idx = selectedEventIndex, isCurrentMeasurePathValid,
+              let measure = currentMeasure, idx < measure.events.count else { return }
+        let events = measure.events
+        let total = effectiveTimeSignature.totalBeats
+        let startBeat = events.prefix(idx).reduce(0.0) { $0 + max(0, $1.actualBeats) }
+        let available = total - startBeat
+
+        var newEvent = events[idx]
+        newEvent.duration.value = duration
+        // Can't grow past the barline: clamp to the largest value that fits. Dots
+        // are dropped when clamping so the event never overshoots the remaining room.
+        if newEvent.duration.beats > available + 1e-9 {
+            newEvent.duration = Duration(value: largestDurationValue(fitting: available))
+        }
+
+        saveUndoState()
+        let rebuilt = Measure.overwrite(events, with: newEvent,
+                                        atBeat: startBeat, totalBeats: total)
+        score.parts[selectedPartIndex].staves[selectedStaffIndex]
+            .measures[selectedMeasureIndex].events = rebuilt
+        // Keep the edited event selected — its id survives the overwrite.
+        selectedEventIndex = rebuilt.firstIndex { $0.id == newEvent.id } ?? idx
+        score.touch()
+    }
+
+    /// The longest `DurationValue` whose plain (undotted) length is ≤ `beats`.
+    /// `DurationValue.allCases` runs longest→shortest, so the first fit wins.
+    private func largestDurationValue(fitting beats: Double) -> DurationValue {
+        for v in DurationValue.allCases where Duration(value: v).beats <= beats + 1e-9 {
+            return v
+        }
+        return .oneThousandTwentyFourth
     }
 
     func updateSelectedEventAccidental(_ accidental: Accidental) {
