@@ -422,6 +422,53 @@ class ScoreViewModel: ObservableObject {
         Duration(value: selectedDuration, dotted: isDotted, doubleDotted: isDoubleDotted)
     }
 
+    /// The note-input "shadow": a translucent preview of what the pen would drop at
+    /// the cursor right now (MuseScore's shadow note). `stepsAboveMiddle` is the
+    /// vertical position on the focused staff read through `effectiveClef`, so the
+    /// view places the shadow head without re-deriving pitch geometry. nil in every
+    /// mode but note/rest input, so navigation stays uncluttered.
+    struct NoteInputPreview: Equatable {
+        var duration: Duration
+        var isRest: Bool
+        var stepsAboveMiddle: Int   // vertical position for the shadow head (0 for a rest)
+    }
+
+    var noteInputPreview: NoteInputPreview? {
+        switch inputMode {
+        case .note:
+            let steps = previewPitch.staffPosition - effectiveClef.referencePitch.staffPosition
+            return NoteInputPreview(duration: makeDuration(), isRest: false, stepsAboveMiddle: steps)
+        case .rest:
+            return NoteInputPreview(duration: makeDuration(), isRest: true, stepsAboveMiddle: 0)
+        default:
+            return nil
+        }
+    }
+
+    /// The pitch the shadow head sits on before the tap. Touch has no hover, so the
+    /// pen remembers the last entered pitch (a run of notes previews on the last
+    /// line), falling back to the clef's middle-line pitch on an empty staff — a
+    /// stable anchor instead of a head that jumps to a corner.
+    private var previewPitch: Pitch {
+        if let p = lastEnteredPitch { return p }
+        return effectiveClef.referencePitch
+    }
+
+    /// The pitch of the most recent note/chord at or before the cursor (skipping the
+    /// trailing rests that pad a bar). `lastEnteredEvent` alone returns whatever event
+    /// is last in the bar — usually a fill rest right after a fresh note — which has no
+    /// pitch, so the shadow would snap back to the middle line between notes.
+    private var lastEnteredPitch: Pitch? {
+        guard let staff = currentStaff, !staff.measures.isEmpty else { return nil }
+        let start = min(selectedMeasureIndex, staff.measures.count - 1)
+        for mi in stride(from: start, through: 0, by: -1) {
+            for event in staff.measures[mi].events.reversed() where !event.isRest {
+                if let p = event.pitches.last { return p }
+            }
+        }
+        return nil
+    }
+
     /// MuseScore Q — halve the input duration (quarter → eighth). Operates on the
     /// sticky input pen (`selectedDuration`) only, never the selected event, so the
     /// measure-full invariant can't break. `allCases` runs longest→shortest, so a

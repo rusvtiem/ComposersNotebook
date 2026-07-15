@@ -64,6 +64,7 @@
 		CBD7CC61B245383EF27697B6 /* SoundFontManager.swift in Sources */ = {isa = PBXBuildFile; fileRef = 5E0926F59E024C74C9195BF7 /* SoundFontManager.swift */; };
 		CCD0B7E66BACE897B616B6A1 /* InsertModeInvariantTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = CB5B12FD049AF7ADE194488A /* InsertModeInvariantTests.swift */; };
 		CCD0B7E66BACE897B616B6A2 /* RangeSelectionInvariantTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = CB5B12FD049AF7ADE194488B /* RangeSelectionInvariantTests.swift */; };
+		CCD0B7E66BACE897B616B6A3 /* NoteInputPreviewTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = CB5B12FD049AF7ADE194488C /* NoteInputPreviewTests.swift */; };
 		CE08C92988EF4608810D80F1 /* OctaveShift.swift in Sources */ = {isa = PBXBuildFile; fileRef = CF37449983CAD06A212D3231 /* OctaveShift.swift */; };
 		CEFC23B266A4FC844E1DD9F6 /* LetterInputView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 437AEBD2A108F257A1639D28 /* LetterInputView.swift */; };
 		CF0C34584979F0ADEDBD06C9 /* Note.swift in Sources */ = {isa = PBXBuildFile; fileRef = 8589EB828201460A07C202F3 /* Note.swift */; };
@@ -150,6 +151,7 @@
 		C332283252D17AF92A4994C9 /* PluginManager.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = PluginManager.swift; sourceTree = "<group>"; };
 		CB5B12FD049AF7ADE194488A /* InsertModeInvariantTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = InsertModeInvariantTests.swift; sourceTree = "<group>"; };
 		CB5B12FD049AF7ADE194488B /* RangeSelectionInvariantTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = RangeSelectionInvariantTests.swift; sourceTree = "<group>"; };
+		CB5B12FD049AF7ADE194488C /* NoteInputPreviewTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = NoteInputPreviewTests.swift; sourceTree = "<group>"; };
 		CD1DD96E979B249E29F0672B /* CapellaImporter.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = CapellaImporter.swift; sourceTree = "<group>"; };
 		CF37449983CAD06A212D3231 /* OctaveShift.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = OctaveShift.swift; sourceTree = "<group>"; };
 		CFE90529AD079AAF1ECC7DF9 /* AppSupportContacts.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AppSupportContacts.swift; sourceTree = "<group>"; };
@@ -215,6 +217,7 @@
 				8BFE91DB72874BD613B4A176 /* DurationEditInvariantTests.swift */,
 				CB5B12FD049AF7ADE194488A /* InsertModeInvariantTests.swift */,
 				CB5B12FD049AF7ADE194488B /* RangeSelectionInvariantTests.swift */,
+				CB5B12FD049AF7ADE194488C /* NoteInputPreviewTests.swift */,
 				1647BE7619E1738F30A16E51 /* MeasureInvariantTests.swift */,
 				A3B7CF0A1580DBF68E28C18F /* MusicXMLExportTests.swift */,
 				B3E2A202918393709B512932 /* NoteScheduleTimingTests.swift */,
@@ -474,6 +477,7 @@
 				6540A10F24E9EFFF6D7BDFE7 /* DurationEditInvariantTests.swift in Sources */,
 				CCD0B7E66BACE897B616B6A1 /* InsertModeInvariantTests.swift in Sources */,
 				CCD0B7E66BACE897B616B6A2 /* RangeSelectionInvariantTests.swift in Sources */,
+				CCD0B7E66BACE897B616B6A3 /* NoteInputPreviewTests.swift in Sources */,
 				A3A6E0F77E41777EECAF9152 /* MeasureInvariantTests.swift in Sources */,
 				B99186888ADC5026212D2E7C /* MusicXMLExportTests.swift in Sources */,
 				0AD1568203A9C361204D8C3A /* NoteScheduleTimingTests.swift in Sources */,

@@ -403,6 +403,17 @@ struct VerovioSVGGeometry {
         return (x, top, bottom, width)
     }
 
+    /// The rendered staff at `staffInMeasure` of `measureIndex` — the single staff
+    /// (not the whole grand-staff system the caret band spans), so the note-input
+    /// shadow head can be placed against *that* staff's middle line. nil if the
+    /// indices fall outside what was rendered.
+    func staff(atMeasure measureIndex: Int, staffInMeasure: Int) -> Staff? {
+        guard measureIndex >= 0, measureIndex < measures.count else { return nil }
+        let staves = measures[measureIndex].staves
+        guard staffInMeasure >= 0, staffInMeasure < staves.count else { return nil }
+        return staves[staffInMeasure].staff
+    }
+
     /// The note-input caret band anchored on the *rendered element* carrying
     /// `exportedID` — the note or rest the cursor sits on. This is how MuseScore
     /// places its caret: the translucent band rides the drawn notehead/rest at the
@@ -484,6 +495,17 @@ struct VerovioSVGGeometry {
         let middleY = staff.lineYs[2]
         let stepHeight = staff.staffSpace / 2
         return Int(((middleY - y) / stepHeight).rounded())
+    }
+
+    /// Inverse of `diatonicStepsAboveMiddle`: the viewBox y of a diatonic position
+    /// (steps above the middle line, screen-up positive). Used to place the note-input
+    /// shadow at the pen's preview pitch. nil for a staff without a resolvable middle
+    /// line, so the shadow simply does not draw rather than landing at a wrong y.
+    func y(ofStaff staff: Staff, stepsAboveMiddle steps: Int) -> CGFloat? {
+        guard staff.lineYs.count == 5, staff.staffSpace > 0 else { return nil }
+        let middleY = staff.lineYs[2]
+        let stepHeight = staff.staffSpace / 2
+        return middleY - CGFloat(steps) * stepHeight
     }
 
     private func distance(_ y: CGFloat, toBand s: Staff) -> CGFloat {

@@ -132,6 +132,15 @@ struct VerovioStaffSurface: View {
                     }
                     .fill(Self.noteInputCaret)
                     .allowsHitTesting(false)
+
+                    // MuseScore "shadow note": a translucent preview of the note the
+                    // pen would drop at the cursor, sitting on the caret beat at the
+                    // preview pitch. Purely visual (never hit-tested), so it can't
+                    // interfere with the tap that actually inserts.
+                    if let shadow = shadowNote(in: geometry, caretX: caret.x) {
+                        shadowGlyph(shadow, unitToPoint: unitToPoint)
+                            .allowsHitTesting(false)
+                    }
                 }
 
                 // Playback cursor: a translucent vertical bar that sweeps the score
@@ -271,6 +280,77 @@ struct VerovioStaffSurface: View {
         }
         return geometry.insertionColumn(measureIndex: viewModel.selectedMeasureIndex,
                                         staffInMeasure: flat)
+    }
+
+    /// MuseScore shadow-note ink — a translucent grey ghost, deliberately NOT the
+    /// blue of the caret/selection so the preview never reads as an already-entered
+    /// (blue) note.
+    private static let shadowInk = Color.gray.opacity(0.5)
+
+    /// Geometry of the note-input shadow (viewBox units): where its head sits and how
+    /// it should look for the pen's current duration. nil outside note/rest input or
+    /// when the focused staff is not on the current render.
+    private struct ShadowNote {
+        var center: CGPoint      // head centre (viewBox)
+        var staffSpace: CGFloat  // viewBox — sizes the head/stem
+        var isOpen: Bool         // open (half/whole) vs filled head
+        var hasStem: Bool        // whole/breve/longa carry no stem
+        var isRest: Bool
+    }
+
+    private func shadowNote(in geometry: VerovioSVGGeometry, caretX: CGFloat) -> ShadowNote? {
+        guard let preview = viewModel.noteInputPreview,
+              let flat = viewModel.flattenedStaffIndex(part: viewModel.selectedPartIndex,
+                                                       staff: viewModel.selectedStaffIndex),
+              let staff = geometry.staff(atMeasure: viewModel.selectedMeasureIndex,
+                                         staffInMeasure: flat),
+              let y = geometry.y(ofStaff: staff,
+                                 stepsAboveMiddle: preview.isRest ? 0 : preview.stepsAboveMiddle)
+        else { return nil }
+        let dv = preview.duration.value
+        let isOpen = dv == .whole || dv == .half || dv == .breve || dv == .longa
+        let hasStem = !(dv == .whole || dv == .breve || dv == .longa)
+        return ShadowNote(center: CGPoint(x: caretX, y: y),
+                          staffSpace: max(staff.staffSpace, 1),
+                          isOpen: isOpen, hasStem: hasStem, isRest: preview.isRest)
+    }
+
+    @ViewBuilder
+    private func shadowGlyph(_ s: ShadowNote, unitToPoint: CGFloat) -> some View {
+        let ss = s.staffSpace * unitToPoint
+        let cx = s.center.x * unitToPoint
+        let cy = s.center.y * unitToPoint
+        if s.isRest {
+            // Stand-in shadow rest: a compact rounded block on the middle line. The
+            // caret band already marks the beat; this just previews "a rest goes here".
+            Path { p in
+                p.addRoundedRect(in: CGRect(x: cx - ss * 0.5, y: cy - ss * 0.4,
+                                            width: ss, height: ss * 0.8),
+                                 cornerSize: CGSize(width: ss * 0.15, height: ss * 0.15))
+            }
+            .fill(Self.shadowInk)
+        } else {
+            let headW = ss * 1.3
+            let headH = ss * 1.02
+            let headRect = CGRect(x: cx - headW / 2, y: cy - headH / 2, width: headW, height: headH)
+            ZStack {
+                if s.isOpen {
+                    Ellipse().path(in: headRect)
+                        .stroke(Self.shadowInk, lineWidth: max(ss * 0.14, 1))
+                } else {
+                    Ellipse().path(in: headRect)
+                        .fill(Self.shadowInk)
+                }
+                if s.hasStem {
+                    Path { p in
+                        let sx = cx + headW / 2 - ss * 0.07  // right side, stem up
+                        p.move(to: CGPoint(x: sx, y: cy))
+                        p.addLine(to: CGPoint(x: sx, y: cy - ss * 3.3))
+                    }
+                    .stroke(Self.shadowInk, lineWidth: max(ss * 0.12, 1))
+                }
+            }
+        }
     }
 
     /// Resolve the tapped vertical position to a pitch — diatonic steps from the
