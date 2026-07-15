@@ -9,6 +9,14 @@ enum StemDirection: Int, Codable, Equatable {
     case down = 2    // Штиль вниз
 }
 
+// MARK: - Slur Placement (MuseScore X flips a selected slur above/below)
+
+/// Направление дуги фразировочной лиги. `nil`/наследие = авто (движок сам решает
+/// по штилям). `.above`/`.below` — принудительно, как X на выделенной лиге в MuseScore.
+enum SlurPlacement: String, Codable, Equatable {
+    case above, below
+}
+
 // MARK: - Note Event (note or rest)
 
 enum NoteEventType: Codable, Equatable {
@@ -182,6 +190,7 @@ struct NoteEvent: Codable, Equatable, Identifiable {
     var tiedToNext: Bool     // залиговка (продление звучания)
     var slurStart: Bool      // начало фразировочной лиги
     var slurEnd: Bool        // конец фразировочной лиги
+    var slurPlacement: SlurPlacement?  // флип дуги лиги (X в MuseScore), nil = авто
     var stemDirection: StemDirection  // направление штиля
     var showNatural: Bool             // явный бекар (♮)
     var voice: VoiceLayer            // голосовой слой
@@ -201,6 +210,7 @@ struct NoteEvent: Codable, Equatable, Identifiable {
         tiedToNext: Bool = false,
         slurStart: Bool = false,
         slurEnd: Bool = false,
+        slurPlacement: SlurPlacement? = nil,
         stemDirection: StemDirection = .auto,
         showNatural: Bool = false,
         voice: VoiceLayer = .voice1,
@@ -220,6 +230,7 @@ struct NoteEvent: Codable, Equatable, Identifiable {
         self.tiedToNext = tiedToNext
         self.slurStart = slurStart
         self.slurEnd = slurEnd
+        self.slurPlacement = slurPlacement
         self.stemDirection = stemDirection
         self.showNatural = showNatural
         self.voice = voice
@@ -235,6 +246,7 @@ struct NoteEvent: Codable, Equatable, Identifiable {
     // Codable optional обеспечивает миграцию.
     private enum CodingKeys: String, CodingKey {
         case id, type, duration, grace, articulations, dynamic, tiedToNext, slurStart, slurEnd
+        case slurPlacement
         case stemDirection, showNatural, voice, lyric, technique, strumPattern
         case tuplet, chordSymbol, fingering
     }
@@ -250,6 +262,7 @@ struct NoteEvent: Codable, Equatable, Identifiable {
         self.tiedToNext = try c.decodeIfPresent(Bool.self, forKey: .tiedToNext) ?? false
         self.slurStart = try c.decodeIfPresent(Bool.self, forKey: .slurStart) ?? false
         self.slurEnd = try c.decodeIfPresent(Bool.self, forKey: .slurEnd) ?? false
+        self.slurPlacement = try c.decodeIfPresent(SlurPlacement.self, forKey: .slurPlacement)
         self.stemDirection = try c.decodeIfPresent(StemDirection.self, forKey: .stemDirection) ?? .auto
         self.showNatural = try c.decodeIfPresent(Bool.self, forKey: .showNatural) ?? false
         self.voice = try c.decodeIfPresent(VoiceLayer.self, forKey: .voice) ?? .voice1
@@ -324,6 +337,7 @@ struct NoteEvent: Codable, Equatable, Identifiable {
             tiedToNext: tiedToNext,
             slurStart: slurStart,
             slurEnd: slurEnd,
+            slurPlacement: slurPlacement,
             stemDirection: stemDirection,
             showNatural: showNatural,
             voice: voice,
@@ -349,6 +363,7 @@ struct NoteEvent: Codable, Equatable, Identifiable {
             tiedToNext: tiedToNext,
             slurStart: slurStart,
             slurEnd: slurEnd,
+            slurPlacement: slurPlacement,
             stemDirection: stemDirection,
             showNatural: showNatural,
             voice: voice,

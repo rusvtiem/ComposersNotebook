@@ -566,7 +566,14 @@ class MusicXMLExporter {
             notations.append("          <tied type=\"start\"/>")
         }
         if event.slurStart {
-            notations.append("          <slur type=\"start\"/>")
+            // MuseScore X on a slur flips its arc; carried as placement on the start.
+            // Omitted when auto so Verovio keeps its default (arc opposite the stems)
+            // and output stays byte-identical for un-flipped slurs.
+            if let p = event.slurPlacement {
+                notations.append("          <slur type=\"start\" placement=\"\(p.rawValue)\"/>")
+            } else {
+                notations.append("          <slur type=\"start\"/>")
+            }
         }
         if event.slurEnd {
             notations.append("          <slur type=\"stop\"/>")

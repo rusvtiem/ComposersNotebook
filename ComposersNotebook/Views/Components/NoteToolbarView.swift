@@ -164,6 +164,16 @@ struct NoteToolbarView: View {
                 fontSize: 16
             ) { viewModel.toggleSelectedEventSlur() }
 
+            // Slur flip (MuseScore X on a slur) — only when the note starts a slur
+            if viewModel.selectedEvent?.slurStart == true {
+                NoteToolbarButton(
+                    icon: nil,
+                    label: slurFlipLabel,
+                    isActive: viewModel.selectedEvent?.slurPlacement != nil,
+                    fontSize: 13
+                ) { viewModel.flipSelectedSlurPlacement() }
+            }
+
             // Stem direction
             NoteToolbarButton(
                 icon: nil,
@@ -508,6 +518,15 @@ struct NoteToolbarView: View {
         case .auto: return "↕"
         case .up: return "↑"
         case .down: return "↓"
+        }
+    }
+
+    /// Label for the slur-flip button: shows the current arc side (auto/above/below).
+    private var slurFlipLabel: String {
+        switch viewModel.selectedEvent?.slurPlacement {
+        case nil:     return "⁀↕"
+        case .above:  return "⁀↑"
+        case .below:  return "⁀↓"
         }
     }
 

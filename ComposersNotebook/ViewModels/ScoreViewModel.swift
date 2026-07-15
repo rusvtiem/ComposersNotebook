@@ -828,6 +828,20 @@ class ScoreViewModel: ObservableObject {
         mutateSelectedEvent { $0.stemDirection = direction }
     }
 
+    /// MuseScore X on a slur: flip its arc above↔below. Cycles auto → above → below →
+    /// auto so the user can also return to engine-default placement. No-op if the
+    /// selected event doesn't start a slur (nothing to flip).
+    func flipSelectedSlurPlacement() {
+        guard selectedEvent?.slurStart == true else { return }
+        mutateSelectedEvent { event in
+            switch event.slurPlacement {
+            case nil:     event.slurPlacement = .above
+            case .above:  event.slurPlacement = .below
+            case .below:  event.slurPlacement = nil
+            }
+        }
+    }
+
     func deleteSelectedEvent() {
         // Replace note/chord with rest of same duration (don't shift other notes)
         mutateSelectedEvent { event in
