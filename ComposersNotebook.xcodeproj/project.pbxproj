@@ -37,6 +37,7 @@
 		7401A39AB70F6E84025CF54D /* MusicXMLImporter.swift in Sources */ = {isa = PBXBuildFile; fileRef = 287E43EA5C25B87FEF4570C3 /* MusicXMLImporter.swift */; };
 		813DDF8F0FC1AB93799DC1E0 /* TimGM6mb.sf2 in Resources */ = {isa = PBXBuildFile; fileRef = 3597BACFD67D58C734C7E184 /* TimGM6mb.sf2 */; };
 		833AA40610B6F6D5D321F577 /* MetronomeEngine.swift in Sources */ = {isa = PBXBuildFile; fileRef = D88126149726E770E48A8525 /* MetronomeEngine.swift */; };
+		840D1672890090864A1107F6 /* VerovioGeometryPlacementTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = F6BF5A299815EBE448D95D45 /* VerovioGeometryPlacementTests.swift */; };
 		86C71629511E39A92B889D68 /* ScoreViewModel.swift in Sources */ = {isa = PBXBuildFile; fileRef = BDDD972C2349864CBA4F7648 /* ScoreViewModel.swift */; };
 		89F96B7D788401039B4EF4E3 /* VerovioPreviewView.swift in Sources */ = {isa = PBXBuildFile; fileRef = FCCF3E43EA929CF6D0795C46 /* VerovioPreviewView.swift */; };
 		8A0C37E370752650D55BA831 /* Theme.swift in Sources */ = {isa = PBXBuildFile; fileRef = 190212CA34ECBD03664EF613 /* Theme.swift */; };
@@ -153,6 +154,7 @@
 		ED18EBF60DE96441348A72DA /* PianoKeyboardView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = PianoKeyboardView.swift; sourceTree = "<group>"; };
 		EE9F96F55499ECA122A5F485 /* ChordSymbolEditor.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ChordSymbolEditor.swift; sourceTree = "<group>"; };
 		F180ED3F1454863D8676C257 /* MusicXMLExporter.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = MusicXMLExporter.swift; sourceTree = "<group>"; };
+		F6BF5A299815EBE448D95D45 /* VerovioGeometryPlacementTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = VerovioGeometryPlacementTests.swift; sourceTree = "<group>"; };
 		F85D1C62DDC7A2564A387949 /* ComposersNotebook.app */ = {isa = PBXFileReference; includeInIndex = 0; lastKnownFileType = wrapper.application; path = ComposersNotebook.app; sourceTree = BUILT_PRODUCTS_DIR; };
 		F8CEA206DDB9A3C9696DDD3D /* TupletTimingTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = TupletTimingTests.swift; sourceTree = "<group>"; };
 		FCB4B56794BAD9F955316678 /* GuitarProImporter.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = GuitarProImporter.swift; sourceTree = "<group>"; };
@@ -206,6 +208,7 @@
 				A3B7CF0A1580DBF68E28C18F /* MusicXMLExportTests.swift */,
 				312F0BDA76BEEE0CDE54A2BE /* PlaybackProgressTests.swift */,
 				F8CEA206DDB9A3C9696DDD3D /* TupletTimingTests.swift */,
+				F6BF5A299815EBE448D95D45 /* VerovioGeometryPlacementTests.swift */,
 			);
 			path = ComposersNotebookTests;
 			sourceTree = "<group>";
@@ -460,6 +463,7 @@
 				B99186888ADC5026212D2E7C /* MusicXMLExportTests.swift in Sources */,
 				E45007FF9390A9021062FDAA /* PlaybackProgressTests.swift in Sources */,
 				D7CAC8B9928E054AFF87A078 /* TupletTimingTests.swift in Sources */,
+				840D1672890090864A1107F6 /* VerovioGeometryPlacementTests.swift in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};

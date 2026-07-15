@@ -44,6 +44,9 @@ struct VerovioSVGGeometry {
     struct MeasureStaff {
         let staff: Staff
         let noteXs: [CGFloat]
+        /// x of the leading glyphs (clef / key / time) drawn before the note area.
+        /// Their rightmost x anchors beat 1 for an empty measure that carries them.
+        let leadingXs: [CGFloat]
     }
 
     /// One measure as a column of staves in top-to-bottom (model) order. Verovio
@@ -119,7 +122,9 @@ struct VerovioSVGGeometry {
 
     private static func shift(_ m: Measure, by o: CGPoint) -> Measure {
         o == .zero ? m : Measure(staves: m.staves.map {
-            MeasureStaff(staff: shift($0.staff, by: o), noteXs: $0.noteXs.map { $0 + o.x })
+            MeasureStaff(staff: shift($0.staff, by: o),
+                         noteXs: $0.noteXs.map { $0 + o.x },
+                         leadingXs: $0.leadingXs.map { $0 + o.x })
         })
     }
 
@@ -225,6 +230,11 @@ struct VerovioSVGGeometry {
         let translateRe = try! NSRegularExpression(
             pattern: #"class="notehead">\s*<use[^>]*translate\(([\d.\-]+),\s*([\d.\-]+)\)"#
         )
+        // Leading glyphs (clef / key / time) sit before the note area; their
+        // rightmost x anchors beat 1 in an empty measure that carries them.
+        let leadingRe = try! NSRegularExpression(
+            pattern: #"class="(?:clef|keySig|meterSig)">\s*<use[^>]*translate\(([\d.\-]+),\s*([\d.\-]+)\)"#
+        )
         let full = NSRange(location: 0, length: ns.length)
         let measureStarts = measureRe.matches(in: svg, range: full).map { $0.range.location }
         guard !measureStarts.isEmpty else { return [] }
@@ -242,7 +252,10 @@ struct VerovioSVGGeometry {
                 let noteXs = translateRe.matches(in: svg, range: sRange).compactMap {
                     Double(ns.substring(with: $0.range(at: 1))).map { CGFloat($0) }
                 }
-                measureStaves.append(MeasureStaff(staff: staff, noteXs: noteXs))
+                let leadingXs = leadingRe.matches(in: svg, range: sRange).compactMap {
+                    Double(ns.substring(with: $0.range(at: 1))).map { CGFloat($0) }
+                }
+                measureStaves.append(MeasureStaff(staff: staff, noteXs: noteXs, leadingXs: leadingXs))
             }
             result.append(Measure(staves: measureStaves))
         }
@@ -346,8 +359,20 @@ struct VerovioSVGGeometry {
         let staves = measures[measureIndex].staves
         guard staffInMeasure >= 0, staffInMeasure < staves.count else { return nil }
         let ms = staves[staffInMeasure]
-        let gap = max(ms.staff.staffSpace, 1) * 0.75
-        let x = ms.noteXs.max().map { $0 + gap } ?? (ms.staff.xRange.lowerBound + gap)
+        let ss = max(ms.staff.staffSpace, 1)
+        // Where the next note lands (all offsets measured against Verovio's default
+        // spacing, verified against rendered noteheads — see PlacementTests):
+        //   • notes present → just past the last notehead (append point)
+        //   • empty but carrying clef/key/time → beat 1 sits ~3.1 sp past them
+        //   • empty interior measure → beat 1 sits 1 sp past the barline
+        let x: CGFloat
+        if let lastNote = ms.noteXs.max() {
+            x = lastNote + ss * 0.75
+        } else if let leadRight = ms.leadingXs.max() {
+            x = leadRight + ss * 3.1
+        } else {
+            x = ms.staff.xRange.lowerBound + ss * 1.0
+        }
         let allStaves = staves.map(\.staff)
         let overshoot = ms.staff.staffSpace * 0.5
         let top = (allStaves.map { $0.top }.min() ?? ms.staff.top) - overshoot
